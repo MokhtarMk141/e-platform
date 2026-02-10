@@ -8,16 +8,15 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy prisma schema first
-COPY prisma ./prisma/
+# Copy Prisma schema
+COPY prisma ./prisma
 
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Copy source code
+# Copy rest of the source
 COPY . .
 
 EXPOSE 5000
 
-# The command will be overridden by docker-compose
 CMD ["npm", "run", "dev"]

@@ -26,7 +26,7 @@ app.get("/health", (req, res) => {
 
 // API routes
 app.get("/api", (req, res) => {
-  res.json({ message: "yo hello u good ??" });
+  res.json({ message: "yo hello u good d??" });
 });
 app.get("/hello", (req, res) => {
   res.json({ message: "hello world !!!" });
