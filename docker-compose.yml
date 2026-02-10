@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: ecommerce-db
@@ -22,7 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend API (Express.js)
   backend:
     build:
       context: ./backend
@@ -38,11 +34,9 @@ services:
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production
       CHOKIDAR_USEPOLLING: "true"
-      CHOKIDAR_INTERVAL: 1000
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - /app/dist
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,7 +44,6 @@ services:
       - ecommerce-network
     command: npm run dev
 
-  # Frontend (Next.js)
   frontend:
     build:
       context: ./frontend
