@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "ecommerce-db",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "ecommerce_db",
+      "Username": "ecommerce_user",
+      "Password": "ecommerce_pass",
+      "SSLMode": "prefer"
+    }
+  }
+}

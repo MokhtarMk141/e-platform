@@ -1,50 +1,38 @@
-import { UserEntity } from "./entity/user.entity";
+import { User } from "@prisma/client";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { randomUUID } from "crypto";
+import { prisma } from "../../prisma.client"; // ← Add this import
+
+// Remove this line:
+// const prisma = new PrismaClient();
 
 export class UserRepository {
-  private users: UserEntity[] = [];
-
-  async create(dto: CreateUserDto): Promise<UserEntity> {
-    const user: UserEntity = {
-      id: randomUUID(),
-      name: dto.name,
-      email: dto.email,
-      password: dto.password,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    this.users.push(user);
-    return user;
+  async create(dto: CreateUserDto): Promise<User> {
+    return prisma.user.create({ data: dto });
   }
 
-  async findById(id: string): Promise<UserEntity | null> {
-    return this.users.find(u => u.id === id) ?? null;
+  async findById(id: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { id } });
   }
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
-    return this.users.find(u => u.email === email) ?? null;
+  async findByEmail(email: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { email } });
   }
 
-  async findAll(): Promise<UserEntity[]> {
-    return this.users;
+  async findAll(): Promise<User[]> {
+    return prisma.user.findMany();
   }
 
-  async update(id: string, dto: UpdateUserDto): Promise<UserEntity | null> {
-    const user = await this.findById(id);
-    if (!user) return null;
-
-    Object.assign(user, dto, { updatedAt: new Date() });
-    return user;
+  async update(id: string, dto: UpdateUserDto): Promise<User | null> {
+    return prisma.user.update({ where: { id }, data: dto }).catch(() => null);
   }
 
   async delete(id: string): Promise<boolean> {
-    const index = this.users.findIndex(u => u.id === id);
-    if (index === -1) return false;
-
-    this.users.splice(index, 1);
-    return true;
+    try {
+      await prisma.user.delete({ where: { id } });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

@@ -5,32 +5,39 @@ import { UserRepository } from "./user.repository";
 const userService = new UserService(new UserRepository());
 
 export class UserController {
-
+  // Create a new user
   async create(req: Request, res: Response) {
-    const user = await userService.createUser(req.body);
-    res.status(201).json(user);
+    try {
+      const user = await userService.createUser(req.body);
+      res.status(201).json(user);
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
   }
 
+  // Get all users
   async findAll(req: Request, res: Response) {
-    const users = await userService.getUsers();
-    res.json(users);
+    try {
+      const users = await userService.getUsers();
+      res.json(users);
+    } catch (err: any) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
   }
 
+  // Get a single user by ID
   async findOne(req: Request, res: Response) {
-    const id = req.params.id as string;
-    const user = await userService.getUser(id);
-    res.json(user);
-  }
+    // Ensure the ID is a string
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
 
-  async update(req: Request, res: Response) {
-    const id = req.params.id as string;
-    const user = await userService.updateUser(id, req.body);
-    res.json(user);
-  }
-
-  async delete(req: Request, res: Response) {
-    const id = req.params.id as string;
-    const ok = await userService.deleteUser(id);
-    res.json({ deleted: ok });
+    try {
+      const user = await userService.getUser(id);
+      res.json(user);
+    } catch (err: any) {
+      res.status(404).json({ error: err.message });
+    }
   }
 }

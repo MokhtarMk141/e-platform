@@ -20,6 +20,7 @@
   ],
   "license": "ISC",
   "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "axios": "^1.6.7",
     "bcryptjs": "^3.0.3",
@@ -29,7 +30,8 @@
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.18.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -37,6 +39,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.2.1",
+    "@types/pg": "^8.16.0",
     "eslint": "^8.56.0",
     "nodemon": "^3.1.11",
     "prettier": "^3.1.1",

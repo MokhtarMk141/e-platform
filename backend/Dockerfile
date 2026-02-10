@@ -11,7 +11,7 @@ RUN npm install
 # Copy Prisma schema
 COPY prisma ./prisma
 
-# Generate Prisma Client
+# Generate Prisma Client during build
 RUN npx prisma generate
 
 # Copy rest of the source
@@ -19,4 +19,5 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["npm", "run", "dev"]
+# Generate again at runtime (in case schema changed) and start
+CMD sh -c "npx prisma generate && npm run dev"
