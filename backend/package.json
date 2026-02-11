@@ -20,8 +20,7 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.3.0",
-    "@prisma/client": "^7.3.0",
+    "@prisma/client": "^6.9.0",
     "axios": "^1.6.7",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
@@ -43,7 +42,7 @@
     "eslint": "^8.56.0",
     "nodemon": "^3.1.11",
     "prettier": "^3.1.1",
-    "prisma": "^7.3.0",
+    "prisma": "^6.9.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
