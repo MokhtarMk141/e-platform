@@ -1,3 +1,4 @@
+// src/modules/user/user.service.ts
 import { UserRepository } from "./user.repository";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -5,7 +6,7 @@ import { UserResponseDto } from "./dto/user-response.dto";
 import bcrypt from "bcryptjs";
 
 export class UserService {
-  constructor(private repository: UserRepository) {}
+  constructor(private repository = new UserRepository()) {}
 
   private toResponse(user: any): UserResponseDto {
     return {

@@ -1,10 +1,8 @@
+// src/modules/user/user.repository.ts
 import { User } from "@prisma/client";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { prisma } from "../../prisma.client"; // ← Add this import
-
-// Remove this line:
-// const prisma = new PrismaClient();
+import { prisma } from "../../config/database";
 
 export class UserRepository {
   async create(dto: CreateUserDto): Promise<User> {
