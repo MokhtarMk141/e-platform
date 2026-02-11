@@ -5,7 +5,8 @@ import { UserRepository } from "./user.repository";
 const userService = new UserService(new UserRepository());
 
 export class UserController {
-  // Create a new user
+
+  
   async create(req: Request, res: Response) {
     try {
       const user = await userService.createUser(req.body);
@@ -15,7 +16,6 @@ export class UserController {
     }
   }
 
-  // Get all users
   async findAll(req: Request, res: Response) {
     try {
       const users = await userService.getUsers();
@@ -32,7 +32,6 @@ export class UserController {
     if (!id) {
       return res.status(400).json({ error: "User ID is required" });
     }
-
     try {
       const user = await userService.getUser(id);
       res.json(user);
