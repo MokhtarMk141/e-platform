@@ -1,7 +1,7 @@
 import { User } from "@prisma/client"; // le type TypeScript généré par Prisma pour la table user de ta base.
 import { CreateUserDto } from "./dto/create-user.dto"; //un objet (Data Transfer Object) 
 import { UpdateUserDto } from "./dto/update-user.dto"; 
-import { prisma } from "../../prisma.client";  // l’instance PrismaClient qu’on utilise pour interagir avec la base de données. 
+import { prisma } from "../../config/database";
 
 //class 
 export class UserRepository {
