@@ -1,67 +1,62 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthService } from '@/services/auth.service';
+import { useAuthStore } from '@/hooks/useAuth';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
 
   useEffect(() => {
-    const token = AuthService.getToken();
-    if (!token) {
+    if (!isAuthenticated) {
       router.push('/login');
-      return;
     }
-
-    const userData = AuthService.getUser();
-    setUser(userData);
-  }, [router]);
+  }, [isAuthenticated, router]);
 
   const handleLogout = () => {
-    AuthService.logout();
+    logout();
     router.push('/login');
   };
 
   if (!user) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-sm text-slate-600">Loading...</p>
+      </div>
+    );
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '50px auto', padding: '20px' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '30px'
-      }}>
-        <h1>Dashboard</h1>
+    <div className="mx-auto my-12 max-w-3xl px-4">
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-semibold text-slate-900">Dashboard</h1>
         <button
           onClick={handleLogout}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-700"
         >
           Logout
         </button>
       </div>
 
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <h2>Welcome, {user.name}!</h2>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>User ID:</strong> {user.id}</p>
-        <p><strong>Created At:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h2 className="mb-4 text-xl font-semibold text-slate-900">
+          Welcome, {user.name}!
+        </h2>
+        <div className="space-y-1 text-sm text-slate-700">
+          <p>
+            <span className="font-medium">Email:</span> {user.email}
+          </p>
+          <p>
+            <span className="font-medium">User ID:</span> {user.id}
+          </p>
+          <p>
+            <span className="font-medium">Created At:</span>{' '}
+            {new Date(user.createdAt).toLocaleDateString()}
+          </p>
+        </div>
       </div>
     </div>
   );

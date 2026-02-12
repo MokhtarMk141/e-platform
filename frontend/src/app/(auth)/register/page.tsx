@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AuthService } from '@/services/auth.service';
+import { useAuth } from '@/hooks/useAuth';
+import type { RegisterCredentials } from '@/types/auth.types';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const auth = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,14 +31,20 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      await AuthService.register(formData);
+      await auth.getState().register(formData as RegisterCredentials);
       router.push('/dashboard');
-    } catch (err: any) {
-      if (err.error && typeof err.error === 'object') {
-        const errors = Object.values(err.error).flat().join(', ');
+    } catch (err) {
+      const maybeError = err as { error?: string | Record<string, string[]> };
+      if (maybeError.error && typeof maybeError.error === 'object') {
+        const errors = Object.values(maybeError.error)
+          .flat()
+          .join(', ');
         setError(errors);
       } else {
-        setError(err.error || 'Registration failed');
+        setError(
+          (typeof maybeError.error === 'string' && maybeError.error) ||
+            'Registration failed'
+        );
       }
     } finally {
       setLoading(false);
@@ -44,100 +52,88 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
-      <h1>Register</h1>
-      
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="name" style={{ display: 'block', marginBottom: '5px' }}>
-            Name
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-6 shadow">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          Register
+        </h1>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
-
-        {error && (
-          <div style={{ color: 'red', marginBottom: '15px' }}>
-            {error}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-slate-700"
+            >
+              Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+            />
           </div>
-        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.6 : 1,
-          }}
-        >
-          {loading ? 'Loading...' : 'Register'}
-        </button>
-      </form>
+          <div className="space-y-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-slate-700"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+            />
+          </div>
 
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
-        Already have an account?{' '}
-        <Link href="/login" style={{ color: '#007bff' }}>
-          Login
-        </Link>
-      </p>
+          <div className="space-y-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-slate-700"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex w-full items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? 'Loading...' : 'Register'}
+          </button>
+        </form>
+
+        <p className="pt-2 text-center text-sm text-slate-600">
+          Already have an account?{' '}
+          <Link
+            href="/login"
+            className="font-medium text-slate-900 underline-offset-4 hover:underline"
+          >
+            Login
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -5,40 +5,61 @@ import {
   RegisterCredentials,
 } from '@/types/auth.types';
 
+const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
+
 export class AuthService {
+  private static setAuthStorage(response: AuthResponse) {
+    if (typeof window === 'undefined') return;
+
+    const { token, user } = response;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    // Store JWT in a cookie so it can be read on the server (if needed)
+    document.cookie = `token=${token}; path=/; max-age=${ONE_WEEK_IN_SECONDS}; secure; samesite=lax`;
+  }
+
+  private static clearAuthStorage() {
+    if (typeof window === 'undefined') return;
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    // Expire the JWT cookie
+    document.cookie = 'token=; path=/; max-age=0';
+  }
+
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await ApiClient.post<AuthResponse>(
       '/auth/login',
       credentials
     );
-    
-    if (typeof window !== 'undefined' && response.token) {
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+
+    if (response.token) {
+      this.setAuthStorage(response);
     }
-    
+
     return response;
   }
 
-  static async register(credentials: RegisterCredentials): Promise<AuthResponse> {
+  static async register(
+    credentials: RegisterCredentials
+  ): Promise<AuthResponse> {
     const response = await ApiClient.post<AuthResponse>(
       '/auth/register',
       credentials
     );
-    
-    if (typeof window !== 'undefined' && response.token) {
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+
+    if (response.token) {
+      this.setAuthStorage(response);
     }
-    
+
     return response;
   }
 
   static logout(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-    }
+    this.clearAuthStorage();
   }
 
   static getToken(): string | null {
