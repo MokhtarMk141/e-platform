@@ -1,9 +1,10 @@
-import { UserRepository } from "../user/user.repository";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { RegisterDto } from "./dto/register.dto";
-import { LoginDto } from "./dto/login.dto";
+import { UserRepository } from "../user/user.repository";
+import { RegisterDtoType } from "./dto/register.dto";
+import { LoginDtoType } from "./dto/login.dto";
 import { UserResponseDto } from "../user/dto/user-response.dto";
+import { AppError } from "../../exceptions/app-error";
 
 export class AuthService {
   constructor(private userRepo: UserRepository) {}
@@ -17,29 +18,36 @@ export class AuthService {
     };
   }
 
-  async register(dto: RegisterDto): Promise<{ user: UserResponseDto; token: string }> {
+  async register(dto: RegisterDtoType) {
     const existing = await this.userRepo.findByEmail(dto.email);
-    if (existing) throw new Error("Email already exists");
+    if (existing) throw new AppError("Email already exists", 400);
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const user = await this.userRepo.create({ ...dto, password: hashedPassword });
+    const hashed = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.userRepo.create({ ...dto, password: hashed });
 
     const token = this.generateToken(user.id, user.role);
+
     return { user: this.toResponse(user), token };
   }
 
-  async login(dto: LoginDto): Promise<{ user: UserResponseDto; token: string }> {
+  async login(dto: LoginDtoType) {
     const user = await this.userRepo.findByEmail(dto.email);
-    if (!user) throw new Error("Invalid email or password");
+    if (!user) throw new AppError("Invalid email or password", 400);
 
     const valid = await bcrypt.compare(dto.password, user.password);
-    if (!valid) throw new Error("Invalid email or password");
+    if (!valid) throw new AppError("Invalid email or password", 400);
 
     const token = this.generateToken(user.id, user.role);
+
     return { user: this.toResponse(user), token };
   }
 
   generateToken(userId: string, role: string) {
-    return jwt.sign({ sub: userId, role }, process.env.JWT_SECRET || "secret", { expiresIn: "7d" });
+    return jwt.sign(
+      { sub: userId, role },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "7d" }
+    );
   }
 }

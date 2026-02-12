@@ -1,25 +1,18 @@
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { UserRepository } from "../user/user.repository";
+import { asyncHandler } from "../../utils/async-handler";
 
 const authService = new AuthService(new UserRepository());
 
 export class AuthController {
-  async register(req: Request, res: Response) {
-    try {
-      const result = await authService.register(req.body);
-      res.status(201).json(result);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
-    }
-  }
+  register = asyncHandler(async (req: Request, res: Response) => {
+    const result = await authService.register(req.body);
+    res.status(201).json(result);
+  });
 
-  async login(req: Request, res: Response) {
-    try {
-      const result = await authService.login(req.body);
-      res.json(result);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
-    }
-  }
+  login = asyncHandler(async (req: Request, res: Response) => {
+    const result = await authService.login(req.body);
+    res.json(result);
+  });
 }
