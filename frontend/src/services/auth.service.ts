@@ -16,7 +16,6 @@ export class AuthService {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
 
-    // Store JWT in a cookie so it can be read on the server (if needed)
     document.cookie = `token=${token}; path=/; max-age=${ONE_WEEK_IN_SECONDS}; secure; samesite=lax`;
   }
 
@@ -26,7 +25,6 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
 
-    // Expire the JWT cookie
     document.cookie = 'token=; path=/; max-age=0';
   }
 
