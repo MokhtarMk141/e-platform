@@ -1,14 +1,64 @@
 'use client'
 import img from '../../../../public/icons8-razer-logo-3.png'
 import { useState } from 'react'
+import { AuthService } from '@/services/auth.service'
+import { LoginCredentials } from '@/types/auth.types'
+import { useRouter } from 'next/navigation'
 
-export default function Example() {
+export default function Login() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
-  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
 
-  // Password validation
-  const hasNumber = /\d/.test(password)
-  const hasMinLength = password.length >= 8
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+    if (error) setError(null)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Basic validation
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields')
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const loginData: LoginCredentials = {
+        email: formData.email,
+        password: formData.password
+      }
+
+      const response = await AuthService.login(loginData)
+      
+      console.log('Login successful:', response)
+      
+      router.push('/dashboard') 
+      
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials and try again.')
+      console.error('Login error:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSocialLogin = (provider: 'google' | 'facebook') => {
+    console.log(`Login with ${provider}`)
+ 
+  }
 
   return (
     <div className="bg-white min-h-screen flex relative">
@@ -16,21 +66,20 @@ export default function Example() {
         
         {/* Left Side - Background Image */}
         <div 
-          className="w-1/2 relative"
+          className="w-3/5 relative"
           style={{
             backgroundImage: `url(${img.src})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-          
           }}
         >
           {/* Left side content can go here if needed */}
         </div>
 
         {/* Right Side - Black Form */}
-        <div className="w-1/2 bg-black flex items-center justify-center p-12 ml-auto relative z-20">
-          <div className="w-full max-w-md space-y-6">
+        <div className="w-2/5 bg-black flex items-center justify-center p-12 ml-auto relative z-20">
+          <div style={{position:'relative', right:'100px'}} className="w-full max-w-md space-y-6">
             
             {/* Title */}
             <div className="text-center mb-8">
@@ -42,29 +91,31 @@ export default function Example() {
             {/* Centered Login Form */}
             <div className="w-full max-w-sm mx-auto">
               <div className="w-full space-y-6">
-                
-                {/* Logo */}
-                <div className="flex justify-center">
-                  <svg className="h-12 w-12 text-white" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="2 2"/>
-                  </svg>
-                </div>
 
                 {/* Title */}
                 <div className="text-center">
                   <h2 className="text-3xl font-semibold tracking-tight text-white">
-                    Welcome 
+                    Welcome Back
                   </h2>
                   <p className="mt-2 text-sm text-gray-400">
-                    Please enter your details to create your account
+                    Please enter your details to sign in
                   </p>
                 </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4">
+                    <p className="text-sm text-red-400 text-center">{error}</p>
+                  </div>
+                )}
 
                 {/* Social Login Buttons */}
                 <div className="space-y-3">
                   <button
                     type="button"
-                    className="flex w-full items-center justify-center gap-3 rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                    onClick={() => handleSocialLogin('google')}
+                    disabled={isLoading}
+                    className="flex w-full items-center justify-center gap-3 rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-sm font-medium text-white hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
                       <path
@@ -89,7 +140,9 @@ export default function Example() {
 
                   <button
                     type="button"
-                    className="flex w-full items-center justify-center gap-3 rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                    onClick={() => handleSocialLogin('facebook')}
+                    disabled={isLoading}
+                    className="flex w-full items-center justify-center gap-3 rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-sm font-medium text-white hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M22.675 0h-21.35C.597 0 0 .597 0 1.326v21.348C0 23.403.597 24 1.326 24h11.495v-9.294H9.691v-3.622h3.13V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.464.099 2.796.143v3.24h-1.918c-1.504 0-1.796.715-1.796 1.763v2.314h3.587l-.467 3.622h-3.12V24h6.116C23.403 24 24 23.403 24 22.674V1.326C24 .597 23.403 0 22.675 0z"/>
@@ -109,7 +162,7 @@ export default function Example() {
                 </div>
 
                 {/* Email/Password Form */}
-                <form className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <input
                       id="email"
@@ -117,8 +170,11 @@ export default function Example() {
                       type="email"
                       placeholder="Email"
                       required
+                      value={formData.email}
+                      onChange={handleInputChange}
                       autoComplete="email"
-                      className="block w-full rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-gray-400 focus:border-white/40 focus:outline-none focus:ring-1 focus:ring-white/40"
+                      disabled={isLoading}
+                      className="block w-full rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-gray-400 focus:border-white/40 focus:outline-none focus:ring-1 focus:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -129,15 +185,17 @@ export default function Example() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
                       required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      value={formData.password}
+                      onChange={handleInputChange}
                       autoComplete="current-password"
-                      className="block w-full rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-gray-400 focus:border-white/40 focus:outline-none focus:ring-1 focus:ring-white/40"
+                      disabled={isLoading}
+                      className="block w-full rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-gray-400 focus:border-white/40 focus:outline-none focus:ring-1 focus:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      disabled={isLoading}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white disabled:opacity-50"
                     >
                       {showPassword ? (
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,29 +210,41 @@ export default function Example() {
                     </button>
                   </div>
 
-                  {/* Password validation hints */}
-                  {password && (
-                    <div className="space-y-1 text-sm">
-                      <p className={hasMinLength ? "text-green-400" : "text-gray-400"}>
-                        ✓ At least 8 characters
-                      </p>
-                      <p className={hasNumber ? "text-green-400" : "text-gray-400"}>
-                        ✓ Contains at least 1 number
-                      </p>
-                    </div>
-                  )}
+                  {/* Forgot Password Link */}
+                  <div className="flex items-center justify-end">
+                    <a 
+                      href="/forgot-password" 
+                      className="text-sm text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                    >
+                      Forgot password?
+                    </a>
+                  </div>
 
                   <button
                     type="submit"
-                    className="flex w-full justify-center rounded-lg bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-gray-100 transition-colors"
+                    disabled={isLoading || !formData.email || !formData.password}
+                    className="flex w-full justify-center rounded-lg bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
                   >
-                    Sign In
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Signing in...
+                      </div>
+                    ) : (
+                      'Sign In'
+                    )}
                   </button>
                 </form>
 
                 <p className="text-center text-sm text-gray-400">
-                  Don't have an account?{' '}
-                  <a href="#" className="font-semibold text-white hover:text-gray-300">
+                  Don t have an account?{' '}
+                  <a 
+                    href="/register" 
+                    className="font-semibold text-white hover:text-gray-300 transition-colors"
+                  >
                     Sign Up
                   </a>
                 </p>
@@ -265,8 +335,6 @@ export default function Example() {
           {/* Duplicate set for seamless loop */}
           <div className="flex items-center gap-12 shrink-0">
             {/* Intel */}
-             <div className="flex items-center gap-12 shrink-0">
-            {/* Intel */}
             <div className="flex items-center gap-2">
               <img 
                 src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg"
@@ -338,7 +406,7 @@ export default function Example() {
               />
             </div>
           </div>
-        </div></div>
+        </div>
       </div>
 
       {/* Keyframe Animations */}
