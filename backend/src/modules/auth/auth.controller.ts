@@ -20,6 +20,7 @@ export class AuthController {
       httpOnly: true, // not accessible by JS
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
+      path: "/api/auth", // only send cookie to auth endpoints
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
     });
   }
@@ -74,18 +75,16 @@ export class AuthController {
     if (token) {
       await this.authService.logout(token);
     }
-    res.clearCookie("refreshToken");
+    res.clearCookie("refreshToken", { path: "/api/auth" });
     res.json({ success: true, message: "Logged out successfully" });
   }
-
-  // Logout from ALL devices
   async logoutAll(req: AuthRequest, res: Response) {
     const userId = req.user?.sub;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
     await this.authService.logoutAll(userId);
-    res.clearCookie("refreshToken");
+    res.clearCookie("refreshToken", { path: "/api/auth" });
     res.json({ success: true, message: "Logged out from all devices" });
   }
 }

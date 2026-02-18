@@ -1,21 +1,19 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import dotenv from "dotenv";
-import cookieParser from "cookie-parser"; // ← add this
+import cookieParser from "cookie-parser";
+import { env } from "./config/env";
 
 import userRoutes from "./modules/user/user.routes";
 import authRoutes from "./modules/auth/auth.routes";
 import productRoutes from "./modules/product/product.routes";
 import categoryRoutes from "./modules/category/category.routes";
 
-dotenv.config();
-
 const app = express();
 
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: env.FRONTEND_URL,
   credentials: true,
 }));
 app.use(express.json());

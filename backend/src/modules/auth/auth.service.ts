@@ -7,6 +7,7 @@ import { LoginDtoType } from "./dto/login.dto";
 import { UserResponseDto } from "../user/dto/user-response.dto";
 import { AppError } from "../../exceptions/app-error";
 import { prisma } from "../../config/database";
+import { env } from "../../config/env";
 
 export class AuthService {
   constructor(private userRepo: UserRepository) {}
@@ -20,35 +21,43 @@ export class AuthService {
     };
   }
 
+  /**
+   * Hash a refresh token with SHA-256 before storing in DB.
+   * The raw token is only ever sent to the client — we never store it.
+   */
+  private hashToken(token: string): string {
+    return crypto.createHash("sha256").update(token).digest("hex");
+  }
+
   // Short lived — 15 minutes
   generateAccessToken(userId: string, role: string) {
     return jwt.sign(
       { sub: userId, role },
-      process.env.JWT_SECRET || "secret",
+      env.JWT_SECRET,
       { expiresIn: "15m" }
     );
   }
 
-  // Random string — stored in DB
+  // Random string — sent to client, stored as hash in DB
   generateRefreshToken(): string {
     return crypto.randomBytes(64).toString("hex");
   }
 
-  // Save refresh token to DB
-  async saveRefreshToken(userId: string, token: string) {
+  // Save hashed refresh token to DB
+  async saveRefreshToken(userId: string, rawToken: string) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
     return prisma.refreshToken.create({
       data: {
-        token,
+        token: this.hashToken(rawToken),
         userId,
         expiresAt,
       },
     });
   }
 
-  // Delete all old tokens for this user (cleanup)
+  // Revoke all tokens for this user
   async revokeAllUserTokens(userId: string) {
     await prisma.refreshToken.updateMany({
       where: { userId, revoked: false },
@@ -87,20 +96,19 @@ export class AuthService {
     return { user: this.toResponse(user), accessToken, refreshToken };
   }
 
-  async refreshAccessToken(token: string) {
-    // Find token in DB
+  async refreshAccessToken(rawToken: string) {
+    const hashedToken = this.hashToken(rawToken);
+
+    // Find token in DB by its hash
     const stored = await prisma.refreshToken.findUnique({
-      where: { token },
+      where: { token: hashedToken },
       include: { user: true },
     });
 
-    // Check it exists
     if (!stored) throw new AppError("Invalid refresh token", 401);
 
-    // Check it hasn't been revoked
     if (stored.revoked) throw new AppError("Refresh token has been revoked", 401);
 
-    // Check it hasn't expired
     if (new Date() > stored.expiresAt) {
       await prisma.refreshToken.update({
         where: { id: stored.id },
@@ -122,8 +130,12 @@ export class AuthService {
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 
-  async logout(token: string) {
-    const stored = await prisma.refreshToken.findUnique({ where: { token } });
+  async logout(rawToken: string) {
+    const hashedToken = this.hashToken(rawToken);
+
+    const stored = await prisma.refreshToken.findUnique({
+      where: { token: hashedToken },
+    });
     if (!stored) throw new AppError("Invalid refresh token", 401);
 
     await prisma.refreshToken.update({
