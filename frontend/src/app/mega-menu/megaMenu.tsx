@@ -129,7 +129,7 @@ export default function MegaMenu() {
   const [active, setActive] = useState(null);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#000", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{  background: "#000", fontFamily: "'Inter', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -331,7 +331,7 @@ export default function MegaMenu() {
               Sign In
             </button>
 
-            <button style={{ background: "#22d3ee", border: "none", color: "#000", fontSize: 13, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
+            <button style={{ background: "white", border: "none", color: "#000", fontSize: 13, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
               onMouseEnter={e => e.target.style.background="#67e8f9"} onMouseLeave={e => e.target.style.background="#22d3ee"}>
               Start Building
             </button>
@@ -401,7 +401,7 @@ export default function MegaMenu() {
               </div>
             </div>
           </div>
-        )}
+        )}  
       </nav>
 
       
