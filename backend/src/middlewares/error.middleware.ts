@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { AppError } from "../exceptions/app-error";
 
 export function errorMiddleware(
-  err: any,
+  err: unknown,
   req: Request,
   res: Response,
   next: NextFunction
@@ -10,7 +10,8 @@ export function errorMiddleware(
   if (err instanceof AppError) {
     return res.status(err.status).json({
       success: false,
-      error: err.message,
+      message: err.message,
+      error: err.details ?? err.message,
     });
   }
 
@@ -18,6 +19,7 @@ export function errorMiddleware(
 
   res.status(500).json({
     success: false,
+    message: "Internal Server Error",
     error: "Internal Server Error",
   });
 }

@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { User, UserRole } from "@prisma/client";
 import { UserRepository } from "../user/user.repository";
 import { RegisterDtoType } from "./dto/register.dto";
 import { LoginDtoType } from "./dto/login.dto";
@@ -11,9 +12,11 @@ import { env } from "../../config/env";
 import { sendEmail } from "../../utils/send-email";
 
 export class AuthService {
-  constructor(private userRepo: UserRepository) {}
+  constructor(private userRepository: UserRepository) {}
 
-  private toResponse(user: any): UserResponseDto {
+  private toResponse(
+    user: Pick<User, "id" | "name" | "email" | "createdAt">
+  ): UserResponseDto {
     return {
       id: user.id,
       name: user.name,
@@ -31,7 +34,7 @@ export class AuthService {
   }
 
   // Short lived — 15 minutes
-  generateAccessToken(userId: string, role: string) {
+  generateAccessToken(userId: string, role: UserRole): string {
     return jwt.sign(
       { sub: userId, role },
       env.JWT_SECRET,
@@ -67,11 +70,11 @@ export class AuthService {
   }
 
   async register(dto: RegisterDtoType) {
-    const existing = await this.userRepo.findByEmail(dto.email);
+    const existing = await this.userRepository.findByEmail(dto.email);
     if (existing) throw new AppError("Email already exists", 400);
 
     const hashed = await bcrypt.hash(dto.password, 10);
-    const user = await this.userRepo.create({ ...dto, password: hashed });
+    const user = await this.userRepository.create({ ...dto, password: hashed });
 
     const accessToken = this.generateAccessToken(user.id, user.role);
     const refreshToken = this.generateRefreshToken();
@@ -81,7 +84,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDtoType) {
-    const user = await this.userRepo.findByEmail(dto.email);
+    const user = await this.userRepository.findByEmail(dto.email);
     if (!user) throw new AppError("Invalid email or password", 400);
 
     const valid = await bcrypt.compare(dto.password, user.password);
@@ -152,7 +155,7 @@ export class AuthService {
   // ─── Forgot / Reset Password ───────────────────────────────────
 
   async forgotPassword(email: string) {
-    const user = await this.userRepo.findByEmail(email);
+    const user = await this.userRepository.findByEmail(email);
 
     // Always return success to prevent email enumeration
     if (!user) return;
@@ -211,7 +214,7 @@ export class AuthService {
 
     // Update password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.userRepo.updatePassword(stored.userId, hashedPassword);
+    await this.userRepository.updatePassword(stored.userId, hashedPassword);
 
     // Delete the used token (single-use)
     await prisma.passwordResetToken.delete({ where: { id: stored.id } });

@@ -19,7 +19,7 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   const header = req.headers.authorization;
 
   if (!header || !header.startsWith("Bearer ")) {
-    throw new AppError("Unauthorized", 401);
+    return next(new AppError("Unauthorized", 401));
   }
 
   const token = header.split(" ")[1];
@@ -27,8 +27,8 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
     req.user = payload;
-    next();
+    return next();
   } catch {
-    throw new AppError("Invalid token", 401);
+    return next(new AppError("Invalid token", 401));
   }
 }

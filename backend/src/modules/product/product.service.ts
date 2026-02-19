@@ -5,11 +5,7 @@ import { ProductResponseDto } from "./dto/product-response.dto";
 import { AppError } from "../../exceptions/app-error";
 
 export class ProductService {
-  private productRepository: ProductRepository;
-
-  constructor() {
-    this.productRepository = new ProductRepository();
-  }
+  constructor(private productRepository: ProductRepository = new ProductRepository()) {}
 
   async getAllProducts(params?: {
     page?: number;

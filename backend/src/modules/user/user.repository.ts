@@ -1,13 +1,10 @@
-import { User } from "@prisma/client"; // le type TypeScript généré par Prisma pour la table user de ta base.
-import { CreateUserDto } from "./dto/create-user.dto"; //un objet (Data Transfer Object) 
-import { UpdateUserDto } from "./dto/update-user.dto"; 
+import { User } from "@prisma/client";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 import { prisma } from "../../config/database";
 
-//class 
 export class UserRepository {
-
-// async => Cette fonction va travailler avec des choses qui prennent du temps (comme des requêtes sur Internet) et elle va renvoyer une promesse
-  async create(dto: CreateUserDto): Promise<User> {     //promise  est un objet qui représente le résultat futur d’une opération qui prend du temps.
+  async create(dto: CreateUserDto): Promise<User> {
     return prisma.user.create({ data: dto });
   }
 
@@ -36,12 +33,10 @@ export class UserRepository {
     }
   }
 
-
   async updatePassword(userId: string, hashedPassword: string): Promise<User> {
     return prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
     });
   }
-
 }

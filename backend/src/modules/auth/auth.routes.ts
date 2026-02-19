@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import rateLimit from "express-rate-limit";
 import { AuthController } from "./auth.controller";
 import { validateRequest } from "../../middlewares/validate-request.middleware";
@@ -7,15 +7,23 @@ import { LoginDto } from "./dto/login.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { authMiddleware } from "./auth.middleware";
+import { AppError } from "../../exceptions/app-error";
 
 const router = Router();
 const controller = new AuthController();
+
+const createRateLimitHandler =
+  (message: string) => (_req: Request, _res: Response, next: NextFunction) => {
+    next(new AppError(message, 429));
+  };
 
 // Rate limiters for auth routes
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per window
-  message: { error: "Too many login attempts, please try again after 15 minutes" },
+  handler: createRateLimitHandler(
+    "Too many login attempts, please try again after 15 minutes"
+  ),
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -23,7 +31,9 @@ const loginLimiter = rateLimit({
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // 3 registrations per window
-  message: { error: "Too many registration attempts, please try again later" },
+  handler: createRateLimitHandler(
+    "Too many registration attempts, please try again later"
+  ),
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -31,7 +41,9 @@ const registerLimiter = rateLimit({
 const refreshLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // 10 refresh attempts per window
-  message: { error: "Too many refresh attempts, please try again later" },
+  handler: createRateLimitHandler(
+    "Too many refresh attempts, please try again later"
+  ),
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -39,7 +51,9 @@ const refreshLimiter = rateLimit({
 const forgotPasswordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 3, // 3 requests per window
-  message: { error: "Too many password reset requests, please try again after 15 minutes" },
+  handler: createRateLimitHandler(
+    "Too many password reset requests, please try again after 15 minutes"
+  ),
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -47,7 +61,9 @@ const forgotPasswordLimiter = rateLimit({
 const resetPasswordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 requests per window
-  message: { error: "Too many password reset attempts, please try again later" },
+  handler: createRateLimitHandler(
+    "Too many password reset attempts, please try again later"
+  ),
   standardHeaders: true,
   legacyHeaders: false,
 });

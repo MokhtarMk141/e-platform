@@ -3,6 +3,7 @@ import { ProductService } from "./product.service";
 import { asyncHandler } from "../../utils/async-handler";
 import { createProductSchema } from "./dto/create-product.dto";
 import { updateProductSchema } from "./dto/update-product.dto";
+import { sendSuccess } from "../../utils/api-response";
 
 export class ProductController {
   private productService: ProductService;
@@ -18,10 +19,14 @@ export class ProductController {
 
     const result = await this.productService.getAllProducts({ page, limit, categoryId });
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       message: "Products fetched successfully",
-      ...result,
+      data: result.data,
+      meta: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+      },
     });
   });
 
@@ -29,8 +34,7 @@ export class ProductController {
     const id = req.params.id as string;
     const product = await this.productService.getProductById(id);
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       message: "Product fetched successfully",
       data: product,
     });
@@ -40,8 +44,8 @@ export class ProductController {
     const dto = createProductSchema.parse(req.body);
     const product = await this.productService.createProduct(dto);
 
-    res.status(201).json({
-      success: true,
+    return sendSuccess(res, {
+      statusCode: 201,
       message: "Product created successfully",
       data: product,
     });
@@ -52,8 +56,7 @@ export class ProductController {
     const dto = updateProductSchema.parse(req.body);
     const product = await this.productService.updateProduct(id, dto);
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       message: "Product updated successfully",
       data: product,
     });
@@ -63,8 +66,7 @@ export class ProductController {
     const id = req.params.id as string;
     await this.productService.deleteProduct(id);
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       message: "Product deleted successfully",
       data: null,
     });

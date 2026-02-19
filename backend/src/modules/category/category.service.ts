@@ -5,11 +5,9 @@ import { CategoryResponseDto } from "./dto/category-response.dto";
 import { AppError } from "../../exceptions/app-error";
 
 export class CategoryService {
-  private categoryRepository: CategoryRepository;
-
-  constructor() {
-    this.categoryRepository = new CategoryRepository();
-  }
+  constructor(
+    private categoryRepository: CategoryRepository = new CategoryRepository()
+  ) {}
 
   async getAllCategories(): Promise<CategoryResponseDto[]> {
     const categories = await this.categoryRepository.findAll();
