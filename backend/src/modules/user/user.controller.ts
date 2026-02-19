@@ -1,42 +1,60 @@
 import { Request, Response } from "express";
 import { UserService } from "./user.service";
 import { UserRepository } from "./user.repository";
-
-const userService = new UserService(new UserRepository());
+import { asyncHandler } from "../../utils/async-handler";
+import { AuthRequest } from "../auth/auth.middleware";
+import { AppError } from "../../exceptions/app-error";
 
 export class UserController {
+  private userService: UserService;
 
-  
-  async create(req: Request, res: Response) {
-    try {
-      const user = await userService.createUser(req.body);
-      res.status(201).json(user);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
-    }
+  constructor() {
+    this.userService = new UserService(new UserRepository());
   }
 
-  async findAll(req: Request, res: Response) {
-    try {
-      const users = await userService.getUsers();
-      res.json(users);
-    } catch (err: any) {
-      res.status(500).json({ error: "Failed to fetch users" });
-    }
-  }
+  create = asyncHandler(async (req: Request, res: Response) => {
+    const user = await this.userService.createUser(req.body);
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data: user,
+    });
+  });
 
-  // Get a single user by ID
-  async findOne(req: Request, res: Response) {
-    // Ensure the ID is a string
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  findAll = asyncHandler(async (req: Request, res: Response) => {
+    const users = await this.userService.getUsers();
+    res.json({
+      success: true,
+      message: "Users fetched successfully",
+      data: users,
+    });
+  });
+
+  findOne = asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.id as string;
     if (!id) {
-      return res.status(400).json({ error: "User ID is required" });
+      throw new AppError("User ID is required", 400);
     }
-    try {
-      const user = await userService.getUser(id);
-      res.json(user);
-    } catch (err: any) {
-      res.status(404).json({ error: err.message });
+
+    const user = await this.userService.getUser(id);
+    res.json({
+      success: true,
+      message: "User fetched successfully",
+      data: user,
+    });
+  });
+
+  getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.sub;
+    if (!userId) {
+      throw new AppError("Not authenticated", 401);
     }
-  }
+
+    const user = await this.userService.getUser(userId);
+    res.json({
+      success: true,
+      message: "Profile fetched successfully",
+      data: user,
+    });
+  });
 }

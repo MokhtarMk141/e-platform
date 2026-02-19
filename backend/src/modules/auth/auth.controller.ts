@@ -2,17 +2,13 @@ import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { UserRepository } from "../user/user.repository";
 import { AuthRequest } from "./auth.middleware";
+import { asyncHandler } from "../../utils/async-handler";
 
 export class AuthController {
   private authService: AuthService;
 
   constructor() {
     this.authService = new AuthService(new UserRepository());
-    this.register = this.register.bind(this);
-    this.login = this.login.bind(this);
-    this.refresh = this.refresh.bind(this);
-    this.logout = this.logout.bind(this);
-    this.logoutAll = this.logoutAll.bind(this);
   }
 
   private setRefreshCookie(res: Response, token: string) {
@@ -25,7 +21,7 @@ export class AuthController {
     });
   }
 
-  async register(req: Request, res: Response) {
+  register = asyncHandler(async (req: Request, res: Response) => {
     const { user, accessToken, refreshToken } =
       await this.authService.register(req.body);
 
@@ -33,11 +29,12 @@ export class AuthController {
 
     res.status(201).json({
       success: true,
+      message: "User registered successfully",
       data: { user, accessToken },
     });
-  }
+  });
 
-  async login(req: Request, res: Response) {
+  login = asyncHandler(async (req: Request, res: Response) => {
     const { user, accessToken, refreshToken } =
       await this.authService.login(req.body);
 
@@ -45,16 +42,17 @@ export class AuthController {
 
     res.json({
       success: true,
+      message: "Login successful",
       data: { user, accessToken },
     });
-  }
+  });
 
-  async refresh(req: Request, res: Response) {
+  refresh = asyncHandler(async (req: Request, res: Response) => {
     const token = req.cookies?.refreshToken;
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "No refresh token provided",
+        error: "No refresh token provided",
       });
     }
 
@@ -66,25 +64,44 @@ export class AuthController {
 
     res.json({
       success: true,
+      message: "Token refreshed successfully",
       data: { accessToken },
     });
-  }
+  });
 
-  async logout(req: Request, res: Response) {
+  logout = asyncHandler(async (req: Request, res: Response) => {
     const token = req.cookies?.refreshToken;
     if (token) {
       await this.authService.logout(token);
     }
     res.clearCookie("refreshToken", { path: "/api/auth" });
     res.json({ success: true, message: "Logged out successfully" });
-  }
-  async logoutAll(req: AuthRequest, res: Response) {
+  });
+
+  logoutAll = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user?.sub;
     if (!userId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(401).json({ success: false, error: "Unauthorized" });
     }
     await this.authService.logoutAll(userId);
     res.clearCookie("refreshToken", { path: "/api/auth" });
     res.json({ success: true, message: "Logged out from all devices" });
-  }
+  });
+
+  forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+    await this.authService.forgotPassword(req.body.email);
+    res.json({
+      success: true,
+      message: "If an account exists with that email, a password reset link has been sent.",
+    });
+  });
+
+  resetPassword = asyncHandler(async (req: Request, res: Response) => {
+    const { token, password } = req.body;
+    await this.authService.resetPassword(token, password);
+    res.json({
+      success: true,
+      message: "Password has been reset successfully. Please login with your new password.",
+    });
+  });
 }

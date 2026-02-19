@@ -8,6 +8,7 @@ import { UserResponseDto } from "../user/dto/user-response.dto";
 import { AppError } from "../../exceptions/app-error";
 import { prisma } from "../../config/database";
 import { env } from "../../config/env";
+import { sendEmail } from "../../utils/send-email";
 
 export class AuthService {
   constructor(private userRepo: UserRepository) {}
@@ -22,7 +23,7 @@ export class AuthService {
   }
 
   /**
-   * Hash a refresh token with SHA-256 before storing in DB.
+   * Hash a token with SHA-256 before storing in DB.
    * The raw token is only ever sent to the client — we never store it.
    */
   private hashToken(token: string): string {
@@ -146,5 +147,76 @@ export class AuthService {
 
   async logoutAll(userId: string) {
     await this.revokeAllUserTokens(userId);
+  }
+
+  // ─── Forgot / Reset Password ───────────────────────────────────
+
+  async forgotPassword(email: string) {
+    const user = await this.userRepo.findByEmail(email);
+
+    // Always return success to prevent email enumeration
+    if (!user) return;
+
+    // Delete any existing reset tokens for this user
+    await prisma.passwordResetToken.deleteMany({
+      where: { userId: user.id },
+    });
+
+    // Generate a random token (raw) and store its hash
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = this.hashToken(rawToken);
+
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour expiry
+
+    await prisma.passwordResetToken.create({
+      data: {
+        token: hashedToken,
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    // Build reset URL (frontend will handle this route)
+    const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `
+        <h2>Password Reset</h2>
+        <p>Hi ${user.name},</p>
+        <p>You requested a password reset. Click the link below to set a new password:</p>
+        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>This link expires in <strong>1 hour</strong>.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    });
+  }
+
+  async resetPassword(rawToken: string, newPassword: string) {
+    const hashedToken = this.hashToken(rawToken);
+
+    const stored = await prisma.passwordResetToken.findUnique({
+      where: { token: hashedToken },
+    });
+
+    if (!stored) throw new AppError("Invalid or expired reset token", 400);
+
+    if (new Date() > stored.expiresAt) {
+      // Clean up expired token
+      await prisma.passwordResetToken.delete({ where: { id: stored.id } });
+      throw new AppError("Reset token has expired, please request a new one", 400);
+    }
+
+    // Update password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userRepo.updatePassword(stored.userId, hashedPassword);
+
+    // Delete the used token (single-use)
+    await prisma.passwordResetToken.delete({ where: { id: stored.id } });
+
+    // Revoke all refresh tokens (force re-login on all devices)
+    await this.revokeAllUserTokens(stored.userId);
   }
 }

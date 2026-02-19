@@ -18,7 +18,8 @@ model User {
   cart         Cart?
   chatMessages ChatMessage[]
   orders       Order[]
-  refreshTokens RefreshToken[]
+  refreshTokens      RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model RefreshToken {
@@ -27,6 +28,15 @@ model RefreshToken {
   userId    String
   expiresAt DateTime
   revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 }
