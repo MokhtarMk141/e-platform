@@ -7,11 +7,6 @@ export class UserRepository {
   async create(dto: CreateUserDtoType): Promise<User> {
     return prisma.user.create({ data: dto });
   }
-
-  async create(dto: CreateUserDtoType): Promise<User> {
-    return prisma.user.create({ data: dto });
-  }
-
   async findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } });
   }
