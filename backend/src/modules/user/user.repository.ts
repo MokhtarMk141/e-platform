@@ -4,10 +4,10 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { prisma } from "../../config/database";
 
 export class UserRepository {
-  async create(dto: CreateUserDto): Promise<User> {
-    return prisma.user.create({ data: dto });
-  }
-
+    async create(dto: CreateUserDto): Promise<User> {
+      return prisma.user.create({ data: dto });
+    }
+  
   async findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } });
   }

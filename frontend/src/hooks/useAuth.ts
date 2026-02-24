@@ -92,5 +92,4 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 }));
 
-// Convenience hook so you can keep using `useAuth()`
 export const useAuth = () => useAuthStore;

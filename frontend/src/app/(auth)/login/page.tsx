@@ -81,13 +81,7 @@
           <div className="w-2/5 bg-black flex items-center justify-center p-12 ml-auto relative z-20">
             <div style={{position:'relative', right:'100px'}} className="w-full max-w-md space-y-6">
               
-              {/* Title */}
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-semibold text-white">
-                  Build Your Dream PC
-                </h2>
-              </div>
-
+  
               {/* Centered Login Form */}
               <div className="w-full max-w-sm mx-auto">
                 <div className="w-full space-y-6">
