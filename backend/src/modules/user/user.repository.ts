@@ -4,7 +4,7 @@ import { UpdateUserDto, UpdateUserDtoType } from "./dto/update-user.dto";
 import { prisma } from "../../config/database";
 
 export class UserRepository {
-  async create(dto: CreateUserDto): Promise<User> {
+  async create(dto: CreateUserDtoType): Promise<User> {
     return prisma.user.create({ data: dto });
   }
 
