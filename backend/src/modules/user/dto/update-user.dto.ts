@@ -1,6 +1,8 @@
-export interface UpdateUserDto {
-  name?: string;
-  email?: string;
-}
-//The ? in TypeScript means “optional”. It tells
-//  TypeScript that the property may or may not be present when you create an object of that type.
+import { z } from "zod";
+
+export const UpdateUserDto = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  email: z.string().email("Invalid email").optional(),
+});
+
+export type UpdateUserDtoType = z.infer<typeof UpdateUserDto>;

@@ -6,7 +6,7 @@ import { AuthRequest } from "../auth/auth.middleware";
 import { AppError } from "../../exceptions/app-error";
 import { sendSuccess } from "../../utils/api-response";
 import { getAuthenticatedUserId } from "../../utils/auth-utils";
-import { CreateUserDto } from "./dto/create-user.dto";
+import { CreateUserDto, CreateUserDtoType } from "./dto/create-user.dto";
 
 export class UserController {
   private userService: UserService;
@@ -16,7 +16,7 @@ export class UserController {
   }
 
   create = asyncHandler(async (req: Request, res: Response) => {
-    const payload = req.body as CreateUserDto;
+    const payload = req.body as CreateUserDtoType;
     const user = await this.userService.createUser(payload);
 
     return sendSuccess(res, {

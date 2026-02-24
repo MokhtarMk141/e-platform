@@ -1,13 +1,17 @@
 import { User } from "@prisma/client";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import { CreateUserDto, CreateUserDtoType } from "./dto/create-user.dto";
+import { UpdateUserDto, UpdateUserDtoType } from "./dto/update-user.dto";
 import { prisma } from "../../config/database";
 
 export class UserRepository {
-    async create(dto: CreateUserDto): Promise<User> {
-      return prisma.user.create({ data: dto });
-    }
-  
+  async create(dto: CreateUserDto): Promise<User> {
+    return prisma.user.create({ data: dto });
+  }
+
+  async create(dto: CreateUserDtoType): Promise<User> {
+    return prisma.user.create({ data: dto });
+  }
+
   async findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } });
   }
@@ -20,7 +24,7 @@ export class UserRepository {
     return prisma.user.findMany();
   }
 
-  async update(id: string, dto: UpdateUserDto): Promise<User | null> {
+  async update(id: string, dto: UpdateUserDtoType): Promise<User | null> {
     return prisma.user.update({ where: { id }, data: dto }).catch(() => null);
   }
 

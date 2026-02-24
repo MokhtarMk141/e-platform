@@ -1,5 +1,5 @@
 import { UserRepository } from "./user.repository";
-import { CreateUserDto } from "./dto/create-user.dto";
+import { CreateUserDto, CreateUserDtoType } from "./dto/create-user.dto";
 import { UserResponseDto } from "./dto/user-response.dto";
 import bcrypt from "bcryptjs";
 import { AppError } from "../../exceptions/app-error";
@@ -19,7 +19,7 @@ export class UserService {
     };
   }
 
-  async createUser(dto: CreateUserDto): Promise<UserResponseDto> {
+  async createUser(dto: CreateUserDtoType): Promise<UserResponseDto> {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) throw new AppError("Email already exists", 400);
 
