@@ -184,6 +184,179 @@ export default function Login() {
           </div>
         </div>
       </div>
+        <div className="absolute bottom-0 left-0 right-0 z-30 overflow-hidden bg-gradient-to-t from-black/50 to-transparent py-6">
+          <div className="flex items-center gap-12 animate-scroll">
+            {/* First set of logos */}
+            <div className="flex items-center gap-12 shrink-0">
+              {/* Intel */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg"
+                  alt="Intel"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* NVIDIA */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/NVIDIA_logo_white.svg/3840px-NVIDIA_logo_white.svg.png"
+                  alt="NVIDIA"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* AMD */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://media.johnlewiscontent.com/i/JohnLewis/amd_brl_white?fmt=auto&$alpha$"
+                  alt="AMD"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* Corsair */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://www.pngplay.com/wp-content/uploads/13/Corsair-PNG-HD-Quality.png"
+                  alt="Corsair"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* Razer */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://www.svgrepo.com/show/306644/razer.svg"
+                  alt="Razer"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* ASUS */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://www.freepnglogos.com/uploads/logo-asus-png/asus-white-logo-png-22.png"
+                  alt="ASUS"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* MSI */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://storage-asset.msi.com/event/spb/2017/InfiniteA_H5page/images/logo.png"
+                  alt="MSI"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* Logitech */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://companieslogo.com/img/orig/LOGI_BIG.D-3f288e21.png?t=1720244492"
+                  alt="Logitech"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+            </div>
+
+            {/* Duplicate set for seamless loop */}
+            <div className="flex items-center gap-12 shrink-0">
+              {/* Intel */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg"
+                  alt="Intel"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* NVIDIA */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/NVIDIA_logo_white.svg/3840px-NVIDIA_logo_white.svg.png"
+                  alt="NVIDIA"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* AMD */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://media.johnlewiscontent.com/i/JohnLewis/amd_brl_white?fmt=auto&$alpha$"
+                  alt="AMD"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* Corsair */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://www.pngplay.com/wp-content/uploads/13/Corsair-PNG-HD-Quality.png"
+                  alt="Corsair"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* Razer */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://www.svgrepo.com/show/306644/razer.svg"
+                  alt="Razer"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* ASUS */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://www.freepnglogos.com/uploads/logo-asus-png/asus-white-logo-png-22.png"
+                  alt="ASUS"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* MSI */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://storage-asset.msi.com/event/spb/2017/InfiniteA_H5page/images/logo.png"
+                  alt="MSI"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+
+              {/* Logitech */}
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://companieslogo.com/img/orig/LOGI_BIG.D-3f288e21.png?t=1720244492"
+                  alt="Logitech"
+                  className="h-6 opacity-80 brightness-0 invert"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Keyframe Animations */}
+        <style jsx>{`
+          @keyframes scroll {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
+
+          .animate-scroll {
+            animation: scroll 30s linear infinite;
+          }
+
+          .animate-scroll:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
     </div>
   )
 }
