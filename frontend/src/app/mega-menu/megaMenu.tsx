@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import logoimg from "../../../public/website_logo.png";
-const Icon = ({ d, size = 16 }) => (
+import ThemeToggle from "@/components/ThemeToggle";
+
+const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
     <path d={d} />
   </svg>
@@ -122,11 +124,13 @@ const menus = {
 
 const navLinks = ["Products", "Deals", "Build Guide", "Support"];
 
+type MenuKey = "Products" | "Deals" | "Build Guide";
+
 export default function MegaMenu() {
-  const [active, setActive] = useState(null);
+  const [active, setActive] = useState<MenuKey | null>(null);
 
   return (
-    <div style={{ background: "#000", fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}>
+    <div style={{ background: "var(--background)", fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", borderBottom: "1px solid var(--border)" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 
@@ -141,9 +145,9 @@ export default function MegaMenu() {
         }
 
         .nav-btn {
-          color: #555;
+          color: var(--text-muted);
           font-size: 13.5px;
-          font-weight: 500;
+          font-weight: 600;
           padding: 6px 14px;
           background: none;
           border: none;
@@ -153,12 +157,12 @@ export default function MegaMenu() {
           align-items: center;
           gap: 5px;
           font-family: 'Plus Jakarta Sans', sans-serif;
-          transition: color 0.15s, border-color 0.15s;
+          transition: all 0.2s;
           height: 56px;
           letter-spacing: -0.01em;
         }
-        .nav-btn:hover { color: #e0e0e0; }
-        .nav-btn.open  { color: #ff2800; border-bottom-color: #ff2800; }
+        .nav-btn:hover { color: var(--foreground); }
+        .nav-btn.open  { color: var(--brand-red); border-bottom-color: var(--brand-red); }
 
         .caret { transition: transform 0.2s; display: inline-block; opacity: 0.5; }
         .caret.open { transform: rotate(180deg); opacity: 1; }
@@ -167,189 +171,204 @@ export default function MegaMenu() {
           display: flex;
           align-items: flex-start;
           gap: 11px;
-          padding: 8px 10px;
-          border-radius: 8px;
+          padding: 10px;
+          border-radius: 12px;
           text-decoration: none;
-          transition: background 0.12s;
+          transition: all 0.2s;
           cursor: pointer;
         }
-        .menu-item:hover { background: rgba(255,40,0,0.06); }
+        .menu-item:hover { background: var(--surface-hover); }
 
         .item-icon {
           width: 32px;
           height: 32px;
-          border-radius: 7px;
-          background: #141414;
-          border: 1px solid #1e1e1e;
+          border-radius: 8px;
+          background: var(--surface);
+          border: 1px solid var(--border);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #555;
+          color: var(--text-muted);
           flex-shrink: 0;
           margin-top: 1px;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
+          transition: all 0.2s;
         }
         .menu-item:hover .item-icon {
-          border-color: #ff2800;
-          color: #ff2800;
-          background: rgba(255,40,0,0.08);
+          border-color: var(--brand-red);
+          color: var(--brand-red);
+          background: var(--background);
+          box-shadow: 0 4px 12px rgba(255,40,0,0.1);
         }
 
         .item-label {
-          font-size: 13px;
-          font-weight: 600;
-          color: #c8c8c8;
+          font-size: 13.5px;
+          font-weight: 700;
+          color: var(--foreground);
           line-height: 1.3;
           font-family: 'Plus Jakarta Sans', sans-serif;
           transition: color 0.12s;
           letter-spacing: -0.01em;
         }
-        .menu-item:hover .item-label { color: #fff; }
+        .menu-item:hover .item-label { color: var(--brand-red); }
 
         .item-desc {
           font-size: 11.5px;
-          color: #444;
+          color: var(--text-dim);
           line-height: 1.45;
-          margin-top: 1px;
+          margin-top: 2px;
           font-family: 'DM Sans', sans-serif;
           font-weight: 400;
         }
 
         .section-title {
           font-size: 10.5px;
-          font-weight: 600;
-          color: #2e2e2e;
+          font-weight: 700;
+          color: var(--text-dim);
           letter-spacing: 0.08em;
           text-transform: uppercase;
           margin-bottom: 8px;
           font-family: 'DM Sans', sans-serif;
           padding-bottom: 8px;
-          border-bottom: 1px solid #161616;
+          border-bottom: 1px solid var(--border);
         }
 
         .featured-cta {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 11px 16px;
+          padding: 12px 16px;
           font-size: 12.5px;
-          font-weight: 700;
+          font-weight: 800;
           color: #fff;
           text-decoration: none;
           font-family: 'Plus Jakarta Sans', sans-serif;
-          background: #ff2800;
-          transition: background 0.15s;
+          background: var(--brand-red);
+          transition: all 0.2s;
           cursor: pointer;
           letter-spacing: -0.01em;
+          box-shadow: 0 4px 14px rgba(255,40,0,0.25);
+          border-radius: 8px;
         }
-        .featured-cta:hover { background: #cc2200; }
+        .featured-cta:hover { 
+          background: var(--brand-red-hover); 
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(255,40,0,0.3);
+        }
 
         .bottom-link {
-          font-size: 12px;
-          color: #363636;
+          font-size: 12.5px;
+          color: var(--text-muted);
           text-decoration: none;
           font-family: 'DM Sans', sans-serif;
-          font-weight: 500;
+          font-weight: 600;
           transition: color 0.12s;
         }
-        .bottom-link:hover { color: #888; }
+        .bottom-link:hover { color: var(--brand-red); }
 
         .see-all {
-          font-size: 12px;
-          font-weight: 700;
-          color: #ff2800;
+          font-size: 12.5px;
+          font-weight: 800;
+          color: var(--foreground);
           text-decoration: none;
           font-family: 'Plus Jakarta Sans', sans-serif;
-          transition: color 0.12s;
+          transition: all 0.2s;
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 6px;
           letter-spacing: -0.01em;
+          padding: 6px 12px;
+          background: var(--surface-hover);
+          border-radius: 6px;
         }
-        .see-all:hover { color: #cc2200; }
+        .see-all:hover { 
+          color: #fff; 
+          background: var(--foreground);
+        }
 
         .search-box {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: #0d0d0d;
-          border: 1px solid #1e1e1e;
-          border-radius: 8px;
+          background: var(--surface-hover);
+          border: 1px solid var(--border);
+          border-radius: 10px;
           padding: 7px 11px;
-          transition: border-color 0.15s;
+          transition: all 0.2s;
         }
-        .search-box:hover { border-color: #2a2a2a; }
-        .search-box:focus-within { border-color: #ff2800; }
+        .search-box:hover { border-color: var(--border-strong); background: var(--surface); }
+        .search-box:focus-within { border-color: var(--brand-red); background: var(--background); box-shadow: 0 0 0 4px rgba(255,40,0,0.05); }
 
         .search-input {
           background: none;
           border: none;
           outline: none;
           font-size: 13px;
-          color: #aaa;
-          width: 150px;
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 400;
+          color: var(--foreground);
+          width: 160px;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 500;
         }
-        .search-input::placeholder { color: #2e2e2e; }
+        .search-input::placeholder { color: var(--text-dim); }
 
         .kbd {
           font-size: 10px;
-          color: #2a2a2a;
-          border: 1px solid #1e1e1e;
+          color: var(--text-dim);
+          background: var(--background);
+          border: 1px solid var(--border);
           border-radius: 4px;
           padding: 1px 5px;
           font-family: 'DM Sans', sans-serif;
+          font-weight: 700;
         }
 
         .sign-in-btn {
           background: none;
           border: none;
-          color: #555;
-          font-size: 13.5px;
-          font-weight: 500;
+          color: var(--foreground);
+          font-size: 14px;
+          font-weight: 700;
           cursor: pointer;
-          padding: 7px 12px;
+          padding: 8px 16px;
           font-family: 'Plus Jakarta Sans', sans-serif;
-          transition: color 0.15s;
+          transition: all 0.2s;
           letter-spacing: -0.01em;
         }
-        .sign-in-btn:hover { color: #e0e0e0; }
+        .sign-in-btn:hover { color: var(--brand-red); }
 
         .start-btn {
-          background: #ff2800;
+          background: var(--foreground);
           border: none;
-          color: #fff;
-          font-size: 13px;
+          color: var(--background);
+          font-size: 13.5px;
           font-weight: 700;
-          padding: 8px 18px;
-          border-radius: 8px;
+          padding: 9px 20px;
+          border-radius: 10px;
           cursor: pointer;
           font-family: 'Plus Jakarta Sans', sans-serif;
           letter-spacing: -0.01em;
-          transition: background 0.15s, box-shadow 0.15s;
-          box-shadow: 0 0 0 0 rgba(255,40,0,0);
+          transition: all 0.2s;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .start-btn:hover {
-          background: #cc2200;
-          box-shadow: 0 0 18px rgba(255,40,0,0.3);
+          opacity: 0.9;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
       `}</style>
 
       {/* ── Navbar ── */}
       <nav
         style={{
-          background: "#000",
-          borderBottom: "1px solid #141414",
+          background: "var(--background)",
           position: "relative",
-          zIndex: 50,
+          zIndex: 100,
         }}
         onMouseLeave={() => setActive(null)}
       >
         {/* Slim red top line */}
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, height: 2,
-          background: "linear-gradient(90deg, #ff2800 0%, #880000 60%, transparent 100%)",
+          background: "linear-gradient(90deg, var(--brand-red) 0%, #ff8000 100%)",
         }} />
 
         <div style={{
@@ -358,31 +377,31 @@ export default function MegaMenu() {
           padding: "0 32px",
           display: "flex",
           alignItems: "center",
-          height: 56,
+          height: 64,
           gap: 0,
         }}>
           {/* Logo */}
-          <a href="#" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0, marginRight: 32 }}>
+          <a href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0, marginRight: 32 }}>
             <img
               src={logoimg.src}
               alt="Website logo"
-              style={{ maxHeight: 38, maxWidth: 150, objectFit: "contain" }}
+              style={{ maxHeight: 38, maxWidth: 150, objectFit: "contain", filter: "var(--foreground) === '#ffffff' ? 'invert(1)' : 'none'" }}
             />
           </a>
 
           {/* Slim divider */}
-          <div style={{ width: 1, height: 18, background: "#1a1a1a", marginRight: 20 }} />
+          <div style={{ width: 1, height: 24, background: "var(--border)", marginRight: 20 }} />
 
           {/* Nav links */}
           <div style={{ display: "flex", alignItems: "stretch", height: "100%" }}>
             {navLinks.map((link) => {
-              const has = !!menus[link];
+              const has = !!(menus as any)[link];
               const isOpen = active === link;
               return (
                 <button
                   key={link}
                   className={`nav-btn${isOpen ? " open" : ""}`}
-                  onMouseEnter={() => setActive(has ? link : null)}
+                  onMouseEnter={() => setActive(link as MenuKey)}
                 >
                   {link}
                   {has && (
@@ -392,7 +411,7 @@ export default function MegaMenu() {
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2.2"
+                      strokeWidth="2.5"
                       strokeLinecap="round"
                     >
                       <path d="M6 9l6 6 6-6"/>
@@ -404,25 +423,25 @@ export default function MegaMenu() {
           </div>
 
           {/* Right */}
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
             <div className="search-box">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ color: "var(--text-dim)" }}>
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
               </svg>
-              <input className="search-input" type="text" placeholder="Search components..." />
+              <input className="search-input" type="text" placeholder="Search setups..." />
               <span className="kbd">⌘K</span>
             </div>
 
-            <button className="sign-in-btn">Sign in</button>
+            <ThemeToggle />
 
-            <div style={{ width: 1, height: 18, background: "#1a1a1a" }} />
+            <button className="sign-in-btn">Login</button>
 
-            <button className="start-btn">Start Building</button>
+            <button className="start-btn">Start Build</button>
           </div>
         </div>
 
         {/* ── Dropdown ── */}
-        {active && menus[active] && (
+        {active && (menus as any)[active] && (
           <div
             className="dropdown"
             style={{
@@ -430,31 +449,25 @@ export default function MegaMenu() {
               top: "100%",
               left: 0,
               right: 0,
-              background: "#0a0a0a",
-              borderTop: "1px solid #1a1a1a",
-              borderBottom: "1px solid #141414",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.85)",
+              background: "var(--background)",
+              borderTop: "1px solid var(--border)",
+              borderBottom: "1px solid var(--border-strong)",
+              boxShadow: "0 30px 60px rgba(0,0,0,0.12), 0 10px 20px rgba(0,0,0,0.06)",
             }}
           >
-            {/* Very subtle red glow at top */}
-            <div style={{
-              position: "absolute", top: 0, left: 0, right: 0, height: 1,
-              background: "linear-gradient(90deg, #ff2800 0%, rgba(255,40,0,0.3) 40%, transparent 70%)",
-            }} />
-
-            <div style={{ maxWidth: 1400, margin: "0 auto", padding: "28px 32px", position: "relative" }}>
-              <div style={{ display: "flex", gap: 32 }}>
+            <div style={{ maxWidth: 1400, margin: "0 auto", padding: "32px", position: "relative" }}>
+              <div style={{ display: "flex", gap: 40 }}>
 
                 {/* Sections */}
-                <div style={{ display: "flex", gap: 16, flex: 1 }}>
-                  {menus[active].sections.map((section) => (
+                <div style={{ display: "flex", gap: 24, flex: 1 }}>
+                  {(menus as any)[active].sections.map((section: any) => (
                     <div key={section.title} style={{ flex: 1, minWidth: 0 }}>
                       <p className="section-title">{section.title}</p>
-                      <div>
-                        {section.items.map((item) => (
-                          <a key={item.label} href="#" className="menu-item">
+                      <div style={{ display: "grid", gridTemplateColumns: section.items.length > 4 ? "1fr 1fr" : "1fr", gap: "4px" }}>
+                        {section.items.map((item: any) => (
+                          <a key={item.label} href="/product-page" className="menu-item">
                             <div className="item-icon">
-                              <Icon d={icons[item.icon]} size={14} />
+                              <Icon d={(icons as any)[item.icon]} size={14} />
                             </div>
                             <div style={{ minWidth: 0 }}>
                               <p className="item-label">{item.label}</p>
@@ -468,112 +481,106 @@ export default function MegaMenu() {
                 </div>
 
                 {/* Featured card */}
-                <div style={{ width: 235, flexShrink: 0 }}>
+                <div style={{ width: 260, flexShrink: 0 }}>
                   <div style={{
-                    borderRadius: 12,
+                    borderRadius: 16,
                     overflow: "hidden",
-                    border: "1px solid #1a1a1a",
+                    border: "1px solid var(--border)",
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
+                    background: "var(--background)",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
                   }}>
                     {/* Card body */}
                     <div style={{
                       flex: 1,
-                      background: "linear-gradient(140deg, #140404 0%, #1f0303 50%, #0d0d0d 100%)",
-                      padding: "20px 18px",
+                      background: "linear-gradient(140deg, var(--background) 0%, var(--surface) 100%)",
+                      padding: "24px 20px",
                       position: "relative",
                       overflow: "hidden",
                     }}>
                       {/* Soft radial glow */}
                       <div style={{
                         position: "absolute", right: -40, top: -40,
-                        width: 180, height: 180,
+                        width: 200, height: 200,
                         borderRadius: "50%",
-                        background: "radial-gradient(circle, rgba(255,40,0,0.14) 0%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(255,40,0,0.1) 0%, transparent 70%)",
                         pointerEvents: "none",
-                      }} />
-                      {/* Dot grid */}
-                      <div style={{
-                        position: "absolute", inset: 0, pointerEvents: "none",
-                        backgroundImage: `radial-gradient(circle, rgba(255,40,0,0.12) 1px, transparent 1px)`,
-                        backgroundSize: "18px 18px",
-                        opacity: 0.5,
                       }} />
 
                       <span style={{
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 5,
-                        background: "rgba(255,40,0,0.15)",
-                        border: "1px solid rgba(255,40,0,0.25)",
-                        color: "#ff6040",
+                        background: "rgba(255,40,0,0.1)",
+                        border: "1px solid rgba(255,40,0,0.2)",
+                        color: "var(--brand-red)",
                         fontSize: 10,
-                        fontWeight: 700,
-                        letterSpacing: "0.06em",
-                        padding: "3px 9px",
+                        fontWeight: 800,
+                        letterSpacing: "0.05em",
+                        padding: "4px 10px",
                         borderRadius: 20,
-                        marginBottom: 14,
+                        marginBottom: 16,
                         fontFamily: "'Plus Jakarta Sans', sans-serif",
                         textTransform: "uppercase",
-                        position: "relative",
                       }}>
-                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#ff2800", display: "inline-block" }} />
-                        {menus[active].featured.badge}
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--brand-red)", display: "inline-block" }} />
+                        {(menus as any)[active].featured.badge}
                       </span>
 
                       <h3 style={{
-                        color: "#fff",
+                        color: "var(--foreground)",
                         fontWeight: 800,
-                        fontSize: 18,
-                        lineHeight: 1.2,
-                        margin: "0 0 10px",
+                        fontSize: 20,
+                        lineHeight: 1.25,
+                        margin: "0 0 12px",
                         fontFamily: "'Plus Jakarta Sans', sans-serif",
-                        letterSpacing: "-0.02em",
-                        position: "relative",
+                        letterSpacing: "-0.03em",
                       }}>
-                        {menus[active].featured.title}
+                        {(menus as any)[active].featured.title}
                       </h3>
 
                       <p style={{
-                        color: "#555",
-                        fontSize: 12,
+                        color: "var(--text-muted)",
+                        fontSize: 13,
                         lineHeight: 1.6,
                         margin: 0,
                         fontFamily: "'DM Sans', sans-serif",
-                        position: "relative",
                       }}>
-                        {menus[active].featured.desc}
+                        {(menus as any)[active].featured.desc}
                       </p>
                     </div>
 
-                    <a href="#" className="featured-cta" style={{ borderRadius: 0 }}>
-                      {menus[active].featured.cta}
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                    </a>
+                    <div style={{ padding: "0 20px 24px", background: "var(--background)" }}>
+                      <a href="#" className="featured-cta">
+                        {(menus as any)[active].featured.cta}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Bottom bar */}
               <div style={{
-                marginTop: 20,
-                paddingTop: 16,
-                borderTop: "1px solid #141414",
+                marginTop: 24,
+                paddingTop: 20,
+                borderTop: "1px solid var(--border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
               }}>
-                <a href="#" className="see-all">
+                <a href="/product-page" className="see-all">
                   See all products
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </a>
-                <div style={{ display: "flex", gap: 24 }}>
-                  {["PC Builder", "Compatibility Check", "Price Tracker", "Expert Reviews"].map((l) => (
+                <div style={{ display: "flex", gap: 28 }}>
+                  {["PC Builder", "Compatibility", "Benchmarks", "Expert Reviews"].map((l) => (
                     <a key={l} href="#" className="bottom-link">{l}</a>
                   ))}
                 </div>

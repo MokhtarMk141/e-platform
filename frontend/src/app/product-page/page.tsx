@@ -17,26 +17,27 @@ function FilterSection({ label, open, onToggle, children }: {
 }) {
   return (
     <div style={{
-      background: '#0f0f0f', border: '1px solid #1a1a1a',
-      borderRadius: 8, marginBottom: 6, overflow: 'hidden',
+      background: 'var(--background)', border: '1px solid var(--border)',
+      borderRadius: 12, marginBottom: 8, overflow: 'hidden',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
     }}>
       <button onClick={onToggle} style={{
         width: '100%', display: 'flex', justifyContent: 'space-between',
-        alignItems: 'center', padding: '11px 14px', background: 'none',
+        alignItems: 'center', padding: '14px 16px', background: 'none',
         border: 'none', cursor: 'pointer',
         fontFamily: "'Plus Jakarta Sans', sans-serif",
-        fontSize: 11, fontWeight: 600, color: '#555', letterSpacing: '0.04em',
+        fontSize: 12, fontWeight: 700, color: 'var(--foreground)', letterSpacing: '-0.01em',
       }}>
         {label}
         <span style={{
-          fontSize: 13, color: '#2a2a2a', lineHeight: 1, display: 'inline-block',
+          fontSize: 14, color: 'var(--text-dim)', lineHeight: 1, display: 'inline-block',
           transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s',
         }}>▾</span>
       </button>
       {open && (
         <div style={{
-          padding: '4px 14px 12px', display: 'flex',
-          flexDirection: 'column', gap: 8, borderTop: '1px solid #151515',
+          padding: '4px 16px 16px', display: 'flex',
+          flexDirection: 'column', gap: 10, borderTop: '1px solid var(--border)',
         }}>
           {children}
         </div>
@@ -51,22 +52,22 @@ function FilterCheckbox({ label, checked, onChange }: {
   return (
     <label onClick={onChange} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
       <div style={{
-        width: 14, height: 14, flexShrink: 0, borderRadius: 3,
-        border: `1.5px solid ${checked ? '#ff2800' : '#2a2a2a'}`,
-        background: checked ? '#ff2800' : 'transparent',
+        width: 16, height: 16, flexShrink: 0, borderRadius: 5,
+        border: `1.5px solid ${checked ? 'var(--brand-red)' : 'var(--border-strong)'}`,
+        background: checked ? 'var(--brand-red)' : 'transparent',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'all 0.15s',
+        transition: 'all 0.2s',
       }}>
         {checked && (
-          <svg width="8" height="6" viewBox="0 0 8 6" fill="white">
-            <path d="M1 3l2 2 4-4" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+            <path d="M2 4L4 6L8 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         )}
       </div>
       <span style={{
-        fontSize: 12, color: checked ? '#e0e0e0' : '#555',
-        fontWeight: checked ? 600 : 400,
-        fontFamily: "'DM Sans', sans-serif", transition: 'color 0.15s',
+        fontSize: 13, color: checked ? 'var(--foreground)' : 'var(--text-muted)',
+        fontWeight: checked ? 700 : 500,
+        fontFamily: "'Plus Jakarta Sans', sans-serif", transition: 'color 0.2s',
       }}>
         {label}
       </span>
@@ -80,16 +81,17 @@ function PagBtn({ children, onClick, disabled, active }: {
 }) {
   return (
     <button onClick={onClick} disabled={disabled} style={{
-      minWidth: 34, height: 34, padding: '0 6px',
-      background: active ? '#ff2800' : 'transparent',
-      border: `1px solid ${active ? '#ff2800' : '#1e1e1e'}`,
-      borderRadius: 6,
-      color: active ? '#fff' : disabled ? '#222' : '#666',
-      fontSize: 13, fontWeight: active ? 700 : 400,
+      minWidth: 40, height: 40, padding: '0 8px',
+      background: active ? 'var(--foreground)' : 'var(--background)',
+      border: `1px solid ${active ? 'var(--foreground)' : 'var(--border-strong)'}`,
+      borderRadius: 10,
+      color: active ? 'var(--background)' : disabled ? 'var(--text-dim)' : 'var(--foreground)',
+      fontSize: 14, fontWeight: active ? 700 : 600,
       cursor: disabled ? 'not-allowed' : 'pointer',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      transition: 'all 0.15s',
+      transition: 'all 0.2s',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: active ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
     }}>
       {children}
     </button>
@@ -106,44 +108,48 @@ function GridCard({ product, wished, onWish, delay }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#0d0d0d',
-        border: `1px solid ${hovered ? '#ff2800' : '#1a1a1a'}`,
-        borderRadius: 10, overflow: 'hidden',
+        background: 'var(--background)',
+        border: `1px solid ${hovered ? 'var(--brand-red)' : 'var(--border)'}`,
+        borderRadius: 20, overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
-        animation: `fadeUp 0.4s ease ${delay * 45}ms both`,
-        transition: 'border-color 0.2s, box-shadow 0.2s',
+        animation: `fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay * 50}ms both`,
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         boxShadow: hovered
-          ? '0 0 24px rgba(255,40,0,0.09), 0 8px 32px rgba(0,0,0,0.4)'
-          : '0 2px 8px rgba(0,0,0,0.3)',
+          ? '0 20px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(255,40,0,0.08)'
+          : '0 4px 12px rgba(0,0,0,0.04)',
         cursor: 'pointer', position: 'relative',
+        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
       }}
     >
-      {/* Image */}
+      {/* Image Container */}
       <div style={{
-        position: 'relative', height: 300,
-        background: 'linear-gradient(135deg, #111 0%, #0a0a0a 100%)',
+        position: 'relative', height: 320,
+        background: 'var(--surface)',
         overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {product.imageUrl ? (
           <img
             src={product.imageUrl} alt={product.name}
             style={{
-              width: '80%', height: '80%', objectFit: 'cover',
-              transform: hovered ? 'scale(1.04)' : 'scale(1)',
-              transition: 'transform 0.4s ease',
+              width: '85%', height: '85%', objectFit: 'contain',
+              transform: hovered ? 'scale(1.05)' : 'scale(1)',
+              transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+              filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.1))',
             }}
           />
         ) : (
-          <div style={{ fontSize: 48, opacity: 0.05, color: '#fff' }}>◈</div>
+          <div style={{ fontSize: 48, opacity: 0.1, color: 'var(--foreground)' }}>◈</div>
         )}
 
         {product.category && (
           <span style={{
-            position: 'absolute', top: 12, left: 12,
-            background: 'rgba(255,40,0,0.9)', backdropFilter: 'blur(4px)',
-            color: '#fff', fontSize: 10, fontWeight: 700,
-            letterSpacing: '0.05em', padding: '3px 9px', borderRadius: 20,
+            position: 'absolute', top: 16, left: 16,
+            background: 'var(--background)', backdropFilter: 'blur(8px)',
+            color: 'var(--foreground)', fontSize: 11, fontWeight: 800,
+            letterSpacing: '0.02em', padding: '5px 12px', borderRadius: 30,
             fontFamily: "'Plus Jakarta Sans', sans-serif",
+            border: '1px solid var(--border)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           }}>
             {product.category.name}
           </span>
@@ -152,55 +158,60 @@ function GridCard({ product, wished, onWish, delay }: {
         <button
           onClick={e => { e.stopPropagation(); onWish() }}
           style={{
-            position: 'absolute', bottom: 10, right: 10,
-            width: 30, height: 30, borderRadius: 6,
-            background: wished ? '#ff2800' : 'rgba(0,0,0,0.6)',
-            border: `1px solid ${wished ? '#ff2800' : '#2a2a2a'}`,
+            position: 'absolute', top: 16, right: 16,
+            width: 36, height: 36, borderRadius: 12,
+            background: wished ? 'var(--brand-red)' : 'var(--background)',
+            border: `1px solid ${wished ? 'var(--brand-red)' : 'var(--border)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', transition: 'all 0.15s', backdropFilter: 'blur(4px)',
+            cursor: 'pointer', transition: 'all 0.2s', backdropFilter: 'blur(8px)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
           }}
         >
-          <svg width="12" height="12" fill={wished ? '#fff' : 'none'} stroke={wished ? '#fff' : '#666'} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          <svg width="16" height="16" fill={wished ? '#fff' : 'none'} stroke={wished ? '#fff' : 'var(--foreground)'} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
               d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"/>
           </svg>
         </button>
 
         {product.stock === 0 && (
           <div style={{
-            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)',
+            position: 'absolute', inset: 0, background: 'rgba(var(--background-rgb), 0.7)',
+            backdropFilter: 'blur(2px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <span style={{
-              fontSize: 11, fontWeight: 600, color: '#444',
+              fontSize: 12, fontWeight: 800, color: 'var(--text-muted)',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              border: '1px solid #2a2a2a', padding: '5px 14px', borderRadius: 20,
+              border: '1px solid var(--border-strong)', padding: '8px 20px', borderRadius: 40,
+              background: 'var(--background)',
             }}>Out of Stock</span>
           </div>
         )}
       </div>
 
       {/* Info */}
-      <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <div style={{
-          fontSize: 10, color: '#2e2e2e',
-          fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-          letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 5,
-        }}>
-          {product.sku}
-        </div>
+      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1, gap: 10 }}>
+        <div>
+          <div style={{
+            fontSize: 11, color: 'var(--text-dim)',
+            fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+            letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6,
+          }}>
+            {product.sku}
+          </div>
 
-        <p style={{
-          margin: '0 0 6px', fontSize: 14, fontWeight: 700,
-          color: '#d0d0d0', lineHeight: 1.3,
-          fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.01em',
-        }}>
-          {product.name}
-        </p>
+          <p style={{
+            margin: 0, fontSize: 16, fontWeight: 800,
+            color: 'var(--foreground)', lineHeight: 1.4,
+            fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.02em',
+          }}>
+            {product.name}
+          </p>
+        </div>
 
         {product.description && (
           <p style={{
-            margin: '0 0 12px', fontSize: 12, color: '#444', lineHeight: 1.6,
+            margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6,
             fontFamily: "'DM Sans', sans-serif",
             display: '-webkit-box', WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -209,29 +220,28 @@ function GridCard({ product, wished, onWish, delay }: {
           </p>
         )}
 
-        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10 }}>
           <span style={{
-            fontSize: 20, fontWeight: 800, color: '#ff2800',
-            fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.03em',
+            fontSize: 22, fontWeight: 900, color: 'var(--foreground)',
+            fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
           }}>
-            ${product.price.toFixed(2)}
+            ${product.price ? product.price.toFixed(2) : "0.00"}
           </span>
           <button
             disabled={product.stock === 0}
             style={{
-              background: product.stock === 0 ? 'transparent' : '#ff2800',
-              color: product.stock === 0 ? '#333' : '#fff',
-              border: product.stock === 0 ? '1px solid #1e1e1e' : 'none',
-              padding: '7px 16px', borderRadius: 7,
-              fontSize: 12, fontWeight: 700,
+              background: product.stock === 0 ? 'transparent' : 'var(--brand-red)',
+              color: product.stock === 0 ? 'var(--text-dim)' : '#fff',
+              border: product.stock === 0 ? '1px solid var(--border)' : 'none',
+              padding: '10px 20px', borderRadius: 12,
+              fontSize: 13, fontWeight: 800,
               cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              letterSpacing: '-0.01em', transition: 'all 0.15s',
+              letterSpacing: '-0.01em', transition: 'all 0.2s',
+              boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(255,40,0,0.2)',
             }}
-            onMouseEnter={e => { if (product.stock > 0) (e.currentTarget as HTMLButtonElement).style.background = '#cc2200' }}
-            onMouseLeave={e => { if (product.stock > 0) (e.currentTarget as HTMLButtonElement).style.background = '#ff2800' }}
           >
-            {product.stock === 0 ? 'Unavailable' : 'View →'}
+            {product.stock === 0 ? 'Sold Out' : 'View Build →'}
           </button>
         </div>
       </div>
@@ -249,88 +259,89 @@ function ListCard({ product, wished, onWish, delay }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#0d0d0d',
-        border: `1px solid ${hovered ? '#ff2800' : '#1a1a1a'}`,
-        borderRadius: 10, overflow: 'hidden', display: 'flex',
-        animation: `fadeUp 0.35s ease ${delay * 30}ms both`,
-        transition: 'border-color 0.2s, box-shadow 0.2s',
-        boxShadow: hovered ? '0 0 20px rgba(255,40,0,0.07)' : 'none',
+        background: 'var(--background)',
+        border: `1px solid ${hovered ? 'var(--brand-red)' : 'var(--border)'}`,
+        borderRadius: 20, overflow: 'hidden', display: 'flex',
+        animation: `fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${delay * 40}ms both`,
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        boxShadow: hovered ? '0 12px 30px rgba(0,0,0,0.08)' : '0 4px 12px rgba(0,0,0,0.02)',
+        transform: hovered ? 'translateX(4px)' : 'translateX(0)',
       }}
     >
       <div style={{
-        width: 150, flexShrink: 0,
-        background: 'linear-gradient(135deg, #111 0%, #0a0a0a 100%)',
+        width: 180, flexShrink: 0,
+        background: 'var(--surface)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
       }}>
         {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.name} style={{ width: '80%', height: '80%', objectFit: 'cover' }} />
-          : <div style={{ fontSize: 36, opacity: 0.05, color: '#fff' }}>◈</div>
+          ? <img src={product.imageUrl} alt={product.name} style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
+          : <div style={{ fontSize: 36, opacity: 0.1, color: 'var(--foreground)' }}>◈</div>
         }
       </div>
 
       <div style={{
-        padding: '16px 20px', flex: 1,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20,
+        padding: '20px 28px', flex: 1,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24,
       }}>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{
-            fontSize: 10, color: '#2e2e2e',
-            fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-            letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4,
+            fontSize: 10, color: 'var(--text-dim)',
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800,
+            letterSpacing: '0.1em', textTransform: 'uppercase',
           }}>
             {product.sku}{product.category && ` · ${product.category.name}`}
           </div>
           <p style={{
-            margin: '0 0 6px', fontSize: 15, fontWeight: 700,
+            margin: 0, fontSize: 18, fontWeight: 800,
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            color: '#d0d0d0', letterSpacing: '-0.02em',
+            color: 'var(--foreground)', letterSpacing: '-0.02em',
           }}>
             {product.name}
           </p>
-          <p style={{ margin: 0, fontSize: 12, color: '#444', lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
             {product.description}
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, flexShrink: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 16, flexShrink: 0 }}>
           <span style={{
-            fontSize: 22, fontWeight: 800, color: '#ff2800',
-            fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.03em',
+            fontSize: 24, fontWeight: 900, color: 'var(--brand-red)',
+            fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
           }}>
-            ${product.price.toFixed(2)}
+            ${product.price ? product.price.toFixed(2) : "0.00"}
           </span>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={onWish}
               style={{
-                width: 34, height: 34, borderRadius: 7,
-                border: `1px solid ${wished ? '#ff2800' : '#1e1e1e'}`,
-                background: wished ? '#ff2800' : 'transparent',
+                width: 42, height: 42, borderRadius: 12,
+                border: `1px solid ${wished ? 'var(--brand-red)' : 'var(--border)'}`,
+                background: wished ? 'var(--brand-red)' : 'var(--background)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', transition: 'all 0.15s',
+                cursor: 'pointer', transition: 'all 0.2s',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
               }}
             >
-              <svg width="13" height="13" fill={wished ? '#fff' : 'none'} stroke={wished ? '#fff' : '#555'} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              <svg width="18" height="18" fill={wished ? '#fff' : 'none'} stroke={wished ? '#fff' : 'var(--foreground)'} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
                   d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"/>
               </svg>
             </button>
             <button
               disabled={product.stock === 0}
               style={{
-                background: product.stock === 0 ? 'transparent' : '#ff2800',
-                color: product.stock === 0 ? '#333' : '#fff',
-                border: product.stock === 0 ? '1px solid #1e1e1e' : 'none',
-                padding: '0 18px', height: 34, borderRadius: 7,
-                fontSize: 12, fontWeight: 700,
+                background: product.stock === 0 ? 'transparent' : 'var(--foreground)',
+                color: product.stock === 0 ? 'var(--text-dim)' : 'var(--background)',
+                border: product.stock === 0 ? '1px solid var(--border)' : 'none',
+                padding: '0 24px', height: 42, borderRadius: 12,
+                fontSize: 14, fontWeight: 800,
                 cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                letterSpacing: '-0.01em', transition: 'background 0.15s',
+                letterSpacing: '-0.01em', transition: 'all 0.2s',
+                boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
               }}
-              onMouseEnter={e => { if (product.stock > 0) (e.currentTarget as HTMLButtonElement).style.background = '#cc2200' }}
-              onMouseLeave={e => { if (product.stock > 0) (e.currentTarget as HTMLButtonElement).style.background = '#ff2800' }}
             >
-              {product.stock === 0 ? 'Unavailable' : 'View →'}
+              {product.stock === 0 ? 'Sold Out' : 'See Details'}
             </button>
           </div>
         </div>
@@ -339,9 +350,6 @@ function ListCard({ product, wished, onWish, delay }: {
   )
 }
 
-/* ─────────────────────────────────────────────
-   MAIN PAGE
-───────────────────────────────────────────── */
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined)
   const [sortIndex, setSortIndex]               = useState(0)
@@ -354,18 +362,14 @@ export default function ProductsPage() {
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [openSections, setOpenSections]         = useState({ brand: true, price: true, features: true })
 
-  /* ── Real data hooks ── */
   const { categories } = useCategories()
-
   const { products, total, loading, error, refetch } = useProducts({
     page:       currentPage,
     categoryId: selectedCategory,
-    // extend with sort / brand / price / feature filters when your API supports them
   })
 
-  const totalPages = Math.ceil(total / 20) // matches your default limit of 20
+  const totalPages = Math.ceil(total / 20)
 
-  /* ── Helpers ── */
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
 
@@ -382,115 +386,109 @@ export default function ProductsPage() {
 
   const categoryName = selectedCategory
     ? categories.find(c => c.id === selectedCategory)?.name?.toUpperCase() ?? 'Products'
-    : 'All Products'
+    : 'Store Front'
 
   return (
     <div style={{
       fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif",
-      background: '#090909',
+      background: 'var(--background)',
       minHeight: '100vh',
-      color: '#e0e0e0',
+      color: 'var(--foreground)',
     }}>
       <style>{`
         ${FONTS}
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(14px); }
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pulseGlow {
-          0%, 100% { opacity: 0.7; transform: translateY(-50%) scale(1); }
-          50%       { opacity: 1;  transform: translateY(-50%) scale(1.05); }
+        @keyframes subtlePulse {
+          0%, 100% { transform: scale(1); opacity: 0.1; }
+          50%       { transform: scale(1.05); opacity: 0.15; }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
+        ::selection { background: var(--brand-red); color: #fff; }
       `}</style>
 
       <MegaMenu />
 
       {/* ── Hero Banner ── */}
       <div style={{
-        position: 'relative', height: 280, overflow: 'hidden',
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #180404 40%, #0d0d0d 100%)',
-        borderBottom: '1px solid #1a1a1a',
+        position: 'relative', height: 320, overflow: 'hidden',
+        background: 'linear-gradient(135deg, var(--background) 0%, var(--surface) 100%)',
+        borderBottom: '1px solid var(--border)',
       }}>
-        {/* Dot-grid texture */}
+        {/* Soft texture */}
         <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `radial-gradient(circle, rgba(255,40,0,0.08) 1px, transparent 1px)`,
-          backgroundSize: '28px 28px',
+          position: 'absolute', inset: 0, opacity: 0.1,
+          backgroundImage: `radial-gradient(var(--foreground) 1.2px, transparent 1.2px)`,
+          backgroundSize: '32px 32px',
         }} />
-        {/* Radial glow */}
+        
+        {/* Radial brand glow */}
         <div style={{
-          position: 'absolute', right: '18%', top: '50%',
-          transform: 'translateY(-50%)',
-          width: 480, height: 480, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(200,30,0,0.13) 0%, transparent 70%)',
-          animation: 'pulseGlow 3s ease-in-out infinite',
+          position: 'absolute', right: '15%', top: '50%',
+          width: 500, height: 500, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,40,0,0.06) 0%, transparent 70%)',
+          animation: 'subtlePulse 4s ease-in-out infinite',
         }} />
 
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column',
-          justifyContent: 'center', padding: '0 56px', maxWidth: 700,
+          justifyContent: 'center', padding: '0 80px', maxWidth: 850,
+          zIndex: 10,
         }}>
           <div style={{
-            fontSize: 11, letterSpacing: '0.18em', color: '#ff2800',
-            fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif",
-            marginBottom: 10, textTransform: 'uppercase',
-            display: 'flex', alignItems: 'center', gap: 8,
+            fontSize: 12, letterSpacing: '0.2em', color: 'var(--brand-red)',
+            fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif",
+            marginBottom: 16, textTransform: 'uppercase',
+            display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <span style={{ width: 20, height: 1, background: '#ff2800', display: 'inline-block' }} />
-            The Takeover Is Complete
+            <span style={{ width: 30, height: 2, background: 'var(--brand-red)', borderRadius: 2 }} />
+            Premium Performance Hardware
           </div>
 
           <h1 style={{
-            margin: 0, fontSize: 56, fontWeight: 800, lineHeight: 1,
+            margin: 0, fontSize: 64, fontWeight: 900, lineHeight: 1.1,
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            letterSpacing: '-0.03em', color: '#ffffff',
+            letterSpacing: '-0.04em', color: 'var(--foreground)',
           }}>
             {categoryName}
           </h1>
 
-          {!loading && (
-            <p style={{
-              margin: '12px 0 0', fontSize: 13, color: '#555',
-              fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
-            }}>
-              {total} items in collection
-            </p>
-          )}
+          <p style={{
+            margin: '20px 0 0', fontSize: 16, color: 'var(--text-muted)',
+            fontFamily: "'DM Sans', sans-serif", fontWeight: 500, maxWidth: 500,
+          }}>
+            Exploration without limits. Power your setup with our world-class selection of {categoryName.toLowerCase()}.
+          </p>
         </div>
-
-        <div style={{
-          position: 'absolute', right: 0, top: 0, bottom: 0, width: 4,
-          background: 'linear-gradient(180deg, #ff2800, #880000)',
-        }} />
       </div>
 
-      {/* ── Category Tabs ── */}
+      {/* ── Category Navigation ── */}
       <div style={{
-        background: '#0f0f0f', borderBottom: '1px solid #1a1a1a',
-        padding: '0 24px', overflowX: 'auto',
+        background: 'var(--background)', borderBottom: '1px solid var(--border)',
+        padding: '0 40px', overflowX: 'auto', position: 'sticky', top: 0, zIndex: 50,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
       }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 0, alignItems: 'center' }}>
-          {[{ id: undefined, name: 'All' }, ...categories].map(cat => {
+        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+          {[{ id: undefined, name: 'All Collection' }, ...categories].map(cat => {
             const isActive = selectedCategory === cat.id
             return (
               <button
                 key={String(cat.id)}
                 onClick={() => handleCategoryChange(cat.id)}
                 style={{
-                  padding: '14px 18px', background: 'none', border: 'none',
-                  borderBottom: isActive ? '2px solid #ff2800' : '2px solid transparent',
-                  color: isActive ? '#ff2800' : '#555',
-                  fontSize: 13, fontWeight: isActive ? 700 : 500,
+                  padding: '20px 24px', background: 'none', border: 'none',
+                  borderBottom: isActive ? '3px solid var(--brand-red)' : '3px solid transparent',
+                  color: isActive ? 'var(--foreground)' : 'var(--text-dim)',
+                  fontSize: 14, fontWeight: isActive ? 800 : 600,
                   cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
                   transition: 'all 0.2s', whiteSpace: 'nowrap', letterSpacing: '-0.01em',
                 }}
-                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = '#ccc' }}
-                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = '#555' }}
               >
-                {cat.name ?? 'All'}
+                {cat.name ?? 'All Collection'}
               </button>
             )
           })}
@@ -500,17 +498,18 @@ export default function ProductsPage() {
       {/* ── Main Layout ── */}
       <div style={{
         maxWidth: 1400, margin: '0 auto',
-        padding: '28px 24px', display: 'flex', gap: 24, alignItems: 'flex-start',
+        padding: '40px', display: 'flex', gap: 40, alignItems: 'flex-start',
       }}>
 
-        {/* ── Sidebar ── */}
-        <aside style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {/* ── Sidebar Filters ── */}
+        <aside style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8, position: 'sticky', top: 100 }}>
           <div style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: '#333',
+            fontSize: 11, fontWeight: 800, letterSpacing: '0.15em', color: 'var(--text-dim)',
             textTransform: 'uppercase', fontFamily: "'Plus Jakarta Sans', sans-serif",
-            paddingBottom: 10, borderBottom: '1px solid #1a1a1a', marginBottom: 4,
+            paddingBottom: 12, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
-            Filters
+            Filter Results
+            <span style={{ fontSize: 13, background: 'var(--surface-hover)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 6, textTransform: 'none', letterSpacing: 0 }}>{total}</span>
           </div>
 
           <FilterSection label="Brand" open={openSections.brand} onToggle={() => toggleSection('brand')}>
@@ -521,7 +520,7 @@ export default function ProductsPage() {
             ))}
           </FilterSection>
 
-          <FilterSection label="Price" open={openSections.price} onToggle={() => toggleSection('price')}>
+          <FilterSection label="Price Range" open={openSections.price} onToggle={() => toggleSection('price')}>
             {['Under $100', '$100 – $250', '$250 – $500', '$500+'].map(p => (
               <FilterCheckbox key={p} label={p}
                 checked={selectedPrices.includes(p)}
@@ -529,8 +528,8 @@ export default function ProductsPage() {
             ))}
           </FilterSection>
 
-          <FilterSection label="Features" open={openSections.features} onToggle={() => toggleSection('features')}>
-            {['RGB Lighting', 'Wireless', '4K Support', 'Mechanical', 'Haptic'].map(f => (
+          <FilterSection label="Key Features" open={openSections.features} onToggle={() => toggleSection('features')}>
+            {['RGB Lighting', 'Wireless', '4K Support', 'Mechanical', 'Haptic Feed'].map(f => (
               <FilterCheckbox key={f} label={f}
                 checked={selectedFeatures.includes(f)}
                 onChange={() => toggleFilter(f, selectedFeatures, setSelectedFeatures)} />
@@ -541,80 +540,76 @@ export default function ProductsPage() {
             <button
               onClick={() => { setSelectedBrands([]); setSelectedFeatures([]); setSelectedPrices([]) }}
               style={{
-                marginTop: 4, padding: '8px 12px',
-                background: 'transparent', border: '1px solid #ff2800',
-                color: '#ff2800', fontSize: 12, fontWeight: 600,
+                marginTop: 12, padding: '12px',
+                background: 'var(--surface)', border: '1px solid var(--border)',
+                color: 'var(--text-muted)', fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                borderRadius: 7, transition: 'all 0.2s', letterSpacing: '-0.01em',
+                borderRadius: 12, transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,40,0,0.08)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
             >
-              Clear all filters
+              Reset Filters
             </button>
           )}
         </aside>
 
-        {/* ── Main Content ── */}
+        {/* ── Main Product Display ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
 
           {/* Toolbar */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #1a1a1a',
+            marginBottom: 32, paddingBottom: 20, borderBottom: '1px solid var(--border)',
           }}>
-            {/* Sort tabs */}
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 6, background: 'var(--surface-hover)', padding: '4px', borderRadius: 12 }}>
               {sortOptions.map((opt, i) => (
                 <button
                   key={opt}
                   onClick={() => setSortIndex(i)}
                   style={{
-                    padding: '7px 14px',
-                    background: sortIndex === i ? 'rgba(255,40,0,0.1)' : 'none',
-                    border: `1px solid ${sortIndex === i ? '#ff2800' : '#1e1e1e'}`,
-                    borderRadius: 7,
-                    color: sortIndex === i ? '#ff2800' : '#555',
-                    fontSize: 12, fontWeight: sortIndex === i ? 700 : 500,
+                    padding: '8px 16px',
+                    background: sortIndex === i ? 'var(--background)' : 'transparent',
+                    border: 'none',
+                    borderRadius: 10,
+                    color: sortIndex === i ? 'var(--foreground)' : 'var(--text-muted)',
+                    fontSize: 13, fontWeight: sortIndex === i ? 800 : 600,
                     cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    transition: 'all 0.15s', letterSpacing: '-0.01em',
+                    transition: 'all 0.2s',
+                    boxShadow: sortIndex === i ? '0 4px 12px rgba(0,0,0,0.06)' : 'none',
                   }}
-                  onMouseEnter={e => { if (sortIndex !== i) (e.currentTarget as HTMLButtonElement).style.color = '#ccc' }}
-                  onMouseLeave={e => { if (sortIndex !== i) (e.currentTarget as HTMLButtonElement).style.color = '#555' }}
                 >
                   {opt}
                 </button>
               ))}
             </div>
 
-            {/* View toggle */}
-            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {(['grid', 'list'] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
                   style={{
-                    width: 34, height: 34, borderRadius: 7,
+                    width: 42, height: 42, borderRadius: 12,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: `1px solid ${viewMode === mode ? '#ff2800' : '#1e1e1e'}`,
-                    background: viewMode === mode ? 'rgba(255,40,0,0.1)' : 'transparent',
+                    border: '1px solid var(--border)',
+                    background: viewMode === mode ? 'var(--foreground)' : 'var(--background)',
                     cursor: 'pointer',
-                    color: viewMode === mode ? '#ff2800' : '#444',
-                    transition: 'all 0.15s',
+                    color: viewMode === mode ? 'var(--background)' : 'var(--foreground)',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
                   }}
                 >
                   {mode === 'grid' ? (
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor">
-                      <rect x="0" y="0" width="6" height="6" rx="1"/>
-                      <rect x="8" y="0" width="6" height="6" rx="1"/>
-                      <rect x="0" y="8" width="6" height="6" rx="1"/>
-                      <rect x="8" y="8" width="6" height="6" rx="1"/>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <rect x="3" y="3" width="7" height="7" rx="1"/>
+                      <rect x="14" y="3" width="7" height="7" rx="1"/>
+                      <rect x="3" y="14" width="7" height="7" rx="1"/>
+                      <rect x="14" y="14" width="7" height="7" rx="1"/>
                     </svg>
                   ) : (
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor">
-                      <rect x="0" y="0" width="14" height="3" rx="1"/>
-                      <rect x="0" y="5.5" width="14" height="3" rx="1"/>
-                      <rect x="0" y="11" width="14" height="3" rx="1"/>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="3" y1="6" x2="21" y2="6"/>
+                      <line x1="3" y1="12" x2="21" y2="12"/>
+                      <line x1="3" y1="18" x2="21" y2="18"/>
                     </svg>
                   )}
                 </button>
@@ -622,77 +617,69 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* ── Loading ── */}
-          {loading && (
+          {/* ── Content States ── */}
+          {loading ? (
             <div style={{
               display: 'flex', justifyContent: 'center',
-              alignItems: 'center', height: 300, flexDirection: 'column', gap: 16,
+              alignItems: 'center', height: 400, flexDirection: 'column', gap: 24,
             }}>
               <div style={{
-                width: 36, height: 36,
-                border: '2px solid #1e1e1e', borderTop: '2px solid #ff2800',
-                borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+                width: 48, height: 48,
+                border: '3px solid var(--border)', borderTop: '3px solid var(--brand-red)',
+                borderRadius: '50%', animation: 'spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite',
               }} />
               <span style={{
-                fontSize: 12, color: '#333',
+                fontSize: 14, color: 'var(--text-dim)',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 500, letterSpacing: '0.04em',
+                fontWeight: 700, letterSpacing: '0.05em',
               }}>
-                Loading products…
+                SYNCHRONIZING COLLECTION...
               </span>
             </div>
-          )}
-
-          {/* ── Error ── */}
-          {error && !loading && (
-            <div style={{ textAlign: 'center', padding: 60 }}>
-              <p style={{ color: '#444', fontSize: 13, marginBottom: 16, fontFamily: "'DM Sans', sans-serif" }}>
-                {error}
+          ) : error ? (
+            <div style={{ textAlign: 'center', padding: 80, background: 'var(--surface)', borderRadius: 24, border: '1px solid var(--border)' }}>
+              <p style={{ color: 'var(--brand-red)', fontSize: 14, fontWeight: 600, marginBottom: 20, fontFamily: "'DM Sans', sans-serif" }}>
+                Unable to load products: {error}
               </p>
               <button
                 onClick={refetch}
                 style={{
-                  background: '#ff2800', color: '#fff', border: 'none',
-                  padding: '10px 28px', fontSize: 12, cursor: 'pointer',
+                  background: 'var(--foreground)', color: 'var(--background)', border: 'none',
+                  padding: '12px 36px', fontSize: 13, cursor: 'pointer',
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 700, borderRadius: 7, letterSpacing: '-0.01em',
+                  fontWeight: 800, borderRadius: 12,
                 }}
               >
-                Retry
+                Try Again
               </button>
             </div>
-          )}
-
-          {/* ── Empty ── */}
-          {!loading && !error && products.length === 0 && (
-            <div style={{ textAlign: 'center', padding: 80 }}>
-              <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.1 }}>◈</div>
+          ) : products.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 120, background: 'var(--surface)', borderRadius: 24, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 56, marginBottom: 24, opacity: 0.1 }}>◈</div>
               <p style={{
-                color: '#333', fontSize: 13, marginBottom: 16,
+                color: 'var(--text-muted)', fontSize: 15, fontWeight: 600, marginBottom: 24,
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}>
-                No products found
+                We couldn't find any products matching your selection.
               </p>
               <button
                 onClick={() => handleCategoryChange(undefined)}
                 style={{
-                  color: '#ff2800', background: 'none', border: '1px solid #ff2800',
-                  padding: '8px 20px', fontSize: 12, cursor: 'pointer', borderRadius: 7,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
+                  color: 'var(--brand-red)', background: 'var(--background)', border: '1.5px solid var(--brand-red)',
+                  padding: '12px 28px', fontSize: 14, cursor: 'pointer', borderRadius: 12,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800,
+                  boxShadow: '0 4px 12px rgba(255,40,0,0.1)',
                 }}
               >
-                Clear filters
+                Clear All Filters
               </button>
             </div>
-          )}
-
-          {/* ── Product Grid / List ── */}
-          {!loading && !error && products.length > 0 && (
+          ) : (
             <>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: viewMode === 'grid' ? 'repeat(3, 1fr)' : '1fr',
-                gap: viewMode === 'grid' ? 12 : 8,
+                gap: viewMode === 'grid' ? 24 : 16,
               }}>
                 {products.map((product, i) =>
                   viewMode === 'grid' ? (
@@ -713,11 +700,15 @@ export default function ProductsPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 40 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 64, padding: '24px', borderTop: '1px solid var(--border)' }}>
                   <PagBtn
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                  >‹</PagBtn>
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                  </PagBtn>
 
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
                     <PagBtn key={p} onClick={() => setCurrentPage(p)} active={p === currentPage}>
@@ -728,12 +719,21 @@ export default function ProductsPage() {
                   <PagBtn
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                  >›</PagBtn>
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </PagBtn>
                 </div>
               )}
             </>
           )}
         </div>
+      </div>
+
+      {/* ── Footer Subtle Decor ── */}
+      <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-red)', opacity: 0.3 }} />
       </div>
     </div>
   )

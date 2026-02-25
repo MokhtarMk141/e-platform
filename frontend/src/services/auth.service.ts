@@ -3,6 +3,8 @@ import {
   AuthResponse,
   LoginCredentials,
   RegisterCredentials,
+  ForgotPasswordCredentials,
+  ResetPasswordCredentials,
 } from '@/types/auth.types';
 
 const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
@@ -11,12 +13,12 @@ export class AuthService {
   private static setAuthStorage(response: AuthResponse) {
     if (typeof window === 'undefined') return;
 
-    const { token, user } = response;
+    const { accessToken, user } = response;
 
-    localStorage.setItem('token', token);
+    localStorage.setItem('token', accessToken);
     localStorage.setItem('user', JSON.stringify(user));
 
-    document.cookie = `token=${token}; path=/; max-age=${ONE_WEEK_IN_SECONDS}; secure; samesite=lax`;
+    document.cookie = `token=${accessToken}; path=/; max-age=${ONE_WEEK_IN_SECONDS}; secure; samesite=lax`;
   }
 
   private static clearAuthStorage() {
@@ -34,7 +36,7 @@ export class AuthService {
       credentials
     );
 
-    if (response.token) {
+    if (response.accessToken) {
       this.setAuthStorage(response);
     }
 
@@ -49,7 +51,7 @@ export class AuthService {
       credentials
     );
 
-    if (response.token) {
+    if (response.accessToken) {
       this.setAuthStorage(response);
     }
 
@@ -58,6 +60,14 @@ export class AuthService {
 
   static logout(): void {
     this.clearAuthStorage();
+  }
+
+  static async forgotPassword(credentials: ForgotPasswordCredentials): Promise<void> {
+    await ApiClient.post('/auth/forgot-password', credentials);
+  }
+
+  static async resetPassword(credentials: ResetPasswordCredentials): Promise<void> {
+    await ApiClient.post('/auth/reset-password', credentials);
   }
 
   static getToken(): string | null {

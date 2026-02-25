@@ -7,7 +7,8 @@ export interface User {
 
 export interface AuthResponse {
   user: User;
-  token: string;
+  accessToken: string;
+  refreshToken?: string;
 }
 
 export interface LoginCredentials {
@@ -18,5 +19,14 @@ export interface LoginCredentials {
 export interface RegisterCredentials {
   name: string;
   email: string;
+  password: string;
+}
+
+export interface ForgotPasswordCredentials {
+  email: string;
+}
+
+export interface ResetPasswordCredentials {
+  token: string;
   password: string;
 }

@@ -20,7 +20,7 @@ const createRateLimitHandler =
 // Rate limiters for auth routes
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  max: 20, // 20 attempts per window
   handler: createRateLimitHandler(
     "Too many login attempts, please try again after 15 minutes"
   ),
@@ -30,7 +30,7 @@ const loginLimiter = rateLimit({
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 registrations per window
+  max: 10, // 10 registrations per window
   handler: createRateLimitHandler(
     "Too many registration attempts, please try again later"
   ),
@@ -40,7 +40,7 @@ const registerLimiter = rateLimit({
 
 const refreshLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 refresh attempts per window
+  max: 30, // 30 refresh attempts per window
   handler: createRateLimitHandler(
     "Too many refresh attempts, please try again later"
   ),
@@ -49,10 +49,10 @@ const refreshLimiter = rateLimit({
 });
 
 const forgotPasswordLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // 3 requests per window
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 10, // 10 requests per window
   handler: createRateLimitHandler(
-    "Too many password reset requests, please try again after 15 minutes"
+    "Too many password reset requests, please try again after 10 minutes"
   ),
   standardHeaders: true,
   legacyHeaders: false,
@@ -60,7 +60,7 @@ const forgotPasswordLimiter = rateLimit({
 
 const resetPasswordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per window
+  max: 20, // 20 requests per window
   handler: createRateLimitHandler(
     "Too many password reset attempts, please try again later"
   ),
