@@ -37,18 +37,9 @@ export default function ForgotPassword() {
       </div>
 
       <div className="w-full h-screen flex relative">
-        <div 
-          className="w-3/5 relative hidden lg:block"
-          style={{
-            backgroundImage: `url(${img.src})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        >
-        </div>
 
-        <div className="w-full lg:w-2/5 bg-background flex items-center justify-center p-12 lg:ml-auto relative z-20 lg:border-l border-border shadow-xl">
+
+        <div className="w-full bg-background flex items-center justify-center p-12 lg:ml-auto relative z-20 lg:border-l border-border shadow-xl">
           <div style={{position:'relative', right:'0 lg:100px'}} className="w-full max-w-md space-y-6 bg-background p-10 rounded-2xl shadow-2xl border border-border">
             <div className="w-full max-w-sm mx-auto">
               <div className="w-full space-y-6">

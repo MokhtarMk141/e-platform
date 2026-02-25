@@ -1,6 +1,7 @@
 import { ApiClient } from '@/lib/api-client';
 import {
   AuthResponse,
+  RefreshResponse,
   LoginCredentials,
   RegisterCredentials,
   ForgotPasswordCredentials,
@@ -10,7 +11,9 @@ import {
 const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
 
 export class AuthService {
-  private static setAuthStorage(response: AuthResponse) {
+  /* ── Storage helpers ── */
+
+  static setAuthStorage(response: AuthResponse) {
     if (typeof window === 'undefined') return;
 
     const { accessToken, user } = response;
@@ -21,7 +24,7 @@ export class AuthService {
     document.cookie = `token=${accessToken}; path=/; max-age=${ONE_WEEK_IN_SECONDS}; secure; samesite=lax`;
   }
 
-  private static clearAuthStorage() {
+  static clearAuthStorage() {
     if (typeof window === 'undefined') return;
 
     localStorage.removeItem('token');
@@ -29,6 +32,8 @@ export class AuthService {
 
     document.cookie = 'token=; path=/; max-age=0';
   }
+
+  /* ── Auth endpoints ── */
 
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await ApiClient.post<AuthResponse>(
@@ -56,6 +61,16 @@ export class AuthService {
     }
 
     return response;
+  }
+
+  static async refreshToken(): Promise<string> {
+    const response = await ApiClient.post<RefreshResponse>('/auth/refresh');
+
+    if (response.accessToken) {
+      localStorage.setItem('token', response.accessToken);
+    }
+
+    return response.accessToken;
   }
 
   static logout(): void {

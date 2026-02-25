@@ -15,6 +15,7 @@ interface AuthState {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   register: (credentials: RegisterCredentials) => Promise<AuthResponse>;
   logout: () => void;
+  setToken: (token: string) => void;
 }
 
 const getInitialAuthState = (): Pick<
@@ -50,7 +51,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       set({
         user: response.user,
-        token: response.token,
+        token: response.accessToken,
         isAuthenticated: true,
         loading: false,
       });
@@ -69,7 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       set({
         user: response.user,
-        token: response.token,
+        token: response.accessToken,
         isAuthenticated: true,
         loading: false,
       });
@@ -89,6 +90,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: false,
       loading: false,
     });
+  },
+
+  setToken: (token: string) => {
+    set({ token });
   },
 }));
 

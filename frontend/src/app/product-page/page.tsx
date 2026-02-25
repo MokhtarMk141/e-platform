@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useProducts } from '@/hooks/useProducts'
 import { useCategories } from '@/hooks/useCategories'
 import MegaMenu from '../mega-menu/megaMenu';
@@ -10,6 +12,35 @@ const FONTS = `
 `
 
 const sortOptions = ['Featured', 'Price: Low', 'Price: High', 'Newest', 'Top Rated']
+
+const toCategorySlug = (value: string) =>
+  value
+    .replace(/\(.*?\)/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  cpu: ['cpu', 'cpus', 'processor', 'processors', 'ryzen', 'intel'],
+  gpu: ['gpu', 'gpus', 'graphics', 'graphic', 'video-card', 'videocard', 'rtx', 'radeon'],
+  ram: ['ram', 'memory', 'ddr4', 'ddr5'],
+  storage: ['storage', 'ssd', 'hdd', 'nvme', 'm2', 'hard-drive', 'harddisk'],
+  psu: ['psu', 'power', 'power-supply', 'powersupply'],
+  motherboard: ['motherboard', 'board', 'mainboard'],
+  cooling: ['cooling', 'cooler', 'aio', 'fan', 'fans'],
+  case: ['case', 'chassis', 'tower'],
+  monitor: ['monitor', 'display', 'screen'],
+  keyboard: ['keyboard', 'keyboards'],
+  mouse: ['mouse', 'mice'],
+  headset: ['headset', 'headphones', 'audio'],
+}
+
+const toTokens = (value: string) =>
+  toCategorySlug(value).split('-').filter(Boolean)
+
+const hasTokenOverlap = (left: string[], right: string[]) => left.some(token => right.includes(token))
 
 
 function FilterSection({ label, open, onToggle, children }: {
@@ -60,7 +91,7 @@ function FilterCheckbox({ label, checked, onChange }: {
       }}>
         {checked && (
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-            <path d="M2 4L4 6L8 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2 4L4 6L8 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </div>
@@ -104,148 +135,153 @@ function GridCard({ product, wished, onWish, delay }: {
   const [hovered, setHovered] = useState(false)
 
   return (
-    <div
+    <Link
+      href={`/product-page/${product.id}`}
+      style={{ textDecoration: 'none', color: 'inherit' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background: 'var(--background)',
-        border: `1px solid ${hovered ? 'var(--brand-red)' : 'var(--border)'}`,
-        borderRadius: 20, overflow: 'hidden',
-        display: 'flex', flexDirection: 'column',
-        animation: `fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay * 50}ms both`,
-        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        boxShadow: hovered
-          ? '0 20px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(255,40,0,0.08)'
-          : '0 4px 12px rgba(0,0,0,0.04)',
-        cursor: 'pointer', position: 'relative',
-        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
-      }}
     >
-      {/* Image Container */}
-      <div style={{
-        position: 'relative', height: 320,
-        background: 'var(--surface)',
-        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {product.imageUrl ? (
-          <img
-            src={product.imageUrl} alt={product.name}
-            style={{
-              width: '85%', height: '85%', objectFit: 'contain',
-              transform: hovered ? 'scale(1.05)' : 'scale(1)',
-              transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-              filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.1))',
-            }}
-          />
-        ) : (
-          <div style={{ fontSize: 48, opacity: 0.1, color: 'var(--foreground)' }}>◈</div>
-        )}
+      <div
+        style={{
+          background: 'var(--background)',
+          border: `1px solid ${hovered ? 'var(--brand-red)' : 'var(--border)'}`,
+          borderRadius: 20, overflow: 'hidden',
+          display: 'flex', flexDirection: 'column',
+          animation: `fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay * 50}ms both`,
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxShadow: hovered
+            ? '0 20px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(255,40,0,0.08)'
+            : '0 4px 12px rgba(0,0,0,0.04)',
+          cursor: 'pointer', position: 'relative',
+          transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+        }}
+      >
+        {/* Image Container */}
+        <div style={{
+          position: 'relative', height: 320,
+          background: 'var(--surface)',
+          overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl} alt={product.name}
+              style={{
+                width: '85%', height: '85%', objectFit: 'contain',
+                transform: hovered ? 'scale(1.05)' : 'scale(1)',
+                transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.1))',
+              }}
+            />
+          ) : (
+            <div style={{ fontSize: 48, opacity: 0.1, color: 'var(--foreground)' }}>◈</div>
+          )}
 
-        {product.category && (
-          <span style={{
-            position: 'absolute', top: 16, left: 16,
-            background: 'var(--background)', backdropFilter: 'blur(8px)',
-            color: 'var(--foreground)', fontSize: 11, fontWeight: 800,
-            letterSpacing: '0.02em', padding: '5px 12px', borderRadius: 30,
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            border: '1px solid var(--border)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          }}>
-            {product.category.name}
-          </span>
-        )}
-
-        <button
-          onClick={e => { e.stopPropagation(); onWish() }}
-          style={{
-            position: 'absolute', top: 16, right: 16,
-            width: 36, height: 36, borderRadius: 12,
-            background: wished ? 'var(--brand-red)' : 'var(--background)',
-            border: `1px solid ${wished ? 'var(--brand-red)' : 'var(--border)'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', transition: 'all 0.2s', backdropFilter: 'blur(8px)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          }}
-        >
-          <svg width="16" height="16" fill={wished ? '#fff' : 'none'} stroke={wished ? '#fff' : 'var(--foreground)'} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-              d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"/>
-          </svg>
-        </button>
-
-        {product.stock === 0 && (
-          <div style={{
-            position: 'absolute', inset: 0, background: 'rgba(var(--background-rgb), 0.7)',
-            backdropFilter: 'blur(2px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          {product.category && (
             <span style={{
-              fontSize: 12, fontWeight: 800, color: 'var(--text-muted)',
+              position: 'absolute', top: 16, left: 16,
+              background: 'var(--background)', backdropFilter: 'blur(8px)',
+              color: 'var(--foreground)', fontSize: 11, fontWeight: 800,
+              letterSpacing: '0.02em', padding: '5px 12px', borderRadius: 30,
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              border: '1px solid var(--border-strong)', padding: '8px 20px', borderRadius: 40,
-              background: 'var(--background)',
-            }}>Out of Stock</span>
-          </div>
-        )}
-      </div>
+              border: '1px solid var(--border)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            }}>
+              {product.category.name}
+            </span>
+          )}
 
-      {/* Info */}
-      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1, gap: 10 }}>
-        <div>
-          <div style={{
-            fontSize: 11, color: 'var(--text-dim)',
-            fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-            letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6,
-          }}>
-            {product.sku}
-          </div>
-
-          <p style={{
-            margin: 0, fontSize: 16, fontWeight: 800,
-            color: 'var(--foreground)', lineHeight: 1.4,
-            fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.02em',
-          }}>
-            {product.name}
-          </p>
-        </div>
-
-        {product.description && (
-          <p style={{
-            margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6,
-            fontFamily: "'DM Sans', sans-serif",
-            display: '-webkit-box', WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }}>
-            {product.description}
-          </p>
-        )}
-
-        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10 }}>
-          <span style={{
-            fontSize: 22, fontWeight: 900, color: 'var(--foreground)',
-            fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
-          }}>
-            ${product.price ? product.price.toFixed(2) : "0.00"}
-          </span>
           <button
-            disabled={product.stock === 0}
+            onClick={e => { e.stopPropagation(); onWish() }}
             style={{
-              background: product.stock === 0 ? 'transparent' : 'var(--brand-red)',
-              color: product.stock === 0 ? 'var(--text-dim)' : '#fff',
-              border: product.stock === 0 ? '1px solid var(--border)' : 'none',
-              padding: '10px 20px', borderRadius: 12,
-              fontSize: 13, fontWeight: 800,
-              cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              letterSpacing: '-0.01em', transition: 'all 0.2s',
-              boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(255,40,0,0.2)',
+              position: 'absolute', top: 16, right: 16,
+              width: 36, height: 36, borderRadius: 12,
+              background: wished ? 'var(--brand-red)' : 'var(--background)',
+              border: `1px solid ${wished ? 'var(--brand-red)' : 'var(--border)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'all 0.2s', backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             }}
           >
-            {product.stock === 0 ? 'Sold Out' : 'View Build →'}
+            <svg width="16" height="16" fill={wished ? '#fff' : 'none'} stroke={wished ? '#fff' : 'var(--foreground)'} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+            </svg>
           </button>
+
+          {product.stock === 0 && (
+            <div style={{
+              position: 'absolute', inset: 0, background: 'rgba(var(--background-rgb), 0.7)',
+              backdropFilter: 'blur(2px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{
+                fontSize: 12, fontWeight: 800, color: 'var(--text-muted)',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                border: '1px solid var(--border-strong)', padding: '8px 20px', borderRadius: 40,
+                background: 'var(--background)',
+              }}>Out of Stock</span>
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1, gap: 10 }}>
+          <div>
+            <div style={{
+              fontSize: 11, color: 'var(--text-dim)',
+              fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+              letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6,
+            }}>
+              {product.sku}
+            </div>
+
+            <p style={{
+              margin: 0, fontSize: 16, fontWeight: 800,
+              color: 'var(--foreground)', lineHeight: 1.4,
+              fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.02em',
+            }}>
+              {product.name}
+            </p>
+          </div>
+
+          {product.description && (
+            <p style={{
+              margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6,
+              fontFamily: "'DM Sans', sans-serif",
+              display: '-webkit-box', WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            }}>
+              {product.description}
+            </p>
+          )}
+
+          <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10 }}>
+            <span style={{
+              fontSize: 22, fontWeight: 900, color: 'var(--foreground)',
+              fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
+            }}>
+              DTN {product.price ? product.price.toFixed(2) : "0.00"}
+            </span>
+            <button
+              disabled={product.stock === 0}
+              style={{
+                background: product.stock === 0 ? 'transparent' : 'var(--brand-red)',
+                color: product.stock === 0 ? 'var(--text-dim)' : '#fff',
+                border: product.stock === 0 ? '1px solid var(--border)' : 'none',
+                padding: '10px 20px', borderRadius: 12,
+                fontSize: 13, fontWeight: 800,
+                cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                letterSpacing: '-0.01em', transition: 'all 0.2s',
+                boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(255,40,0,0.2)',
+              }}
+            >
+              {product.stock === 0 ? 'Sold Out' : 'View Build →'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -255,117 +291,143 @@ function ListCard({ product, wished, onWish, delay }: {
   const [hovered, setHovered] = useState(false)
 
   return (
-    <div
+    <Link
+      href={`/product-page/${product.id}`}
+      style={{ textDecoration: 'none', color: 'inherit' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background: 'var(--background)',
-        border: `1px solid ${hovered ? 'var(--brand-red)' : 'var(--border)'}`,
-        borderRadius: 20, overflow: 'hidden', display: 'flex',
-        animation: `fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${delay * 40}ms both`,
-        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        boxShadow: hovered ? '0 12px 30px rgba(0,0,0,0.08)' : '0 4px 12px rgba(0,0,0,0.02)',
-        transform: hovered ? 'translateX(4px)' : 'translateX(0)',
-      }}
     >
-      <div style={{
-        width: 180, flexShrink: 0,
-        background: 'var(--surface)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-      }}>
-        {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.name} style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
-          : <div style={{ fontSize: 36, opacity: 0.1, color: 'var(--foreground)' }}>◈</div>
-        }
-      </div>
-
-      <div style={{
-        padding: '20px 28px', flex: 1,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24,
-      }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{
-            fontSize: 10, color: 'var(--text-dim)',
-            fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800,
-            letterSpacing: '0.1em', textTransform: 'uppercase',
-          }}>
-            {product.sku}{product.category && ` · ${product.category.name}`}
-          </div>
-          <p style={{
-            margin: 0, fontSize: 18, fontWeight: 800,
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            color: 'var(--foreground)', letterSpacing: '-0.02em',
-          }}>
-            {product.name}
-          </p>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
-            {product.description}
-          </p>
+      <div
+        style={{
+          background: 'var(--background)',
+          border: `1px solid ${hovered ? 'var(--brand-red)' : 'var(--border)'}`,
+          borderRadius: 20, overflow: 'hidden', display: 'flex',
+          animation: `fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${delay * 40}ms both`,
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxShadow: hovered ? '0 12px 30px rgba(0,0,0,0.08)' : '0 4px 12px rgba(0,0,0,0.02)',
+          transform: hovered ? 'translateX(4px)' : 'translateX(0)',
+        }}
+      >
+        <div style={{
+          width: 180, flexShrink: 0,
+          background: 'var(--surface)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+        }}>
+          {product.imageUrl
+            ? <img src={product.imageUrl} alt={product.name} style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
+            : <div style={{ fontSize: 36, opacity: 0.1, color: 'var(--foreground)' }}>◈</div>
+          }
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 16, flexShrink: 0 }}>
-          <span style={{
-            fontSize: 24, fontWeight: 900, color: 'var(--brand-red)',
-            fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
-          }}>
-            ${product.price ? product.price.toFixed(2) : "0.00"}
-          </span>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={onWish}
-              style={{
-                width: 42, height: 42, borderRadius: 12,
-                border: `1px solid ${wished ? 'var(--brand-red)' : 'var(--border)'}`,
-                background: wished ? 'var(--brand-red)' : 'var(--background)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              }}
-            >
-              <svg width="18" height="18" fill={wished ? '#fff' : 'none'} stroke={wished ? '#fff' : 'var(--foreground)'} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                  d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"/>
-              </svg>
-            </button>
-            <button
-              disabled={product.stock === 0}
-              style={{
-                background: product.stock === 0 ? 'transparent' : 'var(--foreground)',
-                color: product.stock === 0 ? 'var(--text-dim)' : 'var(--background)',
-                border: product.stock === 0 ? '1px solid var(--border)' : 'none',
-                padding: '0 24px', height: 42, borderRadius: 12,
-                fontSize: 14, fontWeight: 800,
-                cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                letterSpacing: '-0.01em', transition: 'all 0.2s',
-                boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
-              }}
-            >
-              {product.stock === 0 ? 'Sold Out' : 'See Details'}
-            </button>
+        <div style={{
+          padding: '20px 28px', flex: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24,
+        }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{
+              fontSize: 10, color: 'var(--text-dim)',
+              fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800,
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+            }}>
+              {product.sku}{product.category && ` · ${product.category.name}`}
+            </div>
+            <p style={{
+              margin: 0, fontSize: 18, fontWeight: 800,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              color: 'var(--foreground)', letterSpacing: '-0.02em',
+            }}>
+              {product.name}
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
+              {product.description}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 16, flexShrink: 0 }}>
+            <span style={{
+              fontSize: 24, fontWeight: 900, color: 'var(--brand-red)',
+              fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
+            }}>
+              ${product.price ? product.price.toFixed(2) : "0.00"}
+            </span>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={onWish}
+                style={{
+                  width: 42, height: 42, borderRadius: 12,
+                  border: `1px solid ${wished ? 'var(--brand-red)' : 'var(--border)'}`,
+                  background: wished ? 'var(--brand-red)' : 'var(--background)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                }}
+              >
+                <svg width="18" height="18" fill={wished ? '#fff' : 'none'} stroke={wished ? '#fff' : 'var(--foreground)'} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                    d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+                </svg>
+              </button>
+              <button
+                disabled={product.stock === 0}
+                style={{
+                  background: product.stock === 0 ? 'transparent' : 'var(--foreground)',
+                  color: product.stock === 0 ? 'var(--text-dim)' : 'var(--background)',
+                  border: product.stock === 0 ? '1px solid var(--border)' : 'none',
+                  padding: '0 24px', height: 42, borderRadius: 12,
+                  fontSize: 14, fontWeight: 800,
+                  cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  letterSpacing: '-0.01em', transition: 'all 0.2s',
+                  boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
+                }}
+              >
+                {product.stock === 0 ? 'Sold Out' : 'See Details'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined)
-  const [sortIndex, setSortIndex]               = useState(0)
-  const [viewMode, setViewMode]                 = useState<'grid' | 'list'>('grid')
-  const [currentPage, setCurrentPage]           = useState(1)
-  const [wished, setWished]                     = useState<string[]>([])
+  const [userSelectedCategory, setUserSelectedCategory] = useState(false)
+  const [sortIndex, setSortIndex] = useState(0)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [wished, setWished] = useState<string[]>([])
 
-  const [selectedBrands, setSelectedBrands]     = useState<string[]>([])
-  const [selectedPrices, setSelectedPrices]     = useState<string[]>([])
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([])
+  const [selectedPrices, setSelectedPrices] = useState<string[]>([])
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
-  const [openSections, setOpenSections]         = useState({ brand: true, price: true, features: true })
+  const [openSections, setOpenSections] = useState({ brand: true, price: true, features: true })
 
   const { categories } = useCategories()
+  const requestedCategorySlug = searchParams.get('category')?.toLowerCase() ?? undefined
+  const requestedCategoryKey = searchParams.get('categoryKey')?.toLowerCase() ?? undefined
+  const requestedKeywords = requestedCategoryKey ? CATEGORY_KEYWORDS[requestedCategoryKey] ?? [] : []
+  const requestedSlugTokens = requestedCategorySlug ? toTokens(requestedCategorySlug) : []
+  const categoryFromQuery = categories.find(category => {
+    const categorySlug = toCategorySlug(category.name)
+    const categoryTokens = toTokens(category.name)
+
+    if (requestedCategorySlug && categorySlug === requestedCategorySlug) return true
+    if (requestedKeywords.length > 0) {
+      return requestedKeywords.some(keyword => categorySlug.includes(keyword) || categoryTokens.includes(keyword))
+    }
+    if (requestedSlugTokens.length > 0) {
+      return hasTokenOverlap(requestedSlugTokens, categoryTokens)
+    }
+    return false
+  })?.id
+  const activeCategory = userSelectedCategory ? selectedCategory : (categoryFromQuery ?? selectedCategory)
+
   const { products, total, loading, error, refetch } = useProducts({
-    page:       currentPage,
-    categoryId: selectedCategory,
+    page: currentPage,
+    categoryId: activeCategory,
   })
 
   const totalPages = Math.ceil(total / 20)
@@ -380,12 +442,13 @@ export default function ProductsPage() {
     setWished(prev => prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id])
 
   const handleCategoryChange = (id: string | undefined) => {
+    setUserSelectedCategory(true)
     setSelectedCategory(id)
     setCurrentPage(1)
   }
 
-  const categoryName = selectedCategory
-    ? categories.find(c => c.id === selectedCategory)?.name?.toUpperCase() ?? 'Products'
+  const categoryName = activeCategory
+    ? categories.find(c => c.id === activeCategory)?.name?.toUpperCase() ?? 'Products'
     : 'Store Front'
 
   return (
@@ -424,7 +487,7 @@ export default function ProductsPage() {
           backgroundImage: `radial-gradient(var(--foreground) 1.2px, transparent 1.2px)`,
           backgroundSize: '32px 32px',
         }} />
-        
+
         {/* Radial brand glow */}
         <div style={{
           position: 'absolute', right: '15%', top: '50%',
@@ -474,7 +537,7 @@ export default function ProductsPage() {
       }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           {[{ id: undefined, name: 'All Collection' }, ...categories].map(cat => {
-            const isActive = selectedCategory === cat.id
+            const isActive = activeCategory === cat.id
             return (
               <button
                 key={String(cat.id)}
@@ -600,16 +663,16 @@ export default function ProductsPage() {
                 >
                   {mode === 'grid' ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <rect x="3" y="3" width="7" height="7" rx="1"/>
-                      <rect x="14" y="3" width="7" height="7" rx="1"/>
-                      <rect x="3" y="14" width="7" height="7" rx="1"/>
-                      <rect x="14" y="14" width="7" height="7" rx="1"/>
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                      <rect x="14" y="14" width="7" height="7" rx="1" />
                     </svg>
                   ) : (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <line x1="3" y1="6" x2="21" y2="6"/>
-                      <line x1="3" y1="12" x2="21" y2="12"/>
-                      <line x1="3" y1="18" x2="21" y2="18"/>
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                      <line x1="3" y1="12" x2="21" y2="12" />
+                      <line x1="3" y1="18" x2="21" y2="18" />
                     </svg>
                   )}
                 </button>
@@ -725,6 +788,7 @@ export default function ProductsPage() {
                     </svg>
                   </PagBtn>
                 </div>
+
               )}
             </>
           )}

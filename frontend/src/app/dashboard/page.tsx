@@ -1,28 +1,38 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/hooks/useAuth';
-import MegaMenu from '@/app/mega-menu/megaMenu'; 
+import MegaMenu from '@/app/mega-menu/megaMenu';
 
 export default function DashboardPage() {
   const { user, logout } = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans transition-colors duration-300">
-      <MegaMenu /> 
-      
+      <MegaMenu />
+
       <main className="mx-auto max-w-7xl px-8 py-12">
         <div className="flex items-center justify-between border-b border-border pb-8">
           <div>
             <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
               Welcome back, <span className="text-brand-red">{user?.name || 'User'}</span>
             </h1>
+            <p className="mt-2 text-sm text-text-dim">
+              {user?.role === 'ADMIN' ? 'Administrator' : 'Customer'} Account
+            </p>
             <p className="mt-4 text-lg text-text-muted">
               Manage your orders, profile, and builds from your personalized dashboard.
             </p>
           </div>
-          
+
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-bold text-background transition-all hover:opacity-90 hover:shadow-lg active:scale-95"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

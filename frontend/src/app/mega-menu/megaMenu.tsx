@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import logoimg from "../../../public/website_logo.png";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -125,6 +126,15 @@ const menus = {
 const navLinks = ["Products", "Deals", "Build Guide", "Support"];
 
 type MenuKey = "Products" | "Deals" | "Build Guide";
+
+const toCategorySlug = (label: string) =>
+  label
+    .replace(/\(.*?\)/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-zA-Z0-9\s-]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
 
 export default function MegaMenu() {
   const [active, setActive] = useState<MenuKey | null>(null);
@@ -385,7 +395,7 @@ export default function MegaMenu() {
             <img
               src={logoimg.src}
               alt="Website logo"
-              style={{ maxHeight: 38, maxWidth: 150, objectFit: "contain", filter: "var(--foreground) === '#ffffff' ? 'invert(1)' : 'none'" }}
+              style={{ maxHeight: 38, maxWidth: 200, objectFit: "contain", filter: "var(--foreground) === '#ffffff' ? 'invert(1)' : 'none'" }}
             />
           </a>
 
@@ -465,7 +475,11 @@ export default function MegaMenu() {
                       <p className="section-title">{section.title}</p>
                       <div style={{ display: "grid", gridTemplateColumns: section.items.length > 4 ? "1fr 1fr" : "1fr", gap: "4px" }}>
                         {section.items.map((item: any) => (
-                          <a key={item.label} href="/product-page" className="menu-item">
+                          <Link
+                            key={item.label}
+                            href={`/product-page?category=${encodeURIComponent(toCategorySlug(item.label))}&categoryKey=${encodeURIComponent(item.icon)}`}
+                            className="menu-item"
+                          >
                             <div className="item-icon">
                               <Icon d={(icons as any)[item.icon]} size={14} />
                             </div>
@@ -473,7 +487,7 @@ export default function MegaMenu() {
                               <p className="item-label">{item.label}</p>
                               <p className="item-desc">{item.desc}</p>
                             </div>
-                          </a>
+                          </Link>
                         ))}
                       </div>
                     </div>
