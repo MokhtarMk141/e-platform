@@ -6,6 +6,7 @@ import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 import { authMiddleware } from "./auth.middleware";
 import { AppError } from "../../exceptions/app-error";
 
@@ -75,5 +76,6 @@ router.post("/logout", controller.logout);
 router.post("/logout-all", authMiddleware, controller.logoutAll);
 router.post("/forgot-password", forgotPasswordLimiter, validateRequest(ForgotPasswordDto), controller.forgotPassword);
 router.post("/reset-password", resetPasswordLimiter, validateRequest(ResetPasswordDto), controller.resetPassword);
+router.post("/change-password", authMiddleware, validateRequest(ChangePasswordDto), controller.changePassword);
 
 export default router;

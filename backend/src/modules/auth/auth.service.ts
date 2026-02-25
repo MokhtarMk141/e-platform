@@ -15,12 +15,13 @@ export class AuthService {
   constructor(private userRepository: UserRepository) {}
 
   private toResponse(
-    user: Pick<User, "id" | "name" | "email" | "createdAt">
+    user: Pick<User, "id" | "name" | "email" | "role" | "createdAt">
   ): UserResponseDto {
     return {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
       createdAt: user.createdAt,
     };
   }
@@ -221,5 +222,19 @@ export class AuthService {
 
     // Revoke all refresh tokens (force re-login on all devices)
     await this.revokeAllUserTokens(stored.userId);
+  }
+
+  async changePassword(userId: string, currentPass: string, newPass: string): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new AppError("User not found", 404);
+
+    const isMatch = await bcrypt.compare(currentPass, user.password);
+    if (!isMatch) throw new AppError("Invalid current password", 400);
+
+    const hashed = await bcrypt.hash(newPass, 10);
+    await this.userRepository.updatePassword(userId, hashed);
+
+    // Revoke all other sessions on password change
+    await this.revokeAllUserTokens(userId);
   }
 }

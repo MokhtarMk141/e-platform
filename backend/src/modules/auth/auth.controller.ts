@@ -113,4 +113,16 @@ export class AuthController {
       data: null,
     });
   });
+
+  changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = getAuthenticatedUserId(req);
+    const { currentPassword, newPassword } = req.body;
+
+    await this.authService.changePassword(userId, currentPassword, newPassword);
+
+    return sendSuccess(res, {
+      message: "Password updated successfully",
+      data: null,
+    });
+  });
 }

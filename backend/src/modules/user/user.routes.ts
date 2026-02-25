@@ -26,11 +26,10 @@ router.get("/:id", authMiddleware, checkRole(["ADMIN"]), controller.findOne);
 
 // Update user route
 router.patch(
-  "/:id",
+  "/me",
   authMiddleware,
-  checkRole(["ADMIN"]),
   validateRequest(UpdateUserDto),
-  // controller.update - Not yet implemented in controller, so leaving commented or for future use
+  controller.updateMe
 );
 
 export default router;

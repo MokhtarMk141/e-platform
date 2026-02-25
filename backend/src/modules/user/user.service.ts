@@ -9,12 +9,13 @@ export class UserService {
   constructor(private userRepository: UserRepository) {}
 
   private toResponse(
-    user: Pick<User, "id" | "name" | "email" | "createdAt">
+    user: Pick<User, "id" | "name" | "email" | "role" | "createdAt">
   ): UserResponseDto {
     return {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
       createdAt: user.createdAt,
     };
   }
@@ -40,5 +41,11 @@ export class UserService {
   async getUsers(): Promise<UserResponseDto[]> {
     const users = await this.userRepository.findAll();
     return users.map((user) => this.toResponse(user));
+  }
+
+  async updateUser(id: string, dto: { name?: string; email?: string }): Promise<UserResponseDto> {
+    const user = await this.userRepository.update(id, dto);
+    if (!user) throw new AppError("User not found", 404);
+    return this.toResponse(user);
   }
 }

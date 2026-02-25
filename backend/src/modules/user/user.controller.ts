@@ -59,4 +59,16 @@ export class UserController {
       data: user,
     });
   });
+
+  updateMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = getAuthenticatedUserId(req);
+    const payload = req.body;
+
+    const user = await this.userService.updateUser(userId, payload);
+
+    return sendSuccess(res, {
+      message: "Profile updated successfully",
+      data: user,
+    });
+  });
 }
