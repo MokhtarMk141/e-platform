@@ -17,8 +17,8 @@ export default function HomePage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <p className="text-sm text-slate-600">Redirecting...</p>
+    <div style={{ padding: 40, textAlign: 'center' }}>
+      <p>Redirecting...</p>
     </div>
   );
 }
