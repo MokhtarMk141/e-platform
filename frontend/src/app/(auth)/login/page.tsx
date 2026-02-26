@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { AuthService } from '@/services/auth.service'
 import { LoginCredentials } from '@/types/auth.types'
 import { useRouter } from 'next/navigation'
@@ -22,8 +22,12 @@ export default function Login() {
     if (error) setError(null)
   }
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+//Si tu ne mets pas e.preventDefault(), la page se recharge et tu ne verras jamais ton console.log.
+//Si tu mets e.preventDefault(), la page reste sur place, et tu peux faire ce que tu veux avec les données du formulaire.
+
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields')
       return
@@ -37,6 +41,10 @@ export default function Login() {
         email: formData.email,
         password: formData.password,
       }
+//Prépare un objet loginData respectant le type LoginCredentials.
+//Contient les informations nécessaires pour l’API de login.
+
+
       await AuthService.login(loginData)
       router.push('/dashboard')
     } catch (err: any) {

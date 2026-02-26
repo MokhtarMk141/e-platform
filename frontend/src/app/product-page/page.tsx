@@ -5,83 +5,60 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useProducts } from '@/hooks/useProducts'
 import { useCategories } from '@/hooks/useCategories'
+import { Category } from '@/types/product.types'
 import MegaMenu from '../mega-menu/megaMenu'
 
 /*
   PRODUCT LISTING PAGE
-  How category filtering works:
-  1. MegaMenu links pass ?category=<slug>&categoryKey=<key> in the URL
-  2. This page reads those params with useSearchParams()
-  3. It matches the slug/key against fetched categories from GET /categories
-  4. It passes the matched categoryId to useProducts() → GET /products?categoryId=<id>
+  How it works:
+  1. MegaMenu links go to /product-page?categoryKey=cpu
+  2. This page reads ?categoryKey from the URL
+  3. It finds the category whose name contains that key
+  4. It fetches products for that category
 */
 
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  cpu: ['processor', 'cpu'],
-  gpu: ['graphics', 'gpu', 'video card'],
-  motherboard: ['motherboard', 'mobo'],
-  ram: ['memory', 'ram', 'ddr'],
-  storage: ['storage', 'ssd', 'hdd', 'nvme', 'hard drive'],
-  psu: ['power supply', 'psu'],
-  cooling: ['cooler', 'cooling', 'fan', 'aio'],
-  case: ['case', 'tower', 'chassis'],
-  monitor: ['monitor', 'display', 'screen'],
-  keyboard: ['keyboard'],
-  mouse: ['mouse', 'mice'],
-  headset: ['headset', 'headphone', 'audio'],
-}
-
 function ProductsPageInner() {
+  // Step 1: Read the categoryKey from the URL (e.g. "cpu", "mouse", etc.)
   const searchParams = useSearchParams()
-  const urlCategory = searchParams.get('category')
-  const urlKey = searchParams.get('categoryKey')
+  const categoryKey = searchParams.get('categoryKey')
 
+  // Step 2: Get all categories from the backend
   const { categories } = useCategories()
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined)
-  const [activeTab, setActiveTab] = useState<string>('all')
 
-  // Match URL params to a backend category
+  // Step 3: Track which category is selected
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined)
+  const [activeTab, setActiveTab] = useState('all')
+
+  // Step 4: When categories load or URL changes, find the matching category
   useEffect(() => {
     if (!categories || categories.length === 0) return
 
-    if (!urlCategory && !urlKey) {
+    // No key in URL → show all products
+    if (!categoryKey) {
       setSelectedCategoryId(undefined)
       setActiveTab('all')
       return
     }
 
-    // Try to match by keyword
-    if (urlKey && CATEGORY_KEYWORDS[urlKey]) {
-      const keywords = CATEGORY_KEYWORDS[urlKey]
-      const matched = categories.find((cat: any) =>
-        keywords.some(kw => cat.name.toLowerCase().includes(kw))
-      )
-      if (matched) {
-        setSelectedCategoryId(matched.id)
-        setActiveTab(matched.name)
-        return
-      }
-    }
+    // Find the category whose name contains the key
+    // Example: categoryKey = "cpu" → matches a category named "CPUs & Processors"
+    const matched = categories.find(cat =>
+      cat.name.toLowerCase().includes(categoryKey.toLowerCase())
+    )
 
-    // Try slug tokenization
-    if (urlCategory) {
-      const tokens = urlCategory.toLowerCase().replace(/-/g, ' ').split(' ')
-      const matched = categories.find((cat: any) =>
-        tokens.some((t: string) => cat.name.toLowerCase().includes(t))
-      )
-      if (matched) {
-        setSelectedCategoryId(matched.id)
-        setActiveTab(matched.name)
-        return
-      }
+    if (matched) {
+      setSelectedCategoryId(matched.id)
+      setActiveTab(matched.name)
     }
-  }, [categories, urlCategory, urlKey])
+  }, [categories, categoryKey])
 
+  // Step 5: Fetch products (filtered by category if one is selected)
   const { products, loading, error } = useProducts(
     selectedCategoryId ? { categoryId: selectedCategoryId } : {}
   )
 
-  const handleCategoryClick = (cat: any) => {
+  // Step 6: Handle clicking a category tab
+  function handleCategoryClick(cat: Category | 'all') {
     if (cat === 'all') {
       setSelectedCategoryId(undefined)
       setActiveTab('all')
@@ -98,13 +75,13 @@ function ProductsPageInner() {
       <main style={{ maxWidth: 1000, margin: '0 auto', padding: 20 }}>
         <h1>Products</h1>
         <p style={{ color: '#666', marginBottom: 20 }}>
-          {urlCategory
-            ? `Filtered by: ${urlCategory} (key: ${urlKey})`
+          {categoryKey
+            ? `Filtered by: ${categoryKey}`
             : 'Showing all products'
           }
         </p>
 
-        {/* ── Category tabs ── */}
+        {/* Category tabs */}
         <div style={{ marginBottom: 20, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             onClick={() => handleCategoryClick('all')}
@@ -117,7 +94,7 @@ function ProductsPageInner() {
           >
             All
           </button>
-          {categories?.map((cat: any) => (
+          {categories?.map((cat) => (
             <button
               key={cat.id}
               onClick={() => handleCategoryClick(cat)}
@@ -133,11 +110,11 @@ function ProductsPageInner() {
           ))}
         </div>
 
-        {/* ── Loading / Error ── */}
+        {/* Loading / Error */}
         {loading && <p>Loading products...</p>}
         {error && <div className="error">{error}</div>}
 
-        {/* ── Product table ── */}
+        {/* Product table */}
         {!loading && products && (
           <>
             <p style={{ fontSize: 13, color: '#888', marginBottom: 10 }}>
@@ -156,7 +133,7 @@ function ProductsPageInner() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((product: any) => (
+                {products.map((product) => (
                   <tr key={product.id}>
                     <td style={{ width: 60 }}>
                       {product.imageUrl

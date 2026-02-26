@@ -40,8 +40,17 @@ export class AuthService {
       '/auth/login',
       credentials
     );
+    
+/*ApiClient.post → envoie une requête POST au serveur à l’URL /auth/login.
 
-    if (response.accessToken) {
+<AuthResponse> → indique le type attendu en retour (TypeScript).
+
+credentials → les données envoyées au backend (email et mot de passe).
+
+await → la fonction attend la réponse avant de continuer.
+*/
+
+    if (response.accessToken) { //Vérifie si la réponse contient un accessToken → signifie que le login a réussi.
       this.setAuthStorage(response);
     }
 
