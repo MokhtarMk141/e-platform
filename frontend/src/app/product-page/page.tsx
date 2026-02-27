@@ -26,7 +26,9 @@ function ProductsPageInner() {
   const { categories } = useCategories()
 
   // Step 3: Track which category is selected
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined) 
+  //selectedCategoryId string → the ID of the category selected
+  //setSelectedCategoryId → function to update selectedCategoryId 
   const [activeTab, setActiveTab] = useState('all')
 
   // Step 4: When categories load or URL changes, find the matching category
