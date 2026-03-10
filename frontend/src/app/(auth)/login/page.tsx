@@ -27,7 +27,6 @@ export default function Login() {
     e.preventDefault()
 //Si tu ne mets pas e.preventDefault(), la page se recharge et tu ne verras jamais ton console.log.
 //Si tu mets e.preventDefault(), la page reste sur place, et tu peux faire ce que tu veux avec les données du formulaire.
-
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields')
       return

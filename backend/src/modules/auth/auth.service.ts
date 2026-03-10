@@ -10,9 +10,11 @@ import { AppError } from "../../exceptions/app-error";
 import { prisma } from "../../config/database";
 import { env } from "../../config/env";
 import { sendEmail } from "../../utils/send-email";
+import { expression } from "joi";
+import { ref } from "process";
 
 export class AuthService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private userRepository: UserRepository) { }
 
   private toResponse(
     user: Pick<User, "id" | "name" | "email" | "role" | "createdAt">
@@ -26,63 +28,152 @@ export class AuthService {
     };
   }
 
-  /**
-   * Hash a token with SHA-256 before storing in DB.
-   * The raw token is only ever sent to the client — we never store it.
-   */
-  private hashToken(token: string): string {
-    return crypto.createHash("sha256").update(token).digest("hex");
+  //make a hush for the tokne with hex type 
+  private hashToken(toekn: string): string {
+    return crypto.createHash("sha256").update(toekn).digest("hex")
   }
 
-  // Short lived — 15 minutes
+
+  //-------------------------------------------------------------------------------------------------------------------------  
+  //Cette fonction sert à créer un Access Token (JWT) que le client utilisera pour accéder aux routes protégées.
+  //sub is just the official JWT claim name for “the subject of the token” (the user the token is about).
+  //It could technically be called userId instead of sub, and it would still work.
+  //But using sub makes your token JWT-standard, so other libraries and tools recognize it automatically.
+  //jwt.sign This is the function from the JWT library that creates the token. the payload is userid and his role 
+  //env.jwt_secret is a secret vlaue This is a secret value only your server knows. It ensures the token: cannot be faked and cannot be modified 
+
   generateAccessToken(userId: string, role: UserRole): string {
-    return jwt.sign(
-      { sub: userId, role },
-      env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
+    return jwt.sign({ sub: userId, role: role }, env.JWT_SECRET, { expiresIn: "15m" });
   }
+  //-------------------------------------------------------------------------------------------------------------------------  
+
+
+  //-------------------------------------------------------------------------------------------------------------------------  
 
   // Random string — sent to client, stored as hash in DB
   generateRefreshToken(): string {
     return crypto.randomBytes(64).toString("hex");
   }
 
+  //crypto est un module intégré de Node.js qui sert à générer des données cryptographiquement sécurisées.
+  //génère 64 octets aléatoires
+  //convert  the  buffer to chaîne hexadécimale. Exemple :  octet 255 become "ff" on  hexadécimal.
+
+
+  //-------------------------------------------------------------------------------------------------------------------------  
+
+
+  //-------------------------------------------------------------------------------------------------------------------------  
+
   // Save hashed refresh token to DB
-  async saveRefreshToken(userId: string, rawToken: string) {
+
+  async saveRefreshToken(userId: string, token: string) {
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
     return prisma.refreshToken.create({
       data: {
-        token: this.hashToken(rawToken),
+        token: this.hashToken(token),
         userId,
         expiresAt,
-      },
-    });
+      }
+    })
+
   }
 
-  // Revoke all tokens for this user
+
+
+
+  /*ajoute une nouvelle ligne dans la table refreshToken.
+  
+  data contient les champs à enregistrer :
+  
+  token -> le refresh token généré précédemment
+  
+  userId -> l'utilisateur auquel le token appartient
+  
+  expiresAt -> date d'expiration du token*/
+
+  //-------------------------------------------------------------------------------------------------------------------------  
+
+
   async revokeAllUserTokens(userId: string) {
     await prisma.refreshToken.updateMany({
       where: { userId, revoked: false },
       data: { revoked: true },
     });
   }
-
+  /*Avec Prisma, prisma.refreshToken permet de faire des opérations sur cette table, comme :
+  
+  findMany -> lire plusieurs tokens
+  
+  create -> ajouter un token
+  
+  updateMany > modifier plusieurs tokens à la fois
+  
+  delete -> supprimer un token
+  
+  *data = ce qu'on change dans les lignes sélectionnées.
+  
+  Ici : on met revoked: true - on révoque ces tokens.
+  
+  * where: { userId, revoked: false } - on sélectionne tous les tokens actifs pour cet utilisateur.
+  
+  data: { revoked: true } -> on met ces tokens comme révoqués, donc plus aucun token actif ne peut être utilisé
+  Résultat : aucun refresh token actif - l'utilisateur devra se reconnecter pour obtenir un nouveau token.
+  
+  */
   async register(dto: RegisterDtoType) {
-    const existing = await this.userRepository.findByEmail(dto.email);
-    if (existing) throw new AppError("Email already exists", 400);
-
+    const exist = await this.userRepository.findByEmail(dto.email);
+    if (exist) throw new AppError("email already exist", 400);
     const hashed = await bcrypt.hash(dto.password, 10);
-    const user = await this.userRepository.create({ ...dto, password: hashed });
-
+    const user = await this.userRepository.create({ ...dto, password: hashed })
     const accessToken = this.generateAccessToken(user.id, user.role);
     const refreshToken = this.generateRefreshToken();
     await this.saveRefreshToken(user.id, refreshToken);
-
     return { user: this.toResponse(user), accessToken, refreshToken };
   }
+
+
+  /*On hash le mot de passe avec bcrypt pour ne pas le stocker en clair.
+  
+  10 = nombre de salt rounds, plus le nombre est grand, plus c'est sécurisé (mais plus lent).
+  
+  Exemple : "mypassword" devient "a9f8d7c6e5 ... " (hash sécurisé).
+  
+  le return comme ca : {
+  "user": {
+  "id": "123",
+  "email": "alice@example.com",
+  "name": "Alice"
+  
+  "accessToken": "eyJhbGciOiJIUzI1 ... ",
+  "refreshToken": "a9f8d7c6e5 ... "
+  
+  Le frontend peut alors :
+  
+  Afficher le nom de l'utilisateur
+  
+  Stocker l'access token pour les futures requêtes
+  
+  Stocker le refresh token pour le renouvellement
+  
+  L'access token et le refresh token circulent dans la réponse HTTP.
+  
+  Si quelqu'un intercepte cette réponse (ex : via un réseau non sécurisé ou un bug XSS dans le frontend) :
+  
+  L'attaquant peut utiliser le refresh token pour générer un nouveau access token et se connecter comme l'utilisateur.
+  
+  L'access token seul donne accès temporaire aux ressources sécurisées.
+  
+  Donc il faut toujours protéger ces tokens.
+  suivant les bonnes pratiques : HTTPS, stockage sécurisé, HttpOnly cookie, expiration courte, révoquer les tokens -
+  le risque est très faible.
+  HTTPS :
+  Les tokens ne doivent jamais transiter en clair sur HTTP.
+  HTTPS chiffre la communication entre client et serveur.
+  
+  */
 
   async login(dto: LoginDtoType) {
     const user = await this.userRepository.findByEmail(dto.email);
@@ -93,13 +184,13 @@ export class AuthService {
 
     // Revoke all previous tokens on new login
     await this.revokeAllUserTokens(user.id);
-
     const accessToken = this.generateAccessToken(user.id, user.role);
     const refreshToken = this.generateRefreshToken();
     await this.saveRefreshToken(user.id, refreshToken);
-
     return { user: this.toResponse(user), accessToken, refreshToken };
   }
+
+
 
   async refreshAccessToken(rawToken: string) {
     const hashedToken = this.hashToken(rawToken);
@@ -135,6 +226,15 @@ export class AuthService {
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 
+
+  async logoutAll(userId: string) {
+    await this.revokeAllUserTokens(userId);
+  }
+
+
+
+
+
   async logout(rawToken: string) {
     const hashedToken = this.hashToken(rawToken);
 
@@ -149,9 +249,20 @@ export class AuthService {
     });
   }
 
-  async logoutAll(userId: string) {
-    await this.revokeAllUserTokens(userId);
-  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ─── Forgot / Reset Password ───────────────────────────────────
 

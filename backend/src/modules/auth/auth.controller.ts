@@ -10,6 +10,8 @@ import { RegisterDtoType } from "./dto/register.dto";
 import { LoginDtoType } from "./dto/login.dto";
 import { ForgotPasswordDtoType } from "./dto/forgot-password.dto";
 import { ResetPasswordDtoType } from "./dto/reset-password.dto";
+import { ref } from "process";
+import { UnderlyingByteSource } from "stream/web";
 
 export class AuthController {
   private authService: AuthService;
@@ -30,11 +32,16 @@ export class AuthController {
 
   register = asyncHandler(async (req: Request, res: Response) => {
     const payload = req.body as RegisterDtoType;
+    //wiht Destructuring =>
     const { user, accessToken, refreshToken } =
       await this.authService.register(payload);
-
-    this.setRefreshCookie(res, refreshToken);
-
+/*-------------ORR with temporary variable  --------------------------
+  const auth = await this.authService.register(payload);
+  const user = auth.user;
+  const accessToken = auth.accessToken;
+  const refreshToken = auth.refreshToken;
+*/
+    this.setRefreshCookie(res, refreshToken); // res is the data coming from the client like json 
     return sendSuccess(res, {
       statusCode: 201,
       message: "User registered successfully",
@@ -54,24 +61,31 @@ export class AuthController {
       data: { user, accessToken },
     });
   });
+/*Check if the user has a valid refresh token.
+Generate a new access token (and optionally a new refresh token).
+Send the new access token to the client, and rotate the refresh token for security*/
 
   refresh = asyncHandler(async (req: Request, res: Response) => {
     const token = req.cookies?.refreshToken as string | undefined;
+  /*Retrieves the refresh token from the HTTP-only cookie sent by the browser.
+req.cookies → contains all cookies from the client.
+?. → optional chaining (in case cookies or refreshToken is undefined).
+as string | undefined → TypeScript type assertion.*/
     if (!token) {
       throw new AppError("No refresh token provided", 401);
     }
-
     const { accessToken, refreshToken } =
       await this.authService.refreshAccessToken(token);
-
     // Set the new refresh token cookie (rotation)
     this.setRefreshCookie(res, refreshToken);
-
     return sendSuccess(res, {
       message: "Token refreshed successfully",
       data: { accessToken },
     });
   });
+
+
+
 
   logout = asyncHandler(async (req: Request, res: Response) => {
     const token = req.cookies?.refreshToken as string | undefined;
@@ -85,6 +99,38 @@ export class AuthController {
     });
   });
 
+
+
+
+
+
+
+
+
+
+
+
+  logout_= asyncHandler (async (req : Request , res : Response ) => {
+    const token = req.cookies?.refreshToken as string  | undefined; 
+    if (token){
+      await this.authService.logout(token);
+    }
+
+    res.clearCookie("refreshToken",)
+  } )
+
+
+
+
+
+
+
+
+
+
+
+
+
   logoutAll = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = getAuthenticatedUserId(req);
 
@@ -95,6 +141,21 @@ export class AuthController {
       data: null,
     });
   });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   forgotPassword = asyncHandler(async (req: Request, res: Response) => {
     const payload = req.body as ForgotPasswordDtoType;

@@ -11,58 +11,67 @@ import {
 const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
 
 export class AuthService {
-  /* ── Storage helpers ── */
 
-  static setAuthStorage(response: AuthResponse) {
+  //this function allows the frontend to remeber the logged-in user even if our refresh the page 
+  static setAuthStorage(response: AuthResponse) { //this the return of 
     if (typeof window === 'undefined') return;
 
     const { accessToken, user } = response;
 
     localStorage.setItem('token', accessToken);
     localStorage.setItem('user', JSON.stringify(user));
-
+//Save token in a cookie
     document.cookie = `token=${accessToken}; path=/; max-age=${ONE_WEEK_IN_SECONDS}; secure; samesite=lax`;
   }
+/*token=… → stores the JWT in the cookie.
+
+path=/ → the cookie is available on all pages of your website.
+
+max-age=… → the cookie lasts 1 week. After that, it disappears automatically.
+
+secure → the cookie is sent only over HTTPS (secure connection).
+
+samesite=lax → prevents some attacks from other websites (CSRF protection).*/
+
+
+
+
+
+
 
   static clearAuthStorage() {
     if (typeof window === 'undefined') return;
-
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-
     document.cookie = 'token=; path=/; max-age=0';
   }
 
-  /* ── Auth endpoints ── */
+
+  /* ── Authenticate the user and store their session  ── */
 
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await ApiClient.post<AuthResponse>(
-      '/auth/login',
-      credentials
-    );
-    
-/*ApiClient.post → envoie une requête POST au serveur à l’URL /auth/login.
-
-<AuthResponse> → indique le type attendu en retour (TypeScript).
-
-credentials → les données envoyées au backend (email et mot de passe).
-
-await → la fonction attend la réponse avant de continuer.
-*/
-
-    if (response.accessToken) { //Vérifie si la réponse contient un accessToken → signifie que le login a réussi.
+    const response = await ApiClient.post<AuthResponse>('/auth/login',credentials);
+    if (response.accessToken) { 
       this.setAuthStorage(response);
     }
-
     return response;
   }
 
-  static async register(
-    credentials: RegisterCredentials
-  ): Promise<AuthResponse> {
-    const response = await ApiClient.post<AuthResponse>(
-      '/auth/register',
-      credentials
+/*
+User enters email & password → calls login(credentials).
+
+ApiClient.post sends a POST request to /auth/login.
+
+Server returns accessToken + user.
+
+setAuthStorage saves token in localStorage + cookie.
+
+login returns response → app can now use response.user or response.accessToken.
+*/
+
+
+  static async register(credentials: RegisterCredentials): Promise<AuthResponse> {
+    const response = await ApiClient.post<AuthResponse>('/auth/register',credentials
     );
 
     if (response.accessToken) {
@@ -72,6 +81,8 @@ await → la fonction attend la réponse avant de continuer.
     return response;
   }
 
+
+  //To get a new access token from the server when the current one expires and update it on the client
   static async refreshToken(): Promise<string> {
     const response = await ApiClient.post<RefreshResponse>('/auth/refresh');
 

@@ -18,10 +18,10 @@ interface AuthState {
   setToken: (token: string) => void;
 }
 
-const getInitialAuthState = (): Pick<
-  AuthState,
-  'user' | 'token' | 'isAuthenticated'
+const getInitialAuthState = (): Pick<AuthState,
+'user' | 'token' | 'isAuthenticated'
 > => {
+  
   const token = AuthService.getToken();
   const user = AuthService.getUser();
 
@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  register: async (credentials) => {
+  register: async (credentials) => { //credentials is just a variable name. 
     set({ loading: true });
     try {
       const response = await AuthService.register(credentials);

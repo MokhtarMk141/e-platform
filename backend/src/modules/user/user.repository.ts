@@ -2,11 +2,41 @@ import { User } from "@prisma/client";
 import { CreateUserDto, CreateUserDtoType } from "./dto/create-user.dto";
 import { UpdateUserDto, UpdateUserDtoType } from "./dto/update-user.dto";
 import { prisma } from "../../config/database";
+import { primitiveTypes } from "zod/v4/core/util.cjs";
 
 export class UserRepository {
   async create(dto: CreateUserDtoType): Promise<User> {
     return prisma.user.create({ data: dto });
   }
+
+  async findbbyid(id :string ) :Promise<User | null>{
+    return prisma.user.findUnique({where : {id}})
+  }
+
+  async findbymail(email : string ) : Promise<User |null>
+{
+  return prisma.user.findUnique({where : {email}})
+}
+
+
+async finndall(): Promise<User[]>{
+  return prisma.user.findMany();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   async findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } });
   }

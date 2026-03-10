@@ -14,8 +14,10 @@ export class UserController {
   constructor() {
     this.userService = new UserService(new UserRepository());
   }
-
-  create = asyncHandler(async (req: Request, res: Response) => {
+//This is a wrapper function (probably from express-async-handler) that automatically catches errors in async functions.
+//declaring a function named create
+  create = asyncHandler(async (req: Request, res: Response) => { // The async keyword makes a function return a Promise.
+ /*This allows you to use await inside it to wait for asynchronous operations (like database calls) without using .then() chains.*/
     const payload = req.body as CreateUserDtoType;
     const user = await this.userService.createUser(payload);
 
@@ -25,6 +27,11 @@ export class UserController {
       data: user,
     });
   });
+//asyncHandler catches async errors automatically and passes them to your global error middleware.
+//sendSuccess ensures all responses follow one standardized format.
+
+
+
 
   findAll = asyncHandler(async (req: Request, res: Response) => {
     const users = await this.userService.getUsers();

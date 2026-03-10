@@ -23,7 +23,6 @@ export class UserService {
   async createUser(dto: CreateUserDtoType): Promise<UserResponseDto> {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) throw new AppError("Email already exists", 400);
-
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.userRepository.create({
       ...dto,
