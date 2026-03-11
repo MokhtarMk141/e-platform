@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useProducts } from '@/hooks/useProducts'
 import { useCategories } from '@/hooks/useCategories'
+import { useCartStore, useCart } from '@/hooks/useCart'
+import { useAuthStore } from '@/hooks/useAuth'
 import MegaMenu from '../mega-menu/megaMenu';
 
 const FONTS = `
@@ -133,6 +135,9 @@ function GridCard({ product, wished, onWish, delay }: {
   product: any; wished: boolean; onWish: () => void; delay: number
 }) {
   const [hovered, setHovered] = useState(false)
+  const { addItem } = useCart()
+  const { isAuthenticated } = useAuthStore()
+  const router = useRouter()
 
   return (
     <Link
@@ -264,6 +269,15 @@ function GridCard({ product, wished, onWish, delay }: {
             </span>
             <button
               disabled={product.stock === 0}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isAuthenticated) {
+                  router.push('/login');
+                  return;
+                }
+                addItem(product.id, 1);
+              }}
               style={{
                 background: product.stock === 0 ? 'transparent' : 'var(--brand-red)',
                 color: product.stock === 0 ? 'var(--text-dim)' : '#fff',
@@ -276,7 +290,7 @@ function GridCard({ product, wished, onWish, delay }: {
                 boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(255,40,0,0.2)',
               }}
             >
-              {product.stock === 0 ? 'Sold Out' : 'View Build →'}
+              {product.stock === 0 ? 'Sold Out' : 'Add to Bag +'}
             </button>
           </div>
         </div>
@@ -289,6 +303,9 @@ function ListCard({ product, wished, onWish, delay }: {
   product: any; wished: boolean; onWish: () => void; delay: number
 }) {
   const [hovered, setHovered] = useState(false)
+  const { addItem } = useCart()
+  const { isAuthenticated } = useAuthStore()
+  const router = useRouter()
 
   return (
     <Link
@@ -309,7 +326,7 @@ function ListCard({ product, wished, onWish, delay }: {
         }}
       >
         <div style={{
-          width: 180, flexShrink: 0,
+          width: 50, flexShrink: 0,
           background: 'var(--surface)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
         }}>
@@ -369,6 +386,15 @@ function ListCard({ product, wished, onWish, delay }: {
               </button>
               <button
                 disabled={product.stock === 0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isAuthenticated) {
+                    router.push('/login');
+                    return;
+                  }
+                  addItem(product.id, 1);
+                }}
                 style={{
                   background: product.stock === 0 ? 'transparent' : 'var(--foreground)',
                   color: product.stock === 0 ? 'var(--text-dim)' : 'var(--background)',
@@ -381,7 +407,7 @@ function ListCard({ product, wished, onWish, delay }: {
                   boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
                 }}
               >
-                {product.stock === 0 ? 'Sold Out' : 'See Details'}
+                {product.stock === 0 ? 'Sold Out' : 'Add to Bag +'}
               </button>
             </div>
           </div>

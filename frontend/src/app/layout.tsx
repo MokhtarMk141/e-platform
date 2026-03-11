@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import ClientProviders from '@/components/ClientProviders';
 
 export const metadata: Metadata = {
   title: 'Ecommerce Platform',
@@ -34,7 +35,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased transition-colors duration-300">
-        {children}
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );
