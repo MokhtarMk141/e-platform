@@ -19,7 +19,7 @@ export function useCategories(): UseCategoriesReturn {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const res = await CategoryService.getAll()
+        const res = await CategoryService.getAll();
         setCategories(res.data)
       } catch (err: any) {
         setError(err.message || 'Failed to load categories')

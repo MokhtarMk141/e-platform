@@ -21,60 +21,40 @@ interface AuthState {
 const getInitialAuthState = (): Pick<AuthState,
 'user' | 'token' | 'isAuthenticated'
 > => {
-  
   const token = AuthService.getToken();
   const user = AuthService.getUser();
-
   if (!token || !user) {
-    return {
-      user: null,
-      token: null,
-      isAuthenticated: false,
+    return {user: null,token: null,isAuthenticated: false,
     };
   }
-
-  return {
-    user,
-    token,
-    isAuthenticated: true,
-  };
+  return {user,token,isAuthenticated: true,};
 };
+
 
 export const useAuthStore = create<AuthState>((set) => ({
   ...getInitialAuthState(),
   loading: false,
 
+  
   login: async (credentials) => {
     set({ loading: true });
     try {
       const response = await AuthService.login(credentials);
-
-      set({
-        user: response.user,
-        token: response.accessToken,
-        isAuthenticated: true,
-        loading: false,
-      });
-
+      set({user: response.user,token: response.accessToken,isAuthenticated: true,loading: false,});
       return response;
     } catch (error) {
       set({ loading: false, isAuthenticated: false });
       throw error;
     }
   },
+
+
 
   register: async (credentials) => { //credentials is just a variable name. 
     set({ loading: true });
     try {
       const response = await AuthService.register(credentials);
-
-      set({
-        user: response.user,
-        token: response.accessToken,
-        isAuthenticated: true,
-        loading: false,
-      });
-
+      set({user: response.user,token: response.accessToken,isAuthenticated: true,loading: false,});
       return response;
     } catch (error) {
       set({ loading: false, isAuthenticated: false });
@@ -82,19 +62,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
+
   logout: () => {
     AuthService.logout();
-    set({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      loading: false,
+    set({user: null,token: null,isAuthenticated: false,loading: false,
     });
   },
-
   setToken: (token: string) => {
     set({ token });
   },
 }));
+
+
 
 export const useAuth = () => useAuthStore;

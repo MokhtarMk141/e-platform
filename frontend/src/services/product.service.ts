@@ -1,8 +1,5 @@
 import { ApiClient } from '@/lib/api-client';
-import {
-  ProductListResponse,
-  ProductResponse,
-  ProductFilters,
+import {ProductListResponse,ProductResponse,ProductFilters,
 } from '@/types/product.types'
 
 export class ProductService {
