@@ -67,6 +67,7 @@ model Product {
   orderItems            OrderItem[]
   category              Category?              @relation(fields: [categoryId], references: [id])
   recommendations       Recommendation[]
+  discounts             Discount[]
 }
 
 model Cart {
@@ -148,3 +149,29 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
 }
+
+model Discount {
+  id         String     @id @default(cuid())
+  code       String?    @unique
+  discount   Float
+  type       DiscountType
+  expiryDate DateTime
+  status     DiscountStatus @default(ACTIVE)
+  usageCount Int        @default(0)
+  maxUses    Int?
+  productId  String?
+  product    Product?   @relation(fields: [productId], references: [id])
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum DiscountStatus {
+  ACTIVE
+  PAUSED
+  EXPIRED
+}

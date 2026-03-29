@@ -11,6 +11,7 @@ import authRoutes from "./modules/auth/auth.routes";
 import productRoutes from "./modules/product/product.routes";
 import categoryRoutes from "./modules/category/category.routes";
 import cartRoutes from "./modules/cart/cart.routes";
+import discountRoutes from "./modules/discount/discount.routes";
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/discounts", discountRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
