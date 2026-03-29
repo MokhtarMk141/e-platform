@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useProducts } from '@/hooks/useProducts'
@@ -417,7 +417,7 @@ function ListCard({ product, wished, onWish, delay }: {
   )
 }
 
-export default function ProductsPage() {
+function ProductsPageInner() {
   const searchParams = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined)
   const [userSelectedCategory, setUserSelectedCategory] = useState(false)
@@ -826,5 +826,13 @@ export default function ProductsPage() {
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-red)', opacity: 0.3 }} />
       </div>
     </div>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Loading products...</div>}>
+      <ProductsPageInner />
+    </Suspense>
   )
 }

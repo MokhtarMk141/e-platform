@@ -17,7 +17,11 @@ function clearAuthAndRedirect(): void {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   document.cookie = 'token=; path=/; max-age=0';
-  window.location.href = '/login';
+  
+  // Only redirect if we're not already on the login page to avoid refresh loops
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
 }
 
 /* ── Refresh queue (prevents parallel refresh calls) ── */
@@ -56,7 +60,7 @@ async function refreshAccessToken(): Promise<string> {
     if (!res.ok) throw new Error('Refresh failed');
 
     const data = await res.json();
-    const newToken: string = data.accessToken;
+    const newToken: string = data.data?.accessToken;
 
     setStoredToken(newToken);
     processQueue(null, newToken);

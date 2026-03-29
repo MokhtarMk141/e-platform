@@ -1,12 +1,21 @@
 'use client'
-import { useState } from 'react'
-import { AuthService } from '@/services/auth.service'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 import { LoginCredentials } from '@/types/auth.types'
 import { useRouter } from 'next/navigation'
 import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Login() {
   const router = useRouter()
+  const { login, isAuthenticated } = useAuth()
+  
+  // Redirect to product page if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/product-page')
+    }
+  }, [isAuthenticated, router])
+
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,8 +46,8 @@ export default function Login() {
         email: formData.email,
         password: formData.password
       }
-      await AuthService.login(loginData)
-      router.push('/dashboard')
+      await login(loginData)
+      router.push('/product-page')
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials and try again.')
     } finally {

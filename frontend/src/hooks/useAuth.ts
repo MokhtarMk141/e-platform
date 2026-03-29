@@ -16,6 +16,7 @@ interface AuthState {
   register: (credentials: RegisterCredentials) => Promise<AuthResponse>;
   logout: () => void;
   setToken: (token: string) => void;
+  syncAuth: () => void;
 }
 
 const getInitialAuthState = (): Pick<
@@ -94,6 +95,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setToken: (token: string) => {
     set({ token });
+  },
+
+  syncAuth: () => {
+    set(getInitialAuthState());
   },
 }));
 

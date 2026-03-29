@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import logoimg from "../../../public/website_logo.png";
 import ThemeToggle from "@/components/ThemeToggle";
-import { useCartStore } from "@/hooks/useCart";
-import { useCart } from "@/hooks/useCart";
+import { useCartStore, useCart } from "@/hooks/useCart";
+import { useAuthStore } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
@@ -125,7 +126,7 @@ const menus = {
   },
 };
 
-const navLinks = ["Products", "Deals", "Build Guide", "Support"];
+const navLinks = ["Products", "Deals", "Build Guide"];
 
 type MenuKey = "Products" | "Deals" | "Build Guide";
 
@@ -139,8 +140,10 @@ const toCategorySlug = (label: string) =>
     .replace(/\s+/g, "-");
 
 export default function MegaMenu() {
+  const router = useRouter();
   const [active, setActive] = useState<MenuKey | null>(null);
   const { cart, toggleCart } = useCart();
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   return (
     <div style={{ background: "var(--background)", fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", borderBottom: "1px solid var(--border)" }}>
@@ -462,9 +465,30 @@ export default function MegaMenu() {
               )}
             </button>
 
-            <button className="sign-in-btn">Login</button>
+            {isAuthenticated ? (
+              <>
+                {user?.role === 'ADMIN' && (
+                  <button className="sign-in-btn" onClick={() => router.push('/admin')}>
+                    Admin Panel
+                  </button>
+                )}
+                <span className="sign-in-btn" style={{ cursor: 'default' }}>
+                  {user?.role === 'ADMIN' ? `Welcome Admin ${user?.name}` : user?.name}
+                </span>
+                <button
+                  className="sign-in-btn"
+                  onClick={() => {
+                    logout();
+                    router.push('/login');
+                  }}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <button className="sign-in-btn" onClick={() => router.push('/login')}>Login</button>
+            )}
 
-            <button className="start-btn">Start Build</button>
           </div>
         </div>
 

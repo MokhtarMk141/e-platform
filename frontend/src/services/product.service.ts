@@ -3,6 +3,7 @@ import {
   ProductListResponse,
   ProductResponse,
   ProductFilters,
+  Product,
 } from '@/types/product.types'
 
 export class ProductService {
@@ -22,5 +23,17 @@ export class ProductService {
 
   static getById(id: string): Promise<ProductResponse> {
     return ApiClient.get<ProductResponse>(`/products/${id}`)
+  }
+
+  static create(data: Partial<Product>): Promise<ProductResponse> {
+    return ApiClient.post<ProductResponse>('/products', data)
+  }
+
+  static update(id: string, data: Partial<Product>): Promise<ProductResponse> {
+    return ApiClient.put<ProductResponse>(`/products/${id}`, data)
+  }
+
+  static delete(id: string): Promise<void> {
+    return ApiClient.delete<void>(`/products/${id}`)
   }
 }

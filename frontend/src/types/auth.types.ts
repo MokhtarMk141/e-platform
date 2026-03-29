@@ -34,3 +34,9 @@ export interface ResetPasswordCredentials {
   token: string;
   password: string;
 }
+
+export interface UserListResponse {
+  success: boolean;
+  message: string;
+  data: User[];
+}

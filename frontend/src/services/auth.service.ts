@@ -36,41 +36,41 @@ export class AuthService {
   /* ── Auth endpoints ── */
 
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await ApiClient.post<AuthResponse>(
+    const response = await ApiClient.post<{ data: AuthResponse }>(
       '/auth/login',
       credentials
     );
 
-    if (response.accessToken) {
-      this.setAuthStorage(response);
+    if (response.data?.accessToken) {
+      this.setAuthStorage(response.data);
     }
 
-    return response;
+    return response.data;
   }
 
   static async register(
     credentials: RegisterCredentials
   ): Promise<AuthResponse> {
-    const response = await ApiClient.post<AuthResponse>(
+    const response = await ApiClient.post<{ data: AuthResponse }>(
       '/auth/register',
       credentials
     );
 
-    if (response.accessToken) {
-      this.setAuthStorage(response);
+    if (response.data?.accessToken) {
+      this.setAuthStorage(response.data);
     }
 
-    return response;
+    return response.data;
   }
 
   static async refreshToken(): Promise<string> {
-    const response = await ApiClient.post<RefreshResponse>('/auth/refresh');
+    const response = await ApiClient.post<{ data: RefreshResponse }>('/auth/refresh');
 
-    if (response.accessToken) {
-      localStorage.setItem('token', response.accessToken);
+    if (response.data?.accessToken) {
+      localStorage.setItem('token', response.data.accessToken);
     }
 
-    return response.accessToken;
+    return response.data?.accessToken || '';
   }
 
   static logout(): void {

@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
+import { useAuthStore } from '@/hooks/useAuth';
 import CartDrawer from '@/components/CartDrawer';
 
 export default function ClientProviders({
@@ -10,12 +12,23 @@ export default function ClientProviders({
     children: React.ReactNode;
 }) {
     const { fetchCart } = useCart();
+    const { syncAuth } = useAuthStore();
+    const pathname = usePathname();
 
     useEffect(() => {
-        // Initial fetch for the cart
-        fetchCart();
+        syncAuth();
 
-        // Theme initialization (can be done here or in RootLayout as a script)
+        // Only fetch cart if not on auth pages
+        const isAuthPage = pathname?.startsWith('/login') || 
+                          pathname?.startsWith('/register') || 
+                          pathname?.startsWith('/forgot-password') || 
+                          pathname?.startsWith('/reset-password');
+
+        if (!isAuthPage) {
+            fetchCart();
+        }
+
+        // Theme initialization
         try {
             if (typeof window !== 'undefined') {
                 const savedTheme = localStorage.getItem('theme');
@@ -28,7 +41,7 @@ export default function ClientProviders({
                 }
             }
         } catch (e) { }
-    }, [fetchCart]);
+    }, [fetchCart, pathname]);
 
     return (
         <>

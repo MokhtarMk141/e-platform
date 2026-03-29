@@ -9,10 +9,10 @@ export default function CartDrawer() {
     const { cart, isOpen, setOpen, loading, fetchCart, removeItem, updateQuantity } = useCart();
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !cart && !loading) {
             fetchCart();
         }
-    }, [isOpen, fetchCart]);
+    }, [isOpen]);
 
     return (
         <Drawer isOpen={isOpen} onClose={() => setOpen(false)} title="Shopping Bag">

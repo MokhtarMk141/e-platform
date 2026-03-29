@@ -1,12 +1,21 @@
 'use client'
-import { useState } from 'react'
-import { AuthService } from '@/services/auth.service'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 import { RegisterCredentials } from '@/types/auth.types'
 import { useRouter } from 'next/navigation'
 import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Register() {
   const router = useRouter()
+  const { register, isAuthenticated } = useAuth()
+  
+  // Redirect to product page if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/product-page')
+    }
+  }, [isAuthenticated, router])
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -41,7 +50,7 @@ export default function Register() {
         email: formData.email,
         password: formData.password
       }
-      await AuthService.register(registerData)
+      await register(registerData)
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.')
