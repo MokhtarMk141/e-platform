@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import logoimg from "../../../public/website_logo.png";
 import ThemeToggle from "@/components/ThemeToggle";
-import { useCartStore, useCart } from "@/hooks/useCart";
+import { useCart } from "@/hooks/useCart";
 import { useAuthStore } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
@@ -68,52 +68,13 @@ const menus = {
       cta: "Open PC Builder",
     },
   },
-  Deals: {
-    sections: [
-      {
-        title: "Current Offers",
-        items: [
-          { icon: "deals", label: "Daily Deals", desc: "Fresh discounts every 24 hours" },
-          { icon: "bundle", label: "Bundle Packages", desc: "Save more when buying together" },
-          { icon: "star", label: "Clearance Sale", desc: "Last chance prices, limited stock" },
-          { icon: "truck", label: "Free Shipping", desc: "Orders over $99 ship free" },
-        ],
-      },
-      {
-        title: "Deals by Category",
-        items: [
-          { icon: "cpu", label: "CPU Deals", desc: "Up to 25% off top processors" },
-          { icon: "gpu", label: "GPU Deals", desc: "RTX & RX massive price drops" },
-          { icon: "ram", label: "RAM Deals", desc: "DDR5 kits at record low prices" },
-          { icon: "storage", label: "Storage Deals", desc: "NVMe SSDs under $60/TB" },
-        ],
-      },
-    ],
-    featured: {
-      badge: "This Week",
-      title: "Flash Sale — Up to 40% off",
-      desc: "Massive savings on Intel, AMD, NVIDIA, Corsair and more top brands.",
-      cta: "See All Deals",
-    },
-  },
+
   "Build Guide": {
     sections: [
       {
         title: "Build Types",
         items: [
           { icon: "build", label: "Budget Build $400–$600", desc: "Best performance per dollar" },
-          { icon: "build", label: "Mid-Range $800–$1200", desc: "1440p gaming powerhouse" },
-          { icon: "build", label: "High-End $1500–$2500", desc: "4K ultra settings, no compromise" },
-          { icon: "build", label: "Workstation Pro", desc: "Content creation & 3D rendering" },
-        ],
-      },
-      {
-        title: "Resources",
-        items: [
-          { icon: "motherboard", label: "Compatibility Checker", desc: "Verify your parts work together" },
-          { icon: "chart", label: "Benchmark Database", desc: "Compare real-world performance" },
-          { icon: "star", label: "Expert Reviews", desc: "In-depth analysis by our team" },
-          { icon: "truck", label: "Installation Guide", desc: "Step-by-step video tutorials" },
         ],
       },
     ],
@@ -126,9 +87,9 @@ const menus = {
   },
 };
 
-const navLinks = ["Products", "Deals", "Build Guide"];
+const navLinks = ["Products", "Build Guide"];
 
-type MenuKey = "Products" | "Deals" | "Build Guide";
+type MenuKey = "Products" | "Build Guide";
 
 const toCategorySlug = (label: string) =>
   label
@@ -142,7 +103,7 @@ const toCategorySlug = (label: string) =>
 export default function MegaMenu() {
   const router = useRouter();
   const [active, setActive] = useState<MenuKey | null>(null);
-  const { cart, toggleCart } = useCart();
+  const { cart, toggleCart, resetCart } = useCart();
   const { isAuthenticated, user, logout } = useAuthStore();
 
   return (
@@ -478,6 +439,7 @@ export default function MegaMenu() {
                 <button
                   className="sign-in-btn"
                   onClick={() => {
+                    resetCart();
                     logout();
                     router.push('/login');
                   }}

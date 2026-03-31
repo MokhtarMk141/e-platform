@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { LoginCredentials } from '@/types/auth.types'
 import { useRouter } from 'next/navigation'
@@ -7,14 +7,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Login() {
   const router = useRouter()
-  const { login, isAuthenticated } = useAuth()
-  
-  // Redirect to product page if already logged in
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/product-page')
-    }
-  }, [isAuthenticated, router])
+  const { login } = useAuth()
 
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)

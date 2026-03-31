@@ -4,6 +4,7 @@ import { asyncHandler } from "../../utils/async-handler";
 import { createProductSchema } from "./dto/create-product.dto";
 import { updateProductSchema } from "./dto/update-product.dto";
 import { sendSuccess } from "../../utils/api-response";
+import { ProductSortBy } from "./product.repository";
 
 export class ProductController {
   private productService: ProductService;
@@ -12,12 +13,41 @@ export class ProductController {
     this.productService = new ProductService();
   }
 
+  private parseNumberArray(value: unknown): Array<number | undefined> | undefined {
+    const rawValues = Array.isArray(value) ? value : value != null ? [value] : [];
+    const numbers = rawValues
+      .flatMap((entry) => String(entry).split(","))
+      .map((entry) => {
+        const trimmed = entry.trim();
+        if (!trimmed) {
+          return undefined;
+        }
+
+        const parsed = Number(trimmed);
+        return Number.isFinite(parsed) ? parsed : undefined;
+      });
+
+    return numbers.some((entry) => entry != null) ? numbers : undefined;
+  }
+
   getAll = asyncHandler(async (req: Request, res: Response) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
     const categoryId = req.query.categoryId as string | undefined;
+    const minPrice = this.parseNumberArray(req.query.minPrice);
+    const maxPrice = this.parseNumberArray(req.query.maxPrice);
+    const search = typeof req.query.search === "string" ? req.query.search : undefined;
+    const sortBy = typeof req.query.sortBy === "string" ? (req.query.sortBy as ProductSortBy) : undefined;
 
-    const result = await this.productService.getAllProducts({ page, limit, categoryId });
+    const result = await this.productService.getAllProducts({
+      page,
+      limit,
+      categoryId,
+      minPrice,
+      maxPrice,
+      search,
+      sortBy,
+    });
 
     return sendSuccess(res, {
       message: "Products fetched successfully",

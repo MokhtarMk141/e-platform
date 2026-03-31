@@ -3,20 +3,53 @@
 import React, { useEffect } from 'react';
 import Drawer from './Drawer';
 import { useCart } from '@/hooks/useCart';
-import Link from 'next/link';
+import { useAuthStore } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 export default function CartDrawer() {
     const { cart, isOpen, setOpen, loading, fetchCart, removeItem, updateQuantity } = useCart();
+    const { isAuthenticated } = useAuthStore();
+    const router = useRouter();
 
     useEffect(() => {
-        if (isOpen && !cart && !loading) {
+        if (isOpen && isAuthenticated && !cart && !loading) {
             fetchCart();
         }
-    }, [isOpen]);
+    }, [cart, fetchCart, isAuthenticated, isOpen, loading]);
 
     return (
         <Drawer isOpen={isOpen} onClose={() => setOpen(false)} title="Shopping Bag">
-            {loading && !cart ? (
+            {!isAuthenticated ? (
+                <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    justifyContent: 'center', height: '100%', gap: 20, textAlign: 'center'
+                }}>
+                    <div style={{
+                        width: 80, height: 80, borderRadius: '50%', background: 'var(--surface)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 24, opacity: 0.5
+                    }}>
+                        Bag
+                    </div>
+                    <div>
+                        <h3 style={{ margin: '0 0 8px', fontWeight: 700 }}>Sign in to use your bag</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Your saved items and quantities are linked to your account.</p>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setOpen(false);
+                            router.push('/login');
+                        }}
+                        style={{
+                            padding: '12px 24px', background: 'var(--foreground)', color: 'var(--background)',
+                            border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer',
+                            fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13
+                        }}
+                    >
+                        Sign In
+                    </button>
+                </div>
+            ) : loading && !cart ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
                     <div style={{
                         width: 32, height: 32,
@@ -78,8 +111,9 @@ export default function CartDrawer() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{item.name}</h4>
                                         <button
+                                            disabled={loading}
                                             onClick={() => removeItem(item.id)}
-                                            style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 4 }}
+                                            style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: loading ? 'not-allowed' : 'pointer', padding: 4 }}
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                                 <path d="M18 6L6 18M6 6l12 12" />
@@ -96,15 +130,17 @@ export default function CartDrawer() {
                                             borderRadius: 8, border: '1px solid var(--border)'
                                         }}>
                                             <button
+                                                disabled={loading}
                                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                style={{ background: 'none', border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', color: 'var(--foreground)' }}
+                                                style={{ background: 'none', border: 'none', fontSize: 16, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', color: 'var(--foreground)' }}
                                             >
                                                 -
                                             </button>
                                             <span style={{ fontSize: 13, fontWeight: 800, minWidth: 20, textAlign: 'center' }}>{item.quantity}</span>
                                             <button
+                                                disabled={loading}
                                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                style={{ background: 'none', border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', color: 'var(--foreground)' }}
+                                                style={{ background: 'none', border: 'none', fontSize: 16, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', color: 'var(--foreground)' }}
                                             >
                                                 +
                                             </button>

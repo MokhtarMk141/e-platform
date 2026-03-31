@@ -96,7 +96,7 @@ export class ApiClient {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers,
-      credentials: 'include',           // always send cookies
+      credentials: 'include',          
     });
 
     /* ── 401 interceptor ── */

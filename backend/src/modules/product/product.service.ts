@@ -1,4 +1,4 @@
-import { ProductRepository } from "./product.repository";
+import { ProductRepository, ProductSortBy } from "./product.repository";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { ProductResponseDto } from "./dto/product-response.dto";
@@ -11,14 +11,32 @@ export class ProductService {
     page?: number;
     limit?: number;
     categoryId?: string;
+    minPrice?: Array<number | undefined>;
+    maxPrice?: Array<number | undefined>;
+    search?: string;
+    sortBy?: ProductSortBy;
   }): Promise<{ data: ProductResponseDto[]; total: number; page: number; limit: number }> {
     const page = params?.page ?? 1;
     const limit = params?.limit ?? 20;
     const skip = (page - 1) * limit;
 
     const [products, total] = await Promise.all([
-      this.productRepository.findAll({ skip, take: limit, categoryId: params?.categoryId }),
-      this.productRepository.count(params?.categoryId),
+      this.productRepository.findAll({
+        skip,
+        take: limit,
+        categoryId: params?.categoryId,
+        minPrice: params?.minPrice,
+        maxPrice: params?.maxPrice,
+        search: params?.search,
+        sortBy: params?.sortBy,
+      }),
+      this.productRepository.count({
+        categoryId: params?.categoryId,
+        minPrice: params?.minPrice,
+        maxPrice: params?.maxPrice,
+        search: params?.search,
+        sortBy: params?.sortBy,
+      }),
     ]);
 
     return {

@@ -3,7 +3,8 @@ import { CartService } from "./cart.service";
 import { asyncHandler } from "../../utils/async-handler";
 import { addItemSchema, updateItemQuantitySchema } from "./dto/add-item.dto";
 import { sendSuccess } from "../../utils/api-response";
-import { AppError } from "../../exceptions/app-error";
+import { AuthRequest } from "../auth/auth.middleware";
+import { getAuthenticatedUserId } from "../../utils/auth-utils";
 
 export class CartController {
     private cartService: CartService;
@@ -12,9 +13,8 @@ export class CartController {
         this.cartService = new CartService();
     }
 
-    getCart = asyncHandler(async (req: Request, res: Response) => {
-        const userId = (req as any).user?.id;
-        if (!userId) throw new AppError("Unauthorized", 401);
+    getCart = asyncHandler(async (req: AuthRequest, res: Response) => {
+        const userId = getAuthenticatedUserId(req);
 
         const cart = await this.cartService.getCart(userId);
 
@@ -24,9 +24,8 @@ export class CartController {
         });
     });
 
-    addItem = asyncHandler(async (req: Request, res: Response) => {
-        const userId = (req as any).user?.id;
-        if (!userId) throw new AppError("Unauthorized", 401);
+    addItem = asyncHandler(async (req: AuthRequest, res: Response) => {
+        const userId = getAuthenticatedUserId(req);
 
         const dto = addItemSchema.parse(req.body);
         const cart = await this.cartService.addItem(userId, dto);
@@ -37,9 +36,8 @@ export class CartController {
         });
     });
 
-    updateQuantity = asyncHandler(async (req: Request, res: Response) => {
-        const userId = (req as any).user?.id;
-        if (!userId) throw new AppError("Unauthorized", 401);
+    updateQuantity = asyncHandler(async (req: AuthRequest, res: Response) => {
+        const userId = getAuthenticatedUserId(req);
 
         const itemId = req.params.itemId as string;
         const { quantity } = updateItemQuantitySchema.parse(req.body);
@@ -52,9 +50,8 @@ export class CartController {
         });
     });
 
-    removeItem = asyncHandler(async (req: Request, res: Response) => {
-        const userId = (req as any).user?.id;
-        if (!userId) throw new AppError("Unauthorized", 401);
+    removeItem = asyncHandler(async (req: AuthRequest, res: Response) => {
+        const userId = getAuthenticatedUserId(req);
 
         const itemId = req.params.itemId as string;
         const cart = await this.cartService.removeItem(userId, itemId);
@@ -65,9 +62,8 @@ export class CartController {
         });
     });
 
-    clearCart = asyncHandler(async (req: Request, res: Response) => {
-        const userId = (req as any).user?.id;
-        if (!userId) throw new AppError("Unauthorized", 401);
+    clearCart = asyncHandler(async (req: AuthRequest, res: Response) => {
+        const userId = getAuthenticatedUserId(req);
 
         await this.cartService.clearCart(userId);
 

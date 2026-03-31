@@ -11,23 +11,34 @@ export default function ClientProviders({
 }: {
     children: React.ReactNode;
 }) {
-    const { fetchCart } = useCart();
-    const { syncAuth } = useAuthStore();
+    const { fetchCart, resetCart } = useCart();
+    const { syncAuth, isAuthenticated } = useAuthStore();
     const pathname = usePathname();
 
     useEffect(() => {
         syncAuth();
+    }, [syncAuth]);
 
-        // Only fetch cart if not on auth pages
+    useEffect(() => {
         const isAuthPage = pathname?.startsWith('/login') || 
                           pathname?.startsWith('/register') || 
                           pathname?.startsWith('/forgot-password') || 
                           pathname?.startsWith('/reset-password');
 
-        if (!isAuthPage) {
-            fetchCart();
+        if (isAuthPage) {
+            resetCart();
+            return;
         }
 
+        if (isAuthenticated) {
+            fetchCart();
+            return;
+        }
+
+        resetCart();
+    }, [fetchCart, isAuthenticated, pathname, resetCart]);
+
+    useEffect(() => {
         // Theme initialization
         try {
             if (typeof window !== 'undefined') {
@@ -41,7 +52,7 @@ export default function ClientProviders({
                 }
             }
         } catch (e) { }
-    }, [fetchCart, pathname]);
+    }, []);
 
     return (
         <>

@@ -35,6 +35,19 @@ export interface ProductResponse {
   data: Product
 }
 
+export interface ProductListMeta {
+  total: number
+  page: number
+  limit: number
+}
+
+export interface ApiProductListResponse {
+  success: boolean
+  message: string
+  data: Product[]
+  meta: ProductListMeta
+}
+
 export interface CategoryListResponse {
   success: boolean
   message: string
@@ -45,4 +58,8 @@ export interface ProductFilters {
   page?: number
   limit?: number
   categoryId?: string
+  minPrice?: number | Array<number | null>
+  maxPrice?: number | Array<number | null>
+  search?: string
+  sortBy?: 'featured' | 'price_asc' | 'price_desc' | 'newest'
 }

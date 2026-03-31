@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { RegisterCredentials } from '@/types/auth.types'
 import { useRouter } from 'next/navigation'
@@ -7,14 +7,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Register() {
   const router = useRouter()
-  const { register, isAuthenticated } = useAuth()
-  
-  // Redirect to product page if already logged in
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/product-page')
-    }
-  }, [isAuthenticated, router])
+  const { register } = useAuth()
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)

@@ -1,19 +1,96 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useProducts } from '@/hooks/useProducts'
 import { useCategories } from '@/hooks/useCategories'
-import { useCartStore, useCart } from '@/hooks/useCart'
+import { useCart } from '@/hooks/useCart'
 import { useAuthStore } from '@/hooks/useAuth'
+import type { Product } from '@/types/product.types'
 import MegaMenu from '../mega-menu/megaMenu';
 
 const FONTS = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
 `
 
-const sortOptions = ['Featured', 'Price: Low', 'Price: High', 'Newest', 'Top Rated']
+const sortOptions = ['Featured', 'Price: Low', 'Price: High']
+
+const PRICE_FILTER_RANGES: Record<string, { minPrice?: number; maxPrice?: number }> = {
+  'Under DTN 100': { maxPrice: 100 },
+  'DTN 100 - 250': { minPrice: 100, maxPrice: 250 },
+  'DTN 250 - 500': { minPrice: 250, maxPrice: 500 },
+  'DTN 500+': { minPrice: 500 },
+}
+
+const SORT_BY_INDEX: Record<number, 'featured' | 'price_asc' | 'price_desc'> = {
+  0: 'featured',
+  1: 'price_asc',
+  2: 'price_desc',
+}
+
+const BRAND_MATCHERS = [
+  'ASUS ROG',
+  'ASUS TUF',
+  'Cooler Master',
+  'Lian Li',
+  'Logitech G',
+  'Gigabyte',
+  'Kingston',
+  'Corsair',
+  'Samsung',
+  'Seagate',
+  'Intel',
+  'AMD',
+  'EVGA',
+  'NZXT',
+  'MSI',
+  'Razer',
+  'LG',
+] as const
+
+const FEATURE_DEFINITIONS = [
+  { label: 'Wireless', keywords: ['wireless', 'wifi'] },
+  { label: 'RGB', keywords: ['rgb'] },
+  { label: '4K', keywords: ['4k'] },
+  { label: 'DDR5', keywords: ['ddr5'] },
+  { label: 'OLED', keywords: ['oled'] },
+  { label: 'NVMe', keywords: ['nvme'] },
+  { label: '240Hz', keywords: ['240hz'] },
+  { label: 'Modular', keywords: ['modular'] },
+  { label: 'Mini-ITX', keywords: ['mini-itx'] },
+  { label: 'PCIe 5.0', keywords: ['pcie 5.0', 'pcie 5'] },
+] as const
+
+const inferBrand = (productName: string) => {
+  const normalizedName = productName.toLowerCase()
+  const matchedBrand = BRAND_MATCHERS.find((brand) => normalizedName.startsWith(brand.toLowerCase()))
+
+  if (matchedBrand) {
+    return matchedBrand
+  }
+
+  const [firstWord, secondWord] = productName.split(' ')
+  if (!firstWord) return null
+  if (secondWord && /^[A-Z]$/.test(secondWord)) {
+    return `${firstWord} ${secondWord}`
+  }
+
+  return firstWord
+}
+
+const getBrandOptions = (products: Product[]) =>
+  [...new Set(products.map((product) => inferBrand(product.name)).filter((brand): brand is string => Boolean(brand)))].sort((a, b) => a.localeCompare(b))
+
+const getFeatureOptions = (products: Product[]) =>
+  FEATURE_DEFINITIONS
+    .filter(({ keywords }) =>
+      products.some((product) => {
+        const searchableText = `${product.name} ${product.description ?? ''} ${product.category?.name ?? ''}`.toLowerCase()
+        return keywords.some((keyword) => searchableText.includes(keyword))
+      })
+    )
+    .map(({ label }) => label)
 
 const toCategorySlug = (value: string) =>
   value
@@ -432,11 +509,15 @@ function ProductsPageInner() {
   const [openSections, setOpenSections] = useState({ brand: true, price: true, features: true })
 
   const { categories } = useCategories()
+  const storefrontCategories = useMemo(
+    () => categories.filter((category) => (category.productCount ?? 0) > 0),
+    [categories]
+  )
   const requestedCategorySlug = searchParams.get('category')?.toLowerCase() ?? undefined
   const requestedCategoryKey = searchParams.get('categoryKey')?.toLowerCase() ?? undefined
   const requestedKeywords = requestedCategoryKey ? CATEGORY_KEYWORDS[requestedCategoryKey] ?? [] : []
   const requestedSlugTokens = requestedCategorySlug ? toTokens(requestedCategorySlug) : []
-  const categoryFromQuery = categories.find(category => {
+  const categoryFromQuery = storefrontCategories.find(category => {
     const categorySlug = toCategorySlug(category.name)
     const categoryTokens = toTokens(category.name)
 
@@ -450,19 +531,44 @@ function ProductsPageInner() {
     return false
   })?.id
   const activeCategory = userSelectedCategory ? selectedCategory : (categoryFromQuery ?? selectedCategory)
-
-  const { products, total, loading, error, refetch } = useProducts({
-    page: currentPage,
+  const { products: filterCatalogProducts } = useProducts({
     categoryId: activeCategory,
+    limit: 100,
   })
+  const availableBrands = useMemo(() => getBrandOptions(filterCatalogProducts), [filterCatalogProducts])
+  const availableFeatures = useMemo(() => getFeatureOptions(filterCatalogProducts), [filterCatalogProducts])
+
+  const filters = useMemo(() => {
+    const priceRanges = selectedPrices
+      .map((label) => PRICE_FILTER_RANGES[label])
+      .filter(Boolean)
+
+    const minPrice = priceRanges.map((range) => range.minPrice ?? null)
+    const maxPrice = priceRanges.map((range) => range.maxPrice ?? null)
+
+    const searchTerms = [...selectedBrands, ...selectedFeatures]
+
+    return {
+      page: currentPage,
+      categoryId: activeCategory,
+      minPrice: minPrice.length > 0 ? minPrice : undefined,
+      maxPrice: maxPrice.length > 0 ? maxPrice : undefined,
+      search: searchTerms.length > 0 ? searchTerms.join(',') : undefined,
+      sortBy: SORT_BY_INDEX[sortIndex] ?? 'featured',
+    }
+  }, [activeCategory, currentPage, selectedBrands, selectedFeatures, selectedPrices, sortIndex])
+
+  const { products, total, loading, error, refetch } = useProducts(filters)
 
   const totalPages = Math.ceil(total / 20)
 
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
 
-  const toggleFilter = (val: string, arr: string[], setter: (a: string[]) => void) =>
+  const toggleFilter = (val: string, arr: string[], setter: (a: string[]) => void) => {
+    setCurrentPage(1)
     setter(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
+  }
 
   const toggleWish = (id: string) =>
     setWished(prev => prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id])
@@ -473,8 +579,16 @@ function ProductsPageInner() {
     setCurrentPage(1)
   }
 
+  const resetAllFilters = () => {
+    setSelectedBrands([])
+    setSelectedFeatures([])
+    setSelectedPrices([])
+    setSortIndex(0)
+    handleCategoryChange(undefined)
+  }
+
   const categoryName = activeCategory
-    ? categories.find(c => c.id === activeCategory)?.name?.toUpperCase() ?? 'Products'
+    ? storefrontCategories.find(c => c.id === activeCategory)?.name?.toUpperCase() ?? 'Products'
     : 'Store Front'
 
   return (
@@ -562,7 +676,7 @@ function ProductsPageInner() {
         boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
       }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-          {[{ id: undefined, name: 'All Collection' }, ...categories].map(cat => {
+          {[{ id: undefined, name: 'All Collection' }, ...storefrontCategories].map(cat => {
             const isActive = activeCategory === cat.id
             return (
               <button
@@ -602,15 +716,19 @@ function ProductsPageInner() {
           </div>
 
           <FilterSection label="Brand" open={openSections.brand} onToggle={() => toggleSection('brand')}>
-            {['ASUS ROG', 'MSI', 'Corsair', 'Logitech G', 'Razer', 'SteelSeries'].map(b => (
+            {availableBrands.length > 0 ? availableBrands.map(b => (
               <FilterCheckbox key={b} label={b}
                 checked={selectedBrands.includes(b)}
                 onChange={() => toggleFilter(b, selectedBrands, setSelectedBrands)} />
-            ))}
+            )) : (
+              <span style={{ fontSize: 13, color: 'var(--text-dim)', fontFamily: "'DM Sans', sans-serif" }}>
+                No brand filters available for this collection.
+              </span>
+            )}
           </FilterSection>
 
           <FilterSection label="Price Range" open={openSections.price} onToggle={() => toggleSection('price')}>
-            {['Under $100', '$100 – $250', '$250 – $500', '$500+'].map(p => (
+            {Object.keys(PRICE_FILTER_RANGES).map(p => (
               <FilterCheckbox key={p} label={p}
                 checked={selectedPrices.includes(p)}
                 onChange={() => toggleFilter(p, selectedPrices, setSelectedPrices)} />
@@ -618,16 +736,20 @@ function ProductsPageInner() {
           </FilterSection>
 
           <FilterSection label="Key Features" open={openSections.features} onToggle={() => toggleSection('features')}>
-            {['RGB Lighting', 'Wireless', '4K Support', 'Mechanical', 'Haptic Feed'].map(f => (
+            {availableFeatures.length > 0 ? availableFeatures.map(f => (
               <FilterCheckbox key={f} label={f}
                 checked={selectedFeatures.includes(f)}
                 onChange={() => toggleFilter(f, selectedFeatures, setSelectedFeatures)} />
-            ))}
+            )) : (
+              <span style={{ fontSize: 13, color: 'var(--text-dim)', fontFamily: "'DM Sans', sans-serif" }}>
+                No feature filters available for this collection.
+              </span>
+            )}
           </FilterSection>
 
-          {(selectedBrands.length > 0 || selectedFeatures.length > 0 || selectedPrices.length > 0) && (
+          {(selectedBrands.length > 0 || selectedFeatures.length > 0 || selectedPrices.length > 0 || sortIndex !== 0 || activeCategory) && (
             <button
-              onClick={() => { setSelectedBrands([]); setSelectedFeatures([]); setSelectedPrices([]) }}
+              onClick={resetAllFilters}
               style={{
                 marginTop: 12, padding: '12px',
                 background: 'var(--surface)', border: '1px solid var(--border)',
@@ -653,7 +775,10 @@ function ProductsPageInner() {
               {sortOptions.map((opt, i) => (
                 <button
                   key={opt}
-                  onClick={() => setSortIndex(i)}
+                  onClick={() => {
+                    setCurrentPage(1)
+                    setSortIndex(i)
+                  }}
                   style={{
                     padding: '8px 16px',
                     background: sortIndex === i ? 'var(--background)' : 'transparent',
