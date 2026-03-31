@@ -3,6 +3,7 @@ import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { ProductResponseDto } from "./dto/product-response.dto";
 import { AppError } from "../../exceptions/app-error";
+import { Prisma } from "@prisma/client";
 
 export class ProductService {
   constructor(private productRepository: ProductRepository = new ProductRepository()) {}
@@ -87,6 +88,29 @@ export class ProductService {
     if (!product) {
       throw new AppError("Product not found", 404);
     }
-    await this.productRepository.delete(id);
+
+    const orderItemCount = await this.productRepository.countOrderItems(id);
+    if (orderItemCount > 0) {
+      throw new AppError(
+        "This product cannot be deleted because it is referenced by existing orders",
+        409
+      );
+    }
+
+    try {
+      await this.productRepository.delete(id);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2003"
+      ) {
+        throw new AppError(
+          "This product cannot be deleted because it is still referenced by related records",
+          409
+        );
+      }
+
+      throw error;
+    }
   }
 }

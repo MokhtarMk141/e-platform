@@ -128,8 +128,34 @@ export class ProductRepository {
     });
   }
 
+  async countOrderItems(productId: string): Promise<number> {
+    return prisma.orderItem.count({
+      where: { productId },
+    });
+  }
+
   async delete(id: string) {
-    return prisma.product.delete({ where: { id } });
+    return prisma.$transaction(async (tx) => {
+      await tx.cartItem.deleteMany({
+        where: { productId: id },
+      });
+
+      await tx.discount.deleteMany({
+        where: { productId: id },
+      });
+
+      await tx.aIProductDescription.deleteMany({
+        where: { productId: id },
+      });
+
+      await tx.recommendation.deleteMany({
+        where: {
+          OR: [{ productId: id }, { recommendedProductId: id }],
+        },
+      });
+
+      return tx.product.delete({ where: { id } });
+    });
   }
 
   async count(params?: ProductQueryParams): Promise<number> {

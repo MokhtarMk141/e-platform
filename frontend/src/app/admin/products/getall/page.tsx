@@ -69,8 +69,8 @@ export default function GetAllProductsPage() {
       try {
         await ProductService.delete(id);
         refetch();
-      } catch (err) {
-        alert("Failed to delete product");
+      } catch (err: any) {
+        alert(err?.message || "Failed to delete product");
       }
     }
   };
