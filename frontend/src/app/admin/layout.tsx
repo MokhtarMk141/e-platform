@@ -2,6 +2,7 @@ import Sidebar from "@/app/sidebar/side-bar";
 import ThemeToggle from "@/components/ThemeToggle";
 import AdminGuard from "@/components/AdminGuard";
 import AdminHeaderProfile from "@/components/admin/AdminHeaderProfile";
+import Link from "next/link";
 
 /* ── Small SVG icon helper ── */
 const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
@@ -95,6 +96,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Right: Icons + Profile + Theme toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Link
+              href="/product-page"
+              style={{
+                textDecoration: "none",
+                padding: "8px 12px",
+                borderRadius: 10,
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
+                color: "var(--foreground)",
+                fontSize: 12.5,
+                fontWeight: 700,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Exit Admin
+            </Link>
+
             {/* Notification bell */}
             <button style={{
               width: 36, height: 36, borderRadius: 10,

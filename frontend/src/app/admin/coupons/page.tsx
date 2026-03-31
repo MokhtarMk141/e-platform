@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useDiscounts } from "@/hooks/useDiscounts";
 import { DiscountService, type Discount } from "@/services/discount.service";
 import { useProducts } from "@/hooks/useProducts";
@@ -29,7 +28,6 @@ const icons = {
 const PAGE_SIZE = 8;
 
 export default function CouponsPage() {
-  const router = useRouter();
   const { discounts, loading, error, refetch } = useDiscounts();
   const { products } = useProducts({ limit: 100 }); // We grab a bunch of products for the dropdown. Alternatively would use an autocomplete.
   
@@ -183,7 +181,8 @@ export default function CouponsPage() {
           background: #e62000; box-shadow: 0 6px 16px rgba(255,40,0,0.3); transform: translateY(-1px);
         }
 
-        .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+        .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: auto; }
+        table { min-width: 880px; }
         table { width: 100%; border-collapse: collapse; }
         thead { background: var(--background); border-bottom: 1px solid var(--border); }
         th {
@@ -205,8 +204,8 @@ export default function CouponsPage() {
         .badge.paused { background: rgba(234,179,8,0.1); color: #ca8a04; }
         .badge.expired { background: rgba(239,68,68,0.1); color: #dc2626; }
         
-        .badge.percentage { background: rgba(59,130,246,0.1); color: #2563eb; }
-        .badge.fixed { background: rgba(168,85,247,0.1); color: #9333ea; }
+        .badge.discount-percentage { background: rgba(59,130,246,0.1); color: #2563eb; }
+        .badge.discount-fixed { background: rgba(168,85,247,0.1); color: #9333ea; }
 
         .coupon-code { font-weight: 800; color: var(--foreground); font-size: 15px; letter-spacing: -0.01em; display: inline-flex; align-items: center; gap: 8px;}
         .coupon-desc { font-size: 12px; color: var(--text-dim); font-weight: 500; margin-top: 4px; }
@@ -232,7 +231,7 @@ export default function CouponsPage() {
 
         /* ── Modal Styles ── */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal { background: var(--background); border-radius: 16px; width: 100%; max-width: 500px; border: 1px solid var(--border); display: flex; flexDirection: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal { background: var(--background); border-radius: 16px; width: 100%; max-width: 500px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
         .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
         .modal-title { font-size: 18px; font-weight: 800; color: var(--foreground); margin: 0; letter-spacing: -0.02em; }
         .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; }
@@ -248,6 +247,27 @@ export default function CouponsPage() {
         .mode-toggle { display: flex; gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
         .mode-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 13.5px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: all 0.2s; }
         .mode-btn.active { background: var(--border); color: var(--foreground); }
+
+        .error-alert {
+          margin-top: 14px;
+          padding: 10px 12px;
+          border-radius: 10px;
+          border: 1px solid rgba(239, 68, 68, 0.25);
+          background: rgba(239, 68, 68, 0.08);
+          color: #dc2626;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+          .gap-page { padding: 20px; }
+          .toolbar { gap: 8px; }
+          .stat-card { min-width: calc(50% - 7px); }
+        }
+
+        @media (max-width: 640px) {
+          .stat-card { min-width: 100%; }
+        }
       `}</style>
 
       {/* ── Modal ── */}
@@ -337,6 +357,7 @@ export default function CouponsPage() {
             Create Discount
           </button>
         </div>
+        {error && <div className="error-alert">{error}</div>}
 
         {/* ── Stats row ── */}
         <div style={{ display: "flex", gap: 14, marginTop: 24, flexWrap: "wrap" }}>
@@ -442,7 +463,7 @@ export default function CouponsPage() {
                         </div>
                       </td>
                       <td>
-                        <span className={`badge ${coupon.type.toLowerCase()}`}>
+                        <span className={`badge ${coupon.type === "PERCENTAGE" ? "discount-percentage" : "discount-fixed"}`}>
                           {coupon.type === "PERCENTAGE" ? `${coupon.discount}%` : `$${coupon.discount}`}
                         </span>
                       </td>
