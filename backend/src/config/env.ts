@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+// Loads from .env but DOES NOT override already set environment variables (important for Docker)
 dotenv.config();
 
 function requireEnv(key: string): string {

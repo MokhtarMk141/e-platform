@@ -1,4 +1,4 @@
-import prisma from "../../lib/prisma";
+import { prisma } from "../../config/database";
 import type { DiscountStatus, DiscountType } from "@prisma/client";
 
 export class DiscountService {

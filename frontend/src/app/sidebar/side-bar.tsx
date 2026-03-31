@@ -12,7 +12,6 @@ const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
   </svg>
 );
 
-/* ── Icon paths ── */
 const iconPaths = {
   dashboard: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z",
   products: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
@@ -40,7 +39,6 @@ const iconPaths = {
   logout: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9",
 };
 
-/* ── Sidebar nav structure ── */
 type NavItem = {
   icon: keyof typeof iconPaths;
   label: string;
