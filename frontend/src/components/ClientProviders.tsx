@@ -12,21 +12,15 @@ export default function ClientProviders({
     children: React.ReactNode;
 }) {
     const { fetchCart } = useCart();
-    const { syncAuth } = useAuthStore();
+    const { syncAuth, isAuthenticated } = useAuthStore();
     const pathname = usePathname();
+    const isAuthPage = pathname?.startsWith('/login') ||
+        pathname?.startsWith('/register') ||
+        pathname?.startsWith('/forgot-password') ||
+        pathname?.startsWith('/reset-password');
 
     useEffect(() => {
         syncAuth();
-
-        // Only fetch cart if not on auth pages
-        const isAuthPage = pathname?.startsWith('/login') || 
-                          pathname?.startsWith('/register') || 
-                          pathname?.startsWith('/forgot-password') || 
-                          pathname?.startsWith('/reset-password');
-
-        if (!isAuthPage) {
-            fetchCart();
-        }
 
         // Theme initialization
         try {
@@ -41,7 +35,13 @@ export default function ClientProviders({
                 }
             }
         } catch (e) { }
-    }, [fetchCart, pathname]);
+    }, [pathname, syncAuth]);
+
+    useEffect(() => {
+        if (!isAuthPage && isAuthenticated) {
+            fetchCart();
+        }
+    }, [isAuthPage, isAuthenticated, fetchCart]);
 
     return (
         <>

@@ -21,7 +21,8 @@ export class AuthService {
     localStorage.setItem('token', accessToken);
     localStorage.setItem('user', JSON.stringify(user));
 
-    document.cookie = `token=${accessToken}; path=/; max-age=${ONE_WEEK_IN_SECONDS}; secure; samesite=lax`;
+    const isHttps = window.location.protocol === 'https:';
+    document.cookie = `token=${accessToken}; path=/; max-age=${ONE_WEEK_IN_SECONDS}; samesite=lax${isHttps ? '; secure' : ''}`;
   }
 
   static clearAuthStorage() {

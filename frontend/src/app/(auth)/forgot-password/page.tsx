@@ -1,8 +1,6 @@
 'use client'
-import img from '../../../../public/icons8-razer-logo-3.png'
 import { useState } from 'react'
 import { AuthService } from '@/services/auth.service'
-import { useRouter } from 'next/navigation'
 import ThemeToggle from '@/components/ThemeToggle'
 
 export default function ForgotPassword() {
@@ -40,7 +38,7 @@ export default function ForgotPassword() {
 
 
         <div className="w-full bg-background flex items-center justify-center p-12 lg:ml-auto relative z-20 lg:border-l border-border shadow-xl">
-          <div style={{position:'relative', right:'0 lg:100px'}} className="w-full max-w-md space-y-6 bg-background p-10 rounded-2xl shadow-2xl border border-border">
+          <div className="w-full max-w-md space-y-6 bg-background p-10 rounded-2xl shadow-2xl border border-border">
             <div className="w-full max-w-sm mx-auto">
               <div className="w-full space-y-6">
                 <div className="text-center">

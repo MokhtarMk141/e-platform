@@ -18,14 +18,22 @@ export class AuthController {
     this.authService = new AuthService(new UserRepository());
   }
 
+  private getRefreshCookieOptions() {
+    const isProduction = process.env.NODE_ENV === "production";
+
+    return {
+      httpOnly: true as const,
+      secure: isProduction,
+      // Use Lax in dev to support localhost testing over HTTP.
+      // In production, None is needed for cross-origin cookie-based refresh flows.
+      sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+      path: "/api/auth",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    };
+  }
+
   private setRefreshCookie(res: Response, token: string) {
-    res.cookie("refreshToken", token, {
-      httpOnly: true, // not accessible by JS
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/api/auth", // only send cookie to auth endpoints
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
-    });
+    res.cookie("refreshToken", token, this.getRefreshCookieOptions());
   }
 
   register = asyncHandler(async (req: Request, res: Response) => {
@@ -78,7 +86,7 @@ export class AuthController {
     if (token) {
       await this.authService.logout(token);
     }
-    res.clearCookie("refreshToken", { path: "/api/auth" });
+    res.clearCookie("refreshToken", this.getRefreshCookieOptions());
     return sendSuccess(res, {
       message: "Logged out successfully",
       data: null,
@@ -89,7 +97,7 @@ export class AuthController {
     const userId = getAuthenticatedUserId(req);
 
     await this.authService.logoutAll(userId);
-    res.clearCookie("refreshToken", { path: "/api/auth" });
+    res.clearCookie("refreshToken", this.getRefreshCookieOptions());
     return sendSuccess(res, {
       message: "Logged out from all devices",
       data: null,
