@@ -1,10 +1,14 @@
 import { Request, Response } from "express";
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
 import { ProductService } from "./product.service";
 import { asyncHandler } from "../../utils/async-handler";
 import { createProductSchema } from "./dto/create-product.dto";
 import { updateProductSchema } from "./dto/update-product.dto";
 import { sendSuccess } from "../../utils/api-response";
 import { ProductSortBy } from "./product.repository";
+import { AppError } from "../../exceptions/app-error";
 
 export class ProductController {
   private productService: ProductService;
@@ -78,6 +82,52 @@ export class ProductController {
       statusCode: 201,
       message: "Product created successfully",
       data: product,
+    });
+  });
+
+  uploadImage = asyncHandler(async (req: Request, res: Response) => {
+    const { fileName, fileData } = req.body as {
+      fileName?: string;
+      fileData?: string;
+    };
+
+    if (!fileName || !fileData) {
+      throw new AppError("fileName and fileData are required", 400);
+    }
+
+    const match = fileData.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
+    if (!match) {
+      throw new AppError("Invalid image format. Use png, jpg, jpeg, or webp", 400);
+    }
+
+    const ext = match[1].toLowerCase() === "jpeg" ? "jpg" : match[1].toLowerCase();
+    const base64Payload = match[2];
+    const buffer = Buffer.from(base64Payload, "base64");
+
+    // 5MB max image size
+    if (buffer.length > 5 * 1024 * 1024) {
+      throw new AppError("Image too large. Max size is 5MB", 400);
+    }
+
+    const safeBase = path
+      .parse(fileName)
+      .name
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .slice(0, 50) || "product-image";
+
+    const uniqueName = `${safeBase}-${crypto.randomBytes(6).toString("hex")}.${ext}`;
+    const uploadsDir = path.join(process.cwd(), "uploads", "products");
+    fs.mkdirSync(uploadsDir, { recursive: true });
+
+    const fullPath = path.join(uploadsDir, uniqueName);
+    fs.writeFileSync(fullPath, buffer);
+
+    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/products/${uniqueName}`;
+
+    return sendSuccess(res, {
+      statusCode: 201,
+      message: "Image uploaded successfully",
+      data: { imageUrl },
     });
   });
 

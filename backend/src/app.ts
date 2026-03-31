@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import path from "path";
 import { env } from "./config/env";
 import { AppError } from "./exceptions/app-error";
 import { errorMiddleware } from "./middlewares/error.middleware";
@@ -15,7 +16,13 @@ import discountRoutes from "./modules/discount/discount.routes";
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    // Allow frontend on a different origin (localhost:3000) to render uploaded images
+    // served by backend (localhost:5000).
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(
   cors({
     origin: [env.FRONTEND_URL, "http://localhost:3000", "http://127.0.0.1:3000"],
@@ -25,6 +32,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);

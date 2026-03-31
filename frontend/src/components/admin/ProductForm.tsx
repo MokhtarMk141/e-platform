@@ -37,6 +37,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [fetchingCategories, setFetchingCategories] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -65,6 +66,23 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const uploadedUrl = await ProductService.uploadImage(file);
+      setFormData((prev) => ({ ...prev, imageUrl: uploadedUrl }));
+    } catch (err) {
+      alert("Failed to upload image");
+      console.error(err);
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -185,16 +203,26 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           border-radius: 12px;
           padding: 44px 20px;
           text-align: center;
-          cursor: pointer;
+          cursor: default;
           background: var(--background);
           transition: all 0.2s;
           overflow: hidden;
         }
-        .upload-area:hover { border-color: var(--brand-red); background: rgba(255,40,0,0.03); }
+        .upload-area:hover { border-color: var(--border); background: var(--background); }
         .upload-icon { color: var(--text-dim); margin-bottom: 12px; }
         .upload-text { font-size: 13.5px; font-weight: 700; color: var(--foreground); margin-bottom: 4px; }
         .upload-sub { font-size: 12.5px; color: var(--text-dim); }
         .preview-img { width: 100%; max-height: 200px; object-fit: contain; }
+        .btn-upload {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: var(--surface); color: var(--foreground);
+          border: 1px solid var(--border-strong); border-radius: 10px;
+          padding: 10px 14px; font-size: 13px; font-weight: 700;
+          font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-upload:hover { border-color: var(--brand-red); color: var(--brand-red); }
+        .upload-help { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
       `}</style>
 
       <div className="gap-page">
@@ -210,8 +238,8 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
               <h1 className="page-title">{isEdit ? "Edit Product" : "Add New Product"}</h1>
               <p className="page-sub">{isEdit ? `Update details for ${initialData?.name}` : "Create a new product to add to your catalog"}</p>
             </div>
-            <button className="btn-save" type="submit" disabled={loading}>
-              <Icon d={icons.save} size={15} /> {loading ? "Saving..." : isEdit ? "Update Product" : "Save Product"}
+            <button className="btn-save" type="submit" disabled={loading || uploadingImage}>
+              <Icon d={icons.save} size={15} /> {loading ? "Saving..." : uploadingImage ? "Uploading image..." : isEdit ? "Update Product" : "Save Product"}
             </button>
           </div>
 
@@ -331,6 +359,21 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     onChange={handleChange}
                     />
                 </div>
+                <div className="form-group">
+                  <input
+                    id="product-image-file"
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={handleImageFileChange}
+                    style={{ display: "none" }}
+                    disabled={uploadingImage}
+                  />
+                  <label htmlFor="product-image-file" className="btn-upload">
+                    <Icon d={icons.upload} size={14} />
+                    {uploadingImage ? "Uploading..." : "Upload Image"}
+                  </label>
+                  <p className="upload-help">Upload from your computer (PNG, JPG, JPEG, WEBP, max 5MB).</p>
+                </div>
                 <div className="upload-area">
                   {formData.imageUrl ? (
                     <img src={formData.imageUrl} alt="Preview" className="preview-img" />
@@ -339,8 +382,8 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     <div className="upload-icon">
                         <Icon d={icons.image} size={36} />
                     </div>
-                    <p className="upload-text">Paste image URL above</p>
-                    <p className="upload-sub">A preview will appear here</p>
+                    <p className="upload-text">No image selected yet</p>
+                    <p className="upload-sub">Preview will appear here</p>
                     </>
                   )}
                 </div>
