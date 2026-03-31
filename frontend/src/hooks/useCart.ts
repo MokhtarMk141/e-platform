@@ -7,9 +7,15 @@ const GUEST_CART_KEY = 'guest_cart';
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (error && typeof error === 'object') {
-    const candidate = error as { message?: unknown };
+    const candidate = error as { message?: unknown; error?: unknown; data?: { message?: unknown } };
     if (typeof candidate.message === 'string') {
       return candidate.message;
+    }
+    if (typeof candidate.error === 'string') {
+      return candidate.error;
+    }
+    if (typeof candidate.data?.message === 'string') {
+      return candidate.data.message;
     }
   }
 
@@ -74,8 +80,23 @@ const syncGuestCartToServer = async () => {
     return;
   }
 
+  let hasAuthError = false;
   for (const item of guestCart.items) {
-    await CartService.addItem({ productId: item.productId, quantity: item.quantity });
+    try {
+      await CartService.addItem({ productId: item.productId, quantity: item.quantity });
+    } catch (err) {
+      const message = getErrorMessage(err, '').toLowerCase();
+      if (message.includes('session expired') || message.includes('unauthorized')) {
+        hasAuthError = true;
+        break;
+      }
+      // Ignore per-item merge failures (e.g. stock/product removed)
+      // so a single broken item doesn't prevent syncing the rest.
+    }
+  }
+
+  if (hasAuthError) {
+    throw new Error('Session expired');
   }
 
   writeGuestCart(null);

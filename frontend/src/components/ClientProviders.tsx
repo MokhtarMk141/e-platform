@@ -35,16 +35,7 @@ export default function ClientProviders({
                           pathname?.startsWith('/forgot-password') || 
                           pathname?.startsWith('/reset-password');
 
-        if (isAuthPage) {
-            return;
-        }
-
-        if (isAuthenticated) {
-            fetchCart();
-            return;
-        }
-
-        fetchCart();
+        if (!isAuthPage) fetchCart();
     }, [fetchCart, isAuthenticated, pathname]);
 
     useEffect(() => {
@@ -60,7 +51,7 @@ export default function ClientProviders({
                     document.documentElement.classList.remove('dark');
                 }
             }
-        } catch (e) { }
+        } catch { }
     }, []);
 
     return (

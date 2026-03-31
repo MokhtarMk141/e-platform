@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ProductService } from '@/services/product.service'
 import { Product } from '@/types/product.types'
+import { useCart } from '@/hooks/useCart'
 import MegaMenu from '../../mega-menu/megaMenu'
 
 const FONTS = `
@@ -21,6 +22,7 @@ export default function ProductDetailPage() {
     const [wished, setWished] = useState(false)
     const [selectedImageZoom, setSelectedImageZoom] = useState(false)
     const [quantity, setQuantity] = useState(1)
+    const { addItem } = useCart()
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -29,8 +31,11 @@ export default function ProductDetailPage() {
             try {
                 const res = await ProductService.getById(id)
                 setProduct(res.data)
-            } catch (err: any) {
-                setError(err.message || 'Failed to load product')
+            } catch (err: unknown) {
+                const message = err && typeof err === 'object' && 'message' in err && typeof (err as { message?: unknown }).message === 'string'
+                    ? (err as { message: string }).message
+                    : 'Failed to load product'
+                setError(message)
             } finally {
                 setLoading(false)
             }
@@ -470,6 +475,16 @@ export default function ProductDetailPage() {
                         <button
                             disabled={!inStock}
                             className="add-btn"
+                            onClick={() => {
+                                if (!inStock) return
+                                addItem(product.id, quantity, {
+                                    productId: product.id,
+                                    name: product.name,
+                                    price: product.price ?? 0,
+                                    imageUrl: product.imageUrl ?? null,
+                                    sku: product.sku,
+                                })
+                            }}
                             style={{
                                 flex: 1, height: 48,
                                 background: inStock ? 'var(--brand-red)' : 'var(--surface)',
