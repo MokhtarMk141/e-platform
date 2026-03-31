@@ -1,11 +1,11 @@
-Environment variables loaded from .env
+﻿Environment variables loaded from .env
 Prisma schema loaded from prisma/schema.prisma
 
-✔ Generated Prisma Client (v6.9.0) to ./node_modules/@prisma/client in 203ms
+Γ£ö Generated Prisma Client (v6.9.0) to ./node_modules/@prisma/client in 163ms
 
 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
 
-Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
 
 
 > backend@1.0.0 dev
@@ -16,23 +16,121 @@ Tip: Need your database queries to be 1000x faster? Accelerate offers you that a
 [33m[nodemon] watching path(s): src/**/*[39m
 [33m[nodemon] watching extensions: ts,json[39m
 [32m[nodemon] starting `ts-node src/index.ts`[39m
-[dotenv@17.2.4] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
-/app/node_modules/ts-node/src/index.ts:859
-    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+[dotenv@17.2.4] injecting env (0) from .env -- tip: ΓÜÖ∩╕Å  write to custom object with { processEnv: myObject }
+docker : /app/node_modules/
+ts-node/src/index.ts:859
+At line:1 char:1
++ docker logs 
+ecommerce-backend 2>&1 | 
+Out-File -FilePath 
+backend_logs. ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (/ap  
+  p/node_modul...rc/inde   
+ x.ts:859:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+    return new 
+TSError(diagnosticText, 
+diagnosticCodes, 
+diagnostics);
            ^
-TSError: ⨯ Unable to compile TypeScript:
-src/modules/discount/discount.service.ts(1,20): error TS2307: Cannot find module '../../lib/prisma' or its corresponding type declarations.
+TSError: Γ¿» Unable to 
+compile TypeScript:
+src/modules/product/product
+-upload.ts(3,20): error 
+TS2307: Cannot find module 
+'multer' or its 
+corresponding type 
+declarations.
+src/modules/product/product
+-upload.ts(11,17): error 
+TS7006: Parameter '_req' 
+implicitly has an 'any' 
+type.
+src/modules/product/product
+-upload.ts(11,23): error 
+TS7006: Parameter '_file' 
+implicitly has an 'any' 
+type.
+src/modules/product/product
+-upload.ts(11,30): error 
+TS7006: Parameter 'cb' 
+implicitly has an 'any' 
+type.
+src/modules/product/product
+-upload.ts(14,14): error 
+TS7006: Parameter '_req' 
+implicitly has an 'any' 
+type.
+src/modules/product/product
+-upload.ts(14,20): error 
+TS7006: Parameter 'file' 
+implicitly has an 'any' 
+type.
+src/modules/product/product
+-upload.ts(14,26): error 
+TS7006: Parameter 'cb' 
+implicitly has an 'any' 
+type.
+src/modules/product/product
+-upload.ts(34,16): error 
+TS7006: Parameter '_req' 
+implicitly has an 'any' 
+type.
+src/modules/product/product
+-upload.ts(34,22): error 
+TS7006: Parameter 'file' 
+implicitly has an 'any' 
+type.
+src/modules/product/product
+-upload.ts(34,28): error 
+TS7006: Parameter 'cb' 
+implicitly has an 'any' 
+type.
 
-    at createTSError (/app/node_modules/ts-node/src/index.ts:859:12)
-    at reportTSError (/app/node_modules/ts-node/src/index.ts:863:19)
-    at getOutput (/app/node_modules/ts-node/src/index.ts:1077:36)
-    at Object.compile (/app/node_modules/ts-node/src/index.ts:1433:41)
-    at Module.m._compile (/app/node_modules/ts-node/src/index.ts:1617:30)
-    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-    at Object.require.extensions.<computed> [as .ts] (/app/node_modules/ts-node/src/index.ts:1621:12)
-    at Module.load (node:internal/modules/cjs/loader:1266:32)
-    at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
-    at Module.require (node:internal/modules/cjs/loader:1289:19) {
-  diagnosticCodes: [ 2307 ]
-}
+    at createTSError (/app/
+node_modules/ts-node/src/in
+dex.ts:859:12)
+    at reportTSError (/app/
+node_modules/ts-node/src/in
+dex.ts:863:19)
+    at getOutput (/app/node
+_modules/ts-node/src/index.
+ts:1077:36)
+    at Object.compile (/app
+/node_modules/ts-node/src/i
+ndex.ts:1433:41)
+    at Module.m._compile (/
+app/node_modules/ts-node/sr
+c/index.ts:1617:30)
+    at 
+Module._extensions..js (nod
+e:internal/modules/cjs/load
+er:1623:10)
+    at Object.require.exten
+sions.<computed> [as .ts] (
+/app/node_modules/ts-node/s
+rc/index.ts:1621:12)
+    at Module.load (node:in
+ternal/modules/cjs/loader:1
+266:32)
+    at 
+Function.Module._load (node
+:internal/modules/cjs/loade
+r:1091:12)
+    at Module.require (node
+:internal/modules/cjs/loade
+r:1289:19) {
+  diagnosticCodes: [
+    2307, 7006, 7006,
+    7006, 7006, 7006,
+    7006, 7006, 7006,
 [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+    7006
+  ]
+}

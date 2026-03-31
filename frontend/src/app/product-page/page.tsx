@@ -213,8 +213,6 @@ function GridCard({ product, wished, onWish, delay }: {
 }) {
   const [hovered, setHovered] = useState(false)
   const { addItem } = useCart()
-  const { isAuthenticated } = useAuthStore()
-  const router = useRouter()
 
   return (
     <Link
@@ -349,11 +347,13 @@ function GridCard({ product, wished, onWish, delay }: {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (!isAuthenticated) {
-                  router.push('/login');
-                  return;
-                }
-                addItem(product.id, 1);
+                addItem(product.id, 1, {
+                  productId: product.id,
+                  name: product.name,
+                  price: product.price ?? 0,
+                  imageUrl: product.imageUrl ?? null,
+                  sku: product.sku,
+                });
               }}
               style={{
                 background: product.stock === 0 ? 'transparent' : 'var(--brand-red)',
@@ -381,8 +381,6 @@ function ListCard({ product, wished, onWish, delay }: {
 }) {
   const [hovered, setHovered] = useState(false)
   const { addItem } = useCart()
-  const { isAuthenticated } = useAuthStore()
-  const router = useRouter()
 
   return (
     <Link
@@ -466,11 +464,13 @@ function ListCard({ product, wished, onWish, delay }: {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (!isAuthenticated) {
-                    router.push('/login');
-                    return;
-                  }
-                  addItem(product.id, 1);
+                  addItem(product.id, 1, {
+                    productId: product.id,
+                    name: product.name,
+                    price: product.price ?? 0,
+                    imageUrl: product.imageUrl ?? null,
+                    sku: product.sku,
+                  });
                 }}
                 style={{
                   background: product.stock === 0 ? 'transparent' : 'var(--foreground)',

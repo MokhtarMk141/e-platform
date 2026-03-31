@@ -39,11 +39,11 @@ export class ProductService {
     return ApiClient.get<ProductResponse>(`/products/${id}`)
   }
 
-  static create(data: Partial<Product>): Promise<ProductResponse> {
+  static create(data: Partial<Product> | FormData): Promise<ProductResponse> {
     return ApiClient.post<ProductResponse>('/products', data)
   }
 
-  static update(id: string, data: Partial<Product>): Promise<ProductResponse> {
+  static update(id: string, data: Partial<Product> | FormData): Promise<ProductResponse> {
     return ApiClient.put<ProductResponse>(`/products/${id}`, data)
   }
 

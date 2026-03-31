@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 /* ── Token helpers (direct localStorage access) ── */
 
@@ -12,16 +12,12 @@ function setStoredToken(token: string): void {
   localStorage.setItem('token', token);
 }
 
-function clearAuthAndRedirect(): void {
+function clearAuthState(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   document.cookie = 'token=; path=/; max-age=0';
-  
-  // Only redirect if we're not already on the login page to avoid refresh loops
-  if (window.location.pathname !== '/login') {
-    window.location.href = '/login';
-  }
+  window.dispatchEvent(new Event('auth:changed'));
 }
 
 /* ── Refresh queue (prevents parallel refresh calls) ── */
@@ -67,7 +63,7 @@ async function refreshAccessToken(): Promise<string> {
     return newToken;
   } catch (err) {
     processQueue(err, null);
-    clearAuthAndRedirect();
+    clearAuthState();
     throw err;
   } finally {
     isRefreshing = false;
@@ -83,27 +79,37 @@ export class ApiClient {
     _isRetry = false
   ): Promise<T> {
     const token = getStoredToken();
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
+      ...((options.headers as Record<string, string>) ?? {}),
     };
+
+    if (!isFormData && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-      credentials: 'include',          
-    });
+    let response: Response;
+
+    try {
+      response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+        credentials: 'include',          
+      });
+    } catch {
+      throw new Error(`Unable to reach the API server at ${API_URL}. Make sure the backend is running.`);
+    }
 
     /* ── 401 interceptor ── */
     if (response.status === 401 && !_isRetry) {
       // Don't try to refresh if this IS the refresh call
       if (endpoint === '/auth/refresh') {
-        clearAuthAndRedirect();
+        clearAuthState();
         throw new Error('Session expired');
       }
 
@@ -142,14 +148,14 @@ export class ApiClient {
   static post<T>(endpoint: string, body?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
-      body: body != null ? JSON.stringify(body) : undefined,
+      body: body == null ? undefined : body instanceof FormData ? body : JSON.stringify(body),
     });
   }
 
   static put<T>(endpoint: string, body?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
-      body: body != null ? JSON.stringify(body) : undefined,
+      body: body == null ? undefined : body instanceof FormData ? body : JSON.stringify(body),
     });
   }
 

@@ -11,7 +11,7 @@ export default function ClientProviders({
 }: {
     children: React.ReactNode;
 }) {
-    const { fetchCart, resetCart } = useCart();
+    const { fetchCart } = useCart();
     const { syncAuth, isAuthenticated } = useAuthStore();
     const pathname = usePathname();
 
@@ -20,13 +20,22 @@ export default function ClientProviders({
     }, [syncAuth]);
 
     useEffect(() => {
+        const handleAuthChanged = () => {
+            syncAuth();
+            fetchCart();
+        };
+
+        window.addEventListener('auth:changed', handleAuthChanged);
+        return () => window.removeEventListener('auth:changed', handleAuthChanged);
+    }, [fetchCart, syncAuth]);
+
+    useEffect(() => {
         const isAuthPage = pathname?.startsWith('/login') || 
                           pathname?.startsWith('/register') || 
                           pathname?.startsWith('/forgot-password') || 
                           pathname?.startsWith('/reset-password');
 
         if (isAuthPage) {
-            resetCart();
             return;
         }
 
@@ -35,8 +44,8 @@ export default function ClientProviders({
             return;
         }
 
-        resetCart();
-    }, [fetchCart, isAuthenticated, pathname, resetCart]);
+        fetchCart();
+    }, [fetchCart, isAuthenticated, pathname]);
 
     useEffect(() => {
         // Theme initialization

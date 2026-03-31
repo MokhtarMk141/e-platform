@@ -12,7 +12,7 @@ export default function HomePage() {
     if (token) {
       router.push('/dashboard');
     } else {
-      router.push('/login');
+      router.push('/product-page');
     }
   }, [router]);
 

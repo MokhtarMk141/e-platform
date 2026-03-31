@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import path from "path";
 import { env } from "./config/env";
 import { AppError } from "./exceptions/app-error";
 import { errorMiddleware } from "./middlewares/error.middleware";
@@ -25,6 +26,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
