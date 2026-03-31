@@ -372,7 +372,7 @@ export default function MegaMenu() {
         }
       `}</style>
 
-      {/* ── Navbar ── */}
+    
       <nav
         style={{
           background: "var(--background)",
@@ -396,7 +396,7 @@ export default function MegaMenu() {
           height: 64,
           gap: 0,
         }}>
-          {/* Logo */}
+      
           <a href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0, marginRight: 32 }}>
             <img
               src={logoimg.src}

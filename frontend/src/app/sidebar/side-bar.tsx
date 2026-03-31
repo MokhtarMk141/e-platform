@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import logoimg from "../../../public/website_logo.png";
 
-/* ── Small SVG icon helper ── */
+ 
 const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
     <path d={d} />
@@ -304,14 +304,13 @@ export default function Sidebar() {
           letter-spacing: 0.02em;
         }
       `}</style>
-
-      {/* ── Top accent line (matches MegaMenu) ── */}
+ 
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, height: 2,
         background: "linear-gradient(90deg, var(--brand-red) 0%, #ff8000 100%)",
       }} />
 
-      {/* ── Collapse toggle ── */}
+ 
       <button
         className="sb-collapse-btn"
         onClick={() => setCollapsed(!collapsed)}
@@ -328,15 +327,13 @@ export default function Sidebar() {
           style={{ width: 200, objectFit: "contain", filter: "var(--foreground) === '#ffffff' ? 'invert(1)' : 'none'" }}
         />
       </div>
-
-      {/* ── Nav sections ── */}
+ 
       <nav style={{ flex: 1, padding: "8px 12px", overflowY: "auto", overflowX: "hidden" }}>
         <div style={{ marginBottom: 16 }}>
           {navItems.map((item, idx) => {
             const active = item.href ? isActive(item.href) : false;
 
-            // Add divider before 'Store' to match user's visual request gap
-            const isSecondBlock = item.label === "Store";
+             const isSecondBlock = item.label === "Store";
 
             return (
               <div key={item.label}>
