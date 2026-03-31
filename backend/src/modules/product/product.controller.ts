@@ -34,15 +34,6 @@ export class ProductController {
     return numbers.some((entry) => entry != null) ? numbers : undefined;
   }
 
-  private buildUploadedImageUrl(req: Request): string | undefined {
-    const file = req.file;
-    if (!file) {
-      return undefined;
-    }
-
-    return `${req.protocol}://${req.get("host")}/uploads/products/${file.filename}`;
-  }
-
   getAll = asyncHandler(async (req: Request, res: Response) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
@@ -88,7 +79,7 @@ export class ProductController {
       ...req.body,
       price: Number(req.body.price),
       stock: Number(req.body.stock),
-      imageUrl: this.buildUploadedImageUrl(req) ?? req.body.imageUrl,
+      imageUrl: req.body.imageUrl,
     });
     const product = await this.productService.createProduct(dto);
 
@@ -151,7 +142,7 @@ export class ProductController {
       ...req.body,
       price: req.body.price !== undefined ? Number(req.body.price) : undefined,
       stock: req.body.stock !== undefined ? Number(req.body.stock) : undefined,
-      imageUrl: this.buildUploadedImageUrl(req) ?? req.body.imageUrl,
+      imageUrl: req.body.imageUrl,
     });
     const product = await this.productService.updateProduct(id, dto);
 
