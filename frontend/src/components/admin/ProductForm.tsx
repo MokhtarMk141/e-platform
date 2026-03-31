@@ -37,6 +37,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [fetchingCategories, setFetchingCategories] = useState(true);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(initialData?.imageUrl || "");
@@ -214,12 +215,12 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           border-radius: 12px;
           padding: 44px 20px;
           text-align: center;
-          cursor: pointer;
+          cursor: default;
           background: var(--background);
           transition: all 0.2s;
           overflow: hidden;
         }
-        .upload-area:hover { border-color: var(--brand-red); background: rgba(255,40,0,0.03); }
+        .upload-area:hover { border-color: var(--border); background: var(--background); }
         .upload-icon { color: var(--text-dim); margin-bottom: 12px; }
         .upload-text { font-size: 13.5px; font-weight: 700; color: var(--foreground); margin-bottom: 4px; }
         .upload-sub { font-size: 12.5px; color: var(--text-dim); }
@@ -257,8 +258,8 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
               <h1 className="page-title">{isEdit ? "Edit Product" : "Add New Product"}</h1>
               <p className="page-sub">{isEdit ? `Update details for ${initialData?.name}` : "Create a new product to add to your catalog"}</p>
             </div>
-            <button className="btn-save" type="submit" disabled={loading}>
-              <Icon d={icons.save} size={15} /> {loading ? "Saving..." : isEdit ? "Update Product" : "Save Product"}
+            <button className="btn-save" type="submit" disabled={loading || uploadingImage}>
+              <Icon d={icons.save} size={15} /> {loading ? "Saving..." : uploadingImage ? "Uploading image..." : isEdit ? "Update Product" : "Save Product"}
             </button>
           </div>
 

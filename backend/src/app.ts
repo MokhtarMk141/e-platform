@@ -16,7 +16,13 @@ import discountRoutes from "./modules/discount/discount.routes";
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    // Allow frontend on a different origin (localhost:3000) to render uploaded images
+    // served by backend (localhost:5000).
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(
   cors({
     origin: [env.FRONTEND_URL, "http://localhost:3000", "http://127.0.0.1:3000"],

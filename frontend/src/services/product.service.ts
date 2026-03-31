@@ -8,6 +8,21 @@ import {
 } from '@/types/product.types'
 
 export class ProductService {
+  static async uploadImage(file: File): Promise<string> {
+    const fileData = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Failed to read image file"));
+      reader.readAsDataURL(file);
+    });
+
+    const response = await ApiClient.post<{ data: { imageUrl: string } }>("/products/upload-image", {
+      fileName: file.name,
+      fileData,
+    });
+
+    return response.data.imageUrl;
+  }
 
   static getAll(filters: ProductFilters = {}): Promise<ProductListResponse> {
     const params = new URLSearchParams()
