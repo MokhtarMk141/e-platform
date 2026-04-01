@@ -561,6 +561,9 @@ export default function MegaMenu() {
                     Admin Panel
                   </button>
                 )}
+                <button className="action-btn" onClick={() => router.push('/orders')}>
+                  My Orders
+                </button>
                 <button
                   className="action-btn"
                   onClick={() => {

@@ -136,12 +136,14 @@ export default function CartDrawer() {
                         </div>
 
                         <button
+                            disabled={loading}
                             onClick={() => {
                                 if (!isAuthenticated) {
                                     setShowAuthPrompt(true);
                                     return;
                                 }
-                                alert('Checkout page is not connected yet.');
+                                setOpen(false);
+                                router.push('/checkout');
                             }}
                             style={{
                                 width: '100%', padding: '16px', background: 'var(--brand-red)', color: '#fff',
@@ -150,7 +152,7 @@ export default function CartDrawer() {
                                 boxShadow: '0 8px 24px rgba(255,40,0,0.25)', transition: 'all 0.2s'
                             }}
                         >
-                            Checkout Now
+                            Continue to Checkout
                         </button>
                         <p style={{ textAlign: 'center', margin: 0, fontSize: 11, color: 'var(--text-dim)', fontWeight: 600 }}>
                             {!isAuthenticated
