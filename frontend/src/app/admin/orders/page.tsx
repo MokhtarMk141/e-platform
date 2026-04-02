@@ -38,6 +38,8 @@ export default function AdminOrdersPage() {
   const { orders, loading, error, refetch } = useOrders(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   const stats = useMemo(() => {
     const totalRevenue = orders
@@ -47,6 +49,22 @@ export default function AdminOrdersPage() {
     const delivered = orders.filter((order) => order.status === "DELIVERED").length;
     return { totalRevenue, pending, delivered };
   }, [orders]);
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const matchStatus = statusFilter === "All" || order.status === statusFilter;
+      const s = search.toLowerCase();
+      const matchSearch =
+        search === "" ||
+        order.id.toLowerCase().includes(s) ||
+        (order.customerName && order.customerName.toLowerCase().includes(s)) ||
+        (order.customerEmail && order.customerEmail.toLowerCase().includes(s)) ||
+        (order.customerPhone && order.customerPhone.toLowerCase().includes(s)) ||
+        (order.shippingCity && order.shippingCity.toLowerCase().includes(s)) ||
+        (order.shippingCountry && order.shippingCountry.toLowerCase().includes(s));
+      return matchStatus && matchSearch;
+    });
+  }, [orders, search, statusFilter]);
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
     try {
@@ -84,6 +102,51 @@ export default function AdminOrdersPage() {
         <StatCard label="Revenue" value={currency(stats.totalRevenue)} sub="Excluding cancelled" />
       </div>
 
+      {/* ── Toolbar ── */}
+      <div style={{ marginTop: 20, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ flex: 1, minWidth: 280, position: "relative" }}>
+          <input
+            placeholder="Search by ID, customer, phone, or city..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              borderRadius: 10,
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
+              fontSize: 14,
+              fontFamily: "inherit",
+              outline: "none",
+            }}
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1px solid var(--border)",
+            background: "var(--surface)",
+            fontSize: 14,
+            fontFamily: "inherit",
+            cursor: "pointer",
+            outline: "none",
+          }}
+        >
+          <option value="All">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="PROCESSING">Processing</option>
+          <option value="SHIPPED">Shipped</option>
+          <option value="DELIVERED">Delivered</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+        <span style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>
+          {filteredOrders.length} order{filteredOrders.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
       <div style={{ marginTop: 16, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, overflow: "auto" }}>
         {loading ? (
           <p style={{ padding: 16, margin: 0 }}>Loading orders...</p>
@@ -92,8 +155,8 @@ export default function AdminOrdersPage() {
             <span style={{ color: "#dc2626" }}>{error}</span>
             <button onClick={refetch} style={btnSecondaryStyle}>Retry</button>
           </div>
-        ) : orders.length === 0 ? (
-          <p style={{ padding: 16, margin: 0, color: "var(--text-muted)" }}>No orders yet.</p>
+        ) : filteredOrders.length === 0 ? (
+          <p style={{ padding: 16, margin: 0, color: "var(--text-muted)" }}>No orders match your filters.</p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 780 }}>
             <thead>
@@ -107,7 +170,7 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => {
+              {filteredOrders.map((order) => {
                 const tone = statusColor(order.status);
                 const isSelected = selectedOrder?.id === order.id && sidebarOpen;
                 return (

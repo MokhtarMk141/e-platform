@@ -72,8 +72,7 @@ export default function CustomersPage() {
     .filter((u: User) => {
       const matchSearch =
         u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase()) ||
-        (u.phone && u.phone.toLowerCase().includes(search.toLowerCase()));
+        u.email.toLowerCase().includes(search.toLowerCase());
       const matchRole = roleFilter === "All" || u.role === roleFilter;
       return matchSearch && matchRole;
     })
@@ -236,7 +235,7 @@ export default function CustomersPage() {
             <Icon d={icons.search} size={15} />
             <input
               className="search-input"
-              placeholder="Search by name, email, or phone…"
+              placeholder="Search by name or email…"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             />
@@ -284,7 +283,6 @@ export default function CustomersPage() {
                     <th onClick={() => handleSort("name")}>
                       Customer <SortArrow col="name" />
                     </th>
-                    <th>Phone</th>
                     <th>Role</th>
                     <th onClick={() => handleSort("createdAt")}>
                       Joined Date <SortArrow col="createdAt" />

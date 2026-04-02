@@ -27,6 +27,12 @@ export class OrderController {
     checkoutData.customerEmail = user.email;
     if (user.phone) {
       checkoutData.customerPhone = user.phone;
+    } else if (checkoutData.customerPhone) {
+      // Save phone to user profile if not already set
+      await prisma.user.update({
+        where: { id: userId },
+        data: { phone: checkoutData.customerPhone }
+      });
     }
 
     const order = await this.orderService.checkout(userId, checkoutData);
