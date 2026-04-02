@@ -3,6 +3,8 @@ import { asyncHandler } from "../../utils/async-handler";
 import { sendSuccess } from "../../utils/api-response";
 import { AuthRequest } from "../auth/auth.middleware";
 import { getAuthenticatedUserId } from "../../utils/auth-utils";
+import { prisma } from "../../config/database";
+import { AppError } from "../../exceptions/app-error";
 import { OrderService } from "./order.service";
 import { updateOrderStatusSchema } from "./dto/update-order-status.dto";
 import { checkoutOrderSchema } from "./dto/checkout-order.dto";
@@ -17,6 +19,22 @@ export class OrderController {
   checkout = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = getAuthenticatedUserId(req);
     const checkoutData = checkoutOrderSchema.parse(req.body);
+
+    // Enforce user's profile email
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new AppError("User not found", 404);
+
+    checkoutData.customerEmail = user.email;
+    if (user.phone) {
+      checkoutData.customerPhone = user.phone;
+    } else if (checkoutData.customerPhone) {
+      // Save phone to user profile if not already set
+      await prisma.user.update({
+        where: { id: userId },
+        data: { phone: checkoutData.customerPhone }
+      });
+    }
+
     const order = await this.orderService.checkout(userId, checkoutData);
 
     return sendSuccess(res, {
@@ -53,6 +71,16 @@ export class OrderController {
     return sendSuccess(res, {
       message: "Order status updated successfully",
       data: updated,
+    });
+  });
+
+  getOrdersByUserId = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.params.userId as string;
+    const orders = await this.orderService.getMyOrders(userId);
+
+    return sendSuccess(res, {
+      message: "Customer orders fetched successfully",
+      data: orders,
     });
   });
 }

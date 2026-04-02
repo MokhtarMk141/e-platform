@@ -9,8 +9,6 @@ import {Category as cat} from "@/types/product.types";
 
 import {useCategories} from "@/hooks/useCategories";
 
-
-
 const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
   <svg
     width={size}
@@ -51,6 +49,9 @@ const STATUS_CONFIG: Record<"available" | "out_of_stock", { label: string; color
 };
 
 const PAGE_SIZE = 8;
+
+const currency = (value: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "TND", maximumFractionDigits: 2 }).format(value);
 
 export default function GetAllProductsPage() {
   const [search, setSearch]       = useState("");
@@ -426,7 +427,7 @@ export default function GetAllProductsPage() {
 
                         {/* Price */}
                         <td style={{ textAlign: "right" }}>
-                          <span className="price">${product.price.toFixed(2)}</span>
+                          <span className="price">{currency(product.price)}</span>
                         </td>
 
                         {/* Stock */}

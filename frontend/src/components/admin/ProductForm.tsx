@@ -121,6 +121,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+<<<<<<< HEAD
 
     try {
       let imageUrl = formData.imageUrl;
@@ -138,6 +139,34 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         stock: parseInt(formData.stock),
         description: formData.description || undefined,
         imageUrl: imageUrl || undefined,
+=======
+    try {
+      const parsedPrice = Number.parseFloat(formData.price);
+      const parsedStock = Number.parseInt(formData.stock, 10);
+
+      if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+        throw new Error("Price must be a valid positive number");
+      }
+
+      if (!Number.isFinite(parsedStock) || parsedStock < 0) {
+        throw new Error("Stock must be a valid non-negative integer");
+      }
+
+      let imageUrl = formData.imageUrl || "";
+      if (selectedImage) {
+        setUploadingImage(true);
+        imageUrl = await ProductService.uploadImage(selectedImage);
+      }
+
+      const dataToSave = {
+        name: formData.name.trim(),
+        sku: formData.sku.trim(),
+        categoryId: formData.categoryId || undefined,
+        price: parsedPrice,
+        stock: parsedStock,
+        description: formData.description.trim() || undefined,
+        imageUrl: imageUrl.trim() || undefined,
+>>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
       };
 
       if (isEdit && initialData) {
@@ -151,7 +180,8 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
       router.push("/admin/products/getall");
       router.refresh();
     } catch (err) {
-      alert("Failed to save product");
+      const message = err instanceof Error ? err.message : "Failed to save product";
+      alert(message);
       console.error(err);
     } finally {
       setUploadingImage(false);
@@ -164,6 +194,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
 
+<<<<<<< HEAD
         .gap-page {
           font-family: 'Plus Jakarta Sans', sans-serif;
           padding: 32px;
@@ -174,6 +205,20 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             radial-gradient(circle at top right, rgba(255,40,0,0.08) 0%, transparent 28%),
             linear-gradient(180deg, var(--background) 0%, var(--surface) 52%, var(--background) 100%);
           min-height: 100vh;
+=======
+        .gap-page { font-family: 'Plus Jakarta Sans', sans-serif; padding: 32px; flex: 1; display: flex; flex-direction: column; }
+
+        /* ── Page Header & Toolbar ── */
+        .page-header { display: flex; align-items: flex-start; justifyContent: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0; color: var(--foreground); }
+        .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+        
+        .btn-back {
+          display: inline-flex; align-items: center; gap: 6px;
+          color: var(--text-muted); font-size: 13.5px; font-weight: 600;
+          background: transparent; border: none; cursor: pointer; padding: 0;
+          margin-bottom: 24px; transition: color 0.2s;
+>>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
         }
 
         .btn-back {
@@ -421,6 +466,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         }
 
         .input-with-prefix { position: relative; display: flex; align-items: center; }
+<<<<<<< HEAD
         .input-prefix {
           position: absolute;
           left: 14px;
@@ -431,6 +477,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         }
 
         .input-with-prefix .form-input { padding-left: 28px; }
+=======
+        .input-prefix { position: absolute; left: 14px; color: var(--text-dim); font-weight: 600; font-size: 14px; pointer-events: none; }
+        .input-with-prefix .form-input { padding-left: 42px; }
+>>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
 
         .upload-area {
           border: 1px dashed var(--border-strong);
@@ -455,7 +505,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           margin-top: 12px;
           display: inline-flex;
           align-items: center;
-          justify-content: center;
+          justifyContent: center;
           border: 1px solid var(--border);
           background: var(--background);
           color: var(--foreground);
@@ -508,9 +558,15 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
 
                 <div className="form-group">
                   <label className="form-label">Product Name</label>
+<<<<<<< HEAD
                   <input
                     className="form-input"
                     placeholder="Product name"
+=======
+                  <input 
+                    className="form-input" 
+                    placeholder="product name "
+>>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -538,11 +594,19 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                   <div className="form-group">
                     <label className="form-label">Price</label>
                     <div className="input-with-prefix">
+<<<<<<< HEAD
                       <span className="input-prefix">$</span>
                       <input
                         type="number"
                         step="0.01"
                         className="form-input"
+=======
+                      <span className="input-prefix">TND</span>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        className="form-input" 
+>>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
                         placeholder="0.00"
                         name="price"
                         value={formData.price}

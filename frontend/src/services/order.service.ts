@@ -17,4 +17,8 @@ export class OrderService {
   static updateStatus(orderId: string, status: OrderStatus): Promise<OrderResponse> {
     return ApiClient.patch<OrderResponse>(`/orders/${orderId}/status`, { status });
   }
+
+  static getOrdersByUserId(userId: string): Promise<OrdersResponse> {
+    return ApiClient.get<OrdersResponse>(`/orders/user/${userId}`);
+  }
 }

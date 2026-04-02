@@ -13,6 +13,7 @@ export const checkoutOrderSchema = z.object({
   deliveryMode: z.enum(["STANDARD", "EXPRESS", "PICKUP"]).default("STANDARD"),
   paymentMethod: z.literal("CASH_ON_DELIVERY").default("CASH_ON_DELIVERY"),
   orderNotes: z.string().max(500).optional(),
+  discountCode: z.string().optional(),
 });
 
 export type CheckoutOrderDto = z.infer<typeof checkoutOrderSchema>;

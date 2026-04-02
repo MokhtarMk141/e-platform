@@ -8,7 +8,7 @@ import { useOrders } from "@/hooks/useOrders";
 import { useAuthStore } from "@/hooks/useAuth";
 
 const currency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "TND", maximumFractionDigits: 2 }).format(value);
 
 const statusTone = (status: string) => {
   if (status === "DELIVERED") return { bg: "rgba(34,197,94,0.12)", fg: "#16a34a", border: "rgba(34,197,94,0.35)" };

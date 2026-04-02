@@ -7,10 +7,11 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { OrderService } from "@/services/order.service";
+import { DiscountService } from "@/services/discount.service";
 import { CheckoutRequest, DeliveryMode } from "@/types/order.types";
 
 const currency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "TND", maximumFractionDigits: 2 }).format(value);
 
 const DELIVERY_OPTIONS: Array<{ value: DeliveryMode; label: string; description: string }> = [
   { value: "STANDARD", label: "Standard Delivery", description: "3 to 5 business days" },
@@ -40,6 +41,14 @@ export default function CheckoutPage() {
     orderNotes: "",
   });
 
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<{
+    code: string;
+    amount: number;
+    type: string;
+  } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+
   useEffect(() => {
     syncAuth();
   }, [syncAuth]);
@@ -52,7 +61,51 @@ export default function CheckoutPage() {
     void fetchCart();
   }, [fetchCart, isAuthenticated, router]);
 
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        customerName: user.name || prev.customerName,
+        customerEmail: user.email || prev.customerEmail,
+        customerPhone: user.phone || prev.customerPhone,
+      }));
+    }
+  }, [user]);
+
   const isEmpty = useMemo(() => !cart || cart.items.length === 0, [cart]);
+
+  const finalTotal = useMemo(() => {
+    if (!cart) return 0;
+    return Math.max(0, cart.totalAmount - (appliedDiscount?.amount || 0));
+  }, [cart, appliedDiscount]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim() || !cart) return;
+    setError(null);
+    setCouponLoading(true);
+
+    try {
+      const cartItems = cart.items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      const res = await DiscountService.validateCode(couponCode, cartItems);
+      setAppliedDiscount({
+        code: res.code,
+        amount: res.discountAmount,
+        type: res.type,
+      });
+    } catch (err: any) {
+      setError(err?.message || "Invalid coupon code");
+      setAppliedDiscount(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -67,6 +120,7 @@ export default function CheckoutPage() {
       setSubmitting(true);
       await OrderService.checkout({
         ...form,
+        discountCode: appliedDiscount?.code,
         shippingAddressLine2: form.shippingAddressLine2 || undefined,
         shippingState: form.shippingState || undefined,
         shippingPostalCode: form.shippingPostalCode || undefined,
@@ -115,11 +169,13 @@ export default function CheckoutPage() {
             <div style={gridTwoCols}>
               <Field label="Full Name" value={form.customerName} required onChange={(value) => setForm((prev) => ({ ...prev, customerName: value }))} />
               <Field
-                label="Email Address"
+                label="Email Address (Linked to Account)"
                 value={form.customerEmail}
                 type="email"
                 required
-                onChange={(value) => setForm((prev) => ({ ...prev, customerEmail: value }))}
+                readOnly
+                onChange={() => { }} // Email is read-only
+                style={{ background: "#f3f4f6", cursor: "not-allowed", color: "#6b7280" }}
               />
             </div>
             <Field label="Phone Number" value={form.customerPhone} required onChange={(value) => setForm((prev) => ({ ...prev, customerPhone: value }))} />
@@ -227,9 +283,50 @@ export default function CheckoutPage() {
                     <span style={{ color: "var(--text-muted)" }}>Items</span>
                     <strong>{cart.totalItems}</strong>
                   </div>
+
+                  {appliedDiscount && (
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#10b981" }}>
+                      <span>Discount ({appliedDiscount.code})</span>
+                      <strong>-{currency(appliedDiscount.amount)}</strong>
+                    </div>
+                  )}
+
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ color: "var(--text-muted)", fontSize: 13 }}>Total</span>
-                    <strong style={{ fontSize: 22, letterSpacing: "-0.03em", color: "var(--brand-red)" }}>{currency(cart.totalAmount)}</strong>
+                    <strong style={{ fontSize: 22, letterSpacing: "-0.03em", color: "var(--brand-red)" }}>{currency(finalTotal)}</strong>
+                  </div>
+                </div>
+
+                {/* Coupon Code Input */}
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px dashed #d1d5db" }}>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 800, textTransform: "uppercase", color: "#6b7280", marginBottom: 6 }}>
+                    Have a coupon?
+                  </label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      type="text"
+                      placeholder="Enter code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      style={{ ...inputStyle, flex: 1, padding: "8px 10px", fontSize: 13 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      style={{
+                        background: "#111827",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "0 16px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {couponLoading ? "..." : "Apply"}
+                    </button>
                   </div>
                 </div>
               </>
@@ -280,19 +377,30 @@ function Field({
   onChange,
   type = "text",
   required = false,
+  readOnly = false,
+  style = {},
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   required?: boolean;
+  readOnly?: boolean;
+  style?: CSSProperties;
 }) {
   return (
     <label style={fieldCardStyle}>
       <span style={{ fontSize: 12, fontWeight: 700 }}>
         {label} {required ? "*" : ""}
       </span>
-      <input type={type} value={value} required={required} onChange={(e) => onChange(e.target.value)} style={inputStyle} />
+      <input
+        type={type}
+        value={value}
+        required={required}
+        readOnly={readOnly}
+        onChange={(e) => !readOnly && onChange(e.target.value)}
+        style={{ ...inputStyle, ...style }}
+      />
     </label>
   );
 }

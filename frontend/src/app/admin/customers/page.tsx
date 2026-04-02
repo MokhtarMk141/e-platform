@@ -70,7 +70,9 @@ export default function CustomersPage() {
 
   const filtered = users
     .filter((u: User) => {
-      const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+      const matchSearch =
+        u.name.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase());
       const matchRole = roleFilter === "All" || u.role === roleFilter;
       return matchSearch && matchRole;
     })
@@ -263,9 +265,9 @@ export default function CustomersPage() {
         {/* ── Table ── */}
         <div className="table-wrap">
           {loading ? (
-             <div className="empty">
+            <div className="empty">
               <p className="empty-sub">Loading...</p>
-             </div>
+            </div>
           ) : paginated.length === 0 ? (
             <div className="empty">
               <Icon d={icons.users} size={40} />
@@ -307,8 +309,8 @@ export default function CustomersPage() {
                       </td>
                       <td>
                         <span className="badge" style={{
-                           background: user.role === 'ADMIN' ? 'rgba(255,40,0,0.1)' : 'var(--surface-hover)',
-                           color: user.role === 'ADMIN' ? 'var(--brand-red)' : 'var(--text-muted)'
+                          background: user.role === 'ADMIN' ? 'rgba(255,40,0,0.1)' : 'var(--surface-hover)',
+                          color: user.role === 'ADMIN' ? 'var(--brand-red)' : 'var(--text-muted)'
                         }}>
                           {user.role}
                         </span>
@@ -318,15 +320,22 @@ export default function CustomersPage() {
                       </td>
                       <td>
                         <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                          <button 
-                            className="action-btn edit" 
+                          <button
+                            className="action-btn edit"
+                            title="View Orders"
+                            onClick={() => router.push(`/admin/customers/${user.id}/orders`)}
+                          >
+                            <Icon d={icons.eye} size={14} />
+                          </button>
+                          <button
+                            className="action-btn edit"
                             title="Toggle Role"
                             onClick={() => toggleRole(user)}
                           >
                             <Icon d={icons.edit} size={14} />
                           </button>
-                          <button 
-                            className="action-btn del" 
+                          <button
+                            className="action-btn del"
                             title="Delete"
                             onClick={() => handleDelete(user.id, user.name)}
                           >

@@ -15,9 +15,9 @@ export interface AnalyticsOverview {
     pendingOrders: number;
   };
   revenue: {
-    gross: number;
+    realized: number;
+    potential: number;
     averageOrderValue: number;
-    deliveredRevenue: number;
   };
   carts: {
     itemsInOpenCarts: number;
@@ -35,6 +35,29 @@ export interface AnalyticsOverview {
     orders: number;
     revenue: number;
     newUsers: number;
+  }>;
+  recentOrders: Array<{
+    id: string;
+    customerName: string | null;
+    total: number;
+    status: string;
+    createdAt: string;
+  }>;
+  statusDistribution: Array<{
+    status: string;
+    count: number;
+  }>;
+  categorySales: Array<{
+    categoryId: string;
+    name: string;
+    orders: number;
+    revenue: number;
+  }>;
+  lowStockProducts: Array<{
+    id: string;
+    name: string;
+    sku: string;
+    stock: number;
   }>;
 }
 
