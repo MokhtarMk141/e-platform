@@ -7,6 +7,7 @@ export class ProductEntity {
   stock!: number;
   imageUrl!: string | null;
   categoryId!: string | null;
+  brandId!: string | null;
   createdAt!: Date;
   updatedAt!: Date;
 

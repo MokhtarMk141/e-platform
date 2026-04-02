@@ -31,6 +31,14 @@ export const createProductSchema = z.object({
     const trimmed = value.trim();
     return trimmed === "" ? undefined : trimmed;
   }, z.string().cuid("Must be a valid category ID").optional()),
+  brandId: z.preprocess((value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const trimmed = value.trim();
+    return trimmed === "" ? undefined : trimmed;
+  }, z.string().cuid("Must be a valid brand ID").optional()),
 });
 
 export type CreateProductDto = z.infer<typeof createProductSchema>;

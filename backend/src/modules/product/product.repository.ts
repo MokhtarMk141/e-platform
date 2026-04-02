@@ -4,7 +4,7 @@ import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 
 export type ProductWithCategory = Prisma.ProductGetPayload<{
-  include: { category: true };
+  include: { category: true; brand: true };
 }>;
 
 export type ProductSortBy = "featured" | "price_asc" | "price_desc" | "newest";
@@ -68,6 +68,7 @@ export class ProductRepository {
           { description: { contains: term, mode: "insensitive" } },
           { sku: { contains: term, mode: "insensitive" } },
           { category: { name: { contains: term, mode: "insensitive" } } },
+          { brand: { name: { contains: term, mode: "insensitive" } } },
         ]),
       });
     }
@@ -97,7 +98,7 @@ export class ProductRepository {
       skip,
       take,
       where,
-      include: { category: true },
+      include: { category: true, brand: true },
       orderBy: this.buildOrderBy(sortBy),
     });
   }
@@ -105,7 +106,7 @@ export class ProductRepository {
   async findById(id: string): Promise<ProductWithCategory | null> {
     return prisma.product.findUnique({
       where: { id },
-      include: { category: true },
+      include: { category: true, brand: true },
     });
   }
 
@@ -116,7 +117,7 @@ export class ProductRepository {
   async create(data: CreateProductDto): Promise<ProductWithCategory> {
     return prisma.product.create({
       data,
-      include: { category: true },
+      include: { category: true, brand: true },
     });
   }
 
@@ -124,7 +125,7 @@ export class ProductRepository {
     return prisma.product.update({
       where: { id },
       data,
-      include: { category: true },
+      include: { category: true, brand: true },
     });
   }
 

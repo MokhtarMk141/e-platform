@@ -6,6 +6,14 @@ export interface Category {
   productCount?: number
 }
 
+export interface Brand {
+  id: string
+  name: string
+  description: string | null
+  logoUrl: string | null
+  productCount?: number
+}
+
 export interface Product {
   id: string
   name: string
@@ -15,7 +23,9 @@ export interface Product {
   stock: number
   imageUrl: string | null
   categoryId: string | null
+  brandId: string | null
   category: Category | null
+  brand: Brand | null
   createdAt: string
   updatedAt: string
 }
@@ -52,6 +62,12 @@ export interface CategoryListResponse {
   success: boolean
   message: string
   data: Category[]
+}
+
+export interface BrandListResponse {
+  success: boolean
+  message: string
+  data: Brand[]
 }
 
 export interface ProductFilters {

@@ -164,7 +164,6 @@ export const useCartStore = create<CartState>((set) => ({
             ...existingItems,
             {
               id: `guest-${productId}`,
-              productId,
               quantity,
               ...productSnapshot,
             },

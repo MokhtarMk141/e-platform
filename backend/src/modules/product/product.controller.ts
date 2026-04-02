@@ -10,6 +10,8 @@ import { sendSuccess } from "../../utils/api-response";
 import { ProductSortBy } from "./product.repository";
 import { AppError } from "../../exceptions/app-error";
 
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export class ProductController {
   private productService: ProductService;
 
@@ -80,6 +82,7 @@ export class ProductController {
       price: Number(req.body.price),
       stock: Number(req.body.stock),
       imageUrl: req.body.imageUrl,
+      brandId: req.body.brandId,
     });
     const product = await this.productService.createProduct(dto);
 
@@ -109,9 +112,9 @@ export class ProductController {
     const base64Payload = match[2];
     const buffer = Buffer.from(base64Payload, "base64");
 
-    // 5MB max image size
-    if (buffer.length > 5 * 1024 * 1024) {
-      throw new AppError("Image too large. Max size is 5MB", 400);
+    // 10MB max image size
+    if (buffer.length > MAX_IMAGE_SIZE_BYTES) {
+      throw new AppError("Image too large. Max size is 10MB", 400);
     }
 
     const safeBase = path
@@ -143,6 +146,7 @@ export class ProductController {
       price: req.body.price !== undefined ? Number(req.body.price) : undefined,
       stock: req.body.stock !== undefined ? Number(req.body.stock) : undefined,
       imageUrl: req.body.imageUrl,
+      brandId: req.body.brandId,
     });
     const product = await this.productService.updateProduct(id, dto);
 

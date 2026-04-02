@@ -24,6 +24,7 @@ const iconPaths = {
   addProduct: "M12 5v14M5 12h14",
   editProduct: "M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z",
   categories: "M4 6h16M4 12h16M4 18h7",
+  brands: "M3 7l9-4 9 4-9 4-9-4zm0 5l9 4 9-4M3 17l9 4 9-4",
   inventory: "M5 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V8zm3 4h.01M16 12h.01",
   customers: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2m7-6a4 4 0 100-8 4 4 0 000 8zm10 6v-2a4 4 0 00-3-3.87",
   coupons: "M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82zM7 7h.01",
@@ -55,6 +56,7 @@ const navItems: NavItem[] = [
   { icon: "store", label: "Store", href: "/admin/products/getall" },
   { icon: "addProduct", label: "Add Product", href: "/admin/products/add" },
   { icon: "categories", label: "Categories", href: "/admin/categories" },
+  { icon: "brands", label: "Brands", href: "/admin/brands" },
   { icon: "discounts", label: "Discounts", href: "/admin/coupons" },
   { icon: "settings", label: "Settings", href: "/admin/settings" },
 ];
