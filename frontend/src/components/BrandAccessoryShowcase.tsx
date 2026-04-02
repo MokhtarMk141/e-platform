@@ -1,8 +1,12 @@
 'use client'
 
-import { useEffect, useState, type CSSProperties } from 'react'
+import Link from 'next/link'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useProducts } from '@/hooks/useProducts'
+import { useBrands } from '@/hooks/useBrands'
+import type { Product as StoreProduct } from '@/types/product.types'
 
-interface Product {
+interface ShowcaseProduct {
   id: string
   name: string
   price: string
@@ -10,77 +14,23 @@ interface Product {
   category: string
 }
 
-interface Brand {
+interface ShowcaseBrand {
   id: string
   name: string
-  logo: string
-  products: Product[]
+  logo: string | null
+  products: ShowcaseProduct[]
 }
 
-const brands: Brand[] = [
-  {
-    id: 'msi',
-    name: 'MSI',
-    logo: 'https://storage-asset.msi.com/event/spb/2017/InfiniteA_H5page/images/logo.png',
-    products: [
-      { id: 'msi-1', name: 'MSI MEG Trident X2', price: '2,499', image: '/showcase/pc-case.png', category: 'PC Case' },
-      { id: 'msi-2', name: 'MSI Optix MAG274QRF', price: '449', image: '/showcase/monitor.png', category: 'Monitor' },
-      { id: 'msi-3', name: 'MSI Vigor GK71 Sonic', price: '129', image: '/showcase/keyboard.png', category: 'Keyboard' },
-      { id: 'msi-4', name: 'MSI Immerse GH50', price: '59', image: '/showcase/headset.png', category: 'Headset' },
-      { id: 'msi-5', name: 'MSI Clutch GM41', price: '49', image: '/showcase/mouse.png', category: 'Mouse' },
-    ],
-  },
-  {
-    id: 'redragon',
-    name: 'Redragon',
-    logo: 'https://redragonshop.com/cdn/shop/files/redragon-logo-text.png?v=1726780948&width=200',
-    products: [
-      { id: 'rd-1', name: 'Redragon GC-700 Chassis', price: '189', image: '/showcase/pc-case.png', category: 'PC Case' },
-      { id: 'rd-2', name: 'Redragon Mirror GM-24G5F', price: '279', image: '/showcase/monitor.png', category: 'Monitor' },
-      { id: 'rd-3', name: 'Redragon K556 Devarajas', price: '59', image: '/showcase/keyboard.png', category: 'Keyboard' },
-      { id: 'rd-4', name: 'Redragon H510 Zeus', price: '39', image: '/showcase/headset.png', category: 'Headset' },
-      { id: 'rd-5', name: 'Redragon M913 Impact', price: '34', image: '/showcase/mouse.png', category: 'Mouse' },
-    ],
-  },
-  {
-    id: 'lenovo',
-    name: 'Lenovo',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Lenovo_logo_2015.svg/2560px-Lenovo_logo_2015.svg.png',
-    products: [
-      { id: 'ln-1', name: 'Lenovo Legion Tower 7i', price: '2,199', image: '/showcase/pc-case.png', category: 'PC Case' },
-      { id: 'ln-2', name: 'Lenovo Legion Y27q-30', price: '399', image: '/showcase/monitor.png', category: 'Monitor' },
-      { id: 'ln-3', name: 'Lenovo Legion K500', price: '89', image: '/showcase/keyboard.png', category: 'Keyboard' },
-      { id: 'ln-4', name: 'Lenovo Legion H600', price: '79', image: '/showcase/headset.png', category: 'Headset' },
-      { id: 'ln-5', name: 'Lenovo Legion M600s', price: '59', image: '/showcase/mouse.png', category: 'Mouse' },
-    ],
-  },
-  {
-    id: 'logitech',
-    name: 'Logitech',
-    logo: 'https://companieslogo.com/img/orig/LOGI_BIG.D-3f288e21.png?t=1720244492',
-    products: [
-      { id: 'lg-1', name: 'Logitech G PC Tower', price: '1,899', image: '/showcase/pc-case.png', category: 'PC Case' },
-      { id: 'lg-2', name: 'Logitech G Pro X27', price: '499', image: '/showcase/monitor.png', category: 'Monitor' },
-      { id: 'lg-3', name: 'Logitech G Pro X TKL', price: '199', image: '/showcase/keyboard.png', category: 'Keyboard' },
-      { id: 'lg-4', name: 'Logitech G Pro X 2', price: '249', image: '/showcase/headset.png', category: 'Headset' },
-      { id: 'lg-5', name: 'Logitech G Pro X Superlight', price: '159', image: '/showcase/mouse.png', category: 'Mouse' },
-    ],
-  },
-  {
-    id: 'razer',
-    name: 'Razer',
-    logo: 'https://www.svgrepo.com/show/306644/razer.svg',
-    products: [
-      { id: 'rz-1', name: 'Razer Tomahawk ATX', price: '299', image: '/showcase/pc-case.png', category: 'PC Case' },
-      { id: 'rz-2', name: 'Razer Raptor 27 QHD', price: '799', image: '/showcase/monitor.png', category: 'Monitor' },
-      { id: 'rz-3', name: 'Razer Huntsman V3 Pro', price: '249', image: '/showcase/keyboard.png', category: 'Keyboard' },
-      { id: 'rz-4', name: 'Razer Kraken V4 Pro', price: '399', image: '/showcase/headset.png', category: 'Headset' },
-      { id: 'rz-5', name: 'Razer DeathAdder V3 Pro', price: '89', image: '/showcase/mouse.png', category: 'Mouse' },
-    ],
-  },
-]
+const ACCESSORY_KEYWORDS = ['monitor', 'keyboard', 'mouse', 'headset', 'audio', 'speaker', 'webcam', 'accessor', 'microphone']
+
+const isAccessoryProduct = (product: StoreProduct) => {
+  const searchable = `${product.name} ${product.description ?? ''} ${product.category?.name ?? ''}`.toLowerCase()
+  return ACCESSORY_KEYWORDS.some((keyword) => searchable.includes(keyword))
+}
 
 export default function BrandAccessoryShowcase() {
+  const { products: dbProducts, loading } = useProducts({ limit: 100 })
+  const { brands: dbBrands } = useBrands()
   const [activeBrandIndex, setActiveBrandIndex] = useState(2)
   const [centerProductIndex, setCenterProductIndex] = useState(2)
   const [transitioning, setTransitioning] = useState(false)
@@ -91,7 +41,67 @@ export default function BrandAccessoryShowcase() {
     setMounted(true)
   }, [])
 
+  const brands = useMemo<ShowcaseBrand[]>(() => {
+    const productsWithBrands = dbProducts.filter((product) => product.brand)
+    const accessoryProducts = productsWithBrands.filter(isAccessoryProduct)
+    const sourceProducts = accessoryProducts.length > 0 ? accessoryProducts : productsWithBrands
+
+    return dbBrands
+      .map((brand) => {
+        const brandProducts = sourceProducts
+          .filter((product) => product.brand?.id === brand.id)
+          .slice(0, 5)
+          .map((product) => ({
+            id: product.id,
+            name: product.name,
+            price: (product.price ?? 0).toFixed(2),
+            image: product.imageUrl || '/showcase/keyboard.png',
+            category: product.category?.name || 'Accessory',
+          }))
+
+        return {
+          id: brand.id,
+          name: brand.name,
+          logo: brand.logoUrl,
+          products: brandProducts,
+        }
+      })
+      .filter((brand) => brand.products.length > 0)
+  }, [dbBrands, dbProducts])
+
+  useEffect(() => {
+    if (brands.length === 0) {
+      setActiveBrandIndex(0)
+      setCenterProductIndex(0)
+      return
+    }
+
+    setActiveBrandIndex((prev) => Math.min(prev, brands.length - 1))
+  }, [brands.length])
+
+  useEffect(() => {
+    const currentProductsLength = brands[activeBrandIndex]?.products.length ?? 0
+    if (currentProductsLength === 0) {
+      setCenterProductIndex(0)
+      return
+    }
+
+    setCenterProductIndex((prev) => Math.min(prev, currentProductsLength - 1))
+  }, [activeBrandIndex, brands])
+
   const currentBrand = brands[activeBrandIndex]
+  const hasShowcaseData = brands.length > 0 && currentBrand
+
+  if (!mounted) return null
+
+  if (loading && brands.length === 0) {
+    return null
+  }
+
+  if (!hasShowcaseData) {
+    return null
+  }
+
   const products = currentBrand.products
 
   const switchBrand = (index: number) => {
@@ -147,8 +157,6 @@ export default function BrandAccessoryShowcase() {
       pointerEvents: absPos > 2 ? 'none' : 'auto',
     }
   }
-
-  if (!mounted) return null
 
   return (
     <section
@@ -488,7 +496,8 @@ export default function BrandAccessoryShowcase() {
                       </span>
 
                       {isCenter && (
-                        <button
+                        <Link
+                          href={`/product-page/${product.id}`}
                           style={{
                             background: 'var(--brand-red)',
                             color: '#fff',
@@ -501,10 +510,11 @@ export default function BrandAccessoryShowcase() {
                             transition: 'all 0.2s',
                             boxShadow: '0 4px 12px rgba(255,40,0,0.2)',
                             fontFamily: "'Plus Jakarta Sans', sans-serif",
+                            textDecoration: 'none',
                           }}
                         >
-                          Add to Bag +
-                        </button>
+                          View Product +
+                        </Link>
                       )}
                     </div>
                   </div>
@@ -630,7 +640,20 @@ export default function BrandAccessoryShowcase() {
                   onClick={() => switchBrand(i)}
                 >
                   <div className={`sc-brand-pill ${isCenter ? 'active' : ''}`}>
-                    <img src={brand.logo} alt={brand.name} className="sc-brand-logo" />
+                    {brand.logo ? (
+                      <img src={brand.logo} alt={brand.name} className="sc-brand-logo" />
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: '0.08em',
+                          color: isCenter ? 'var(--foreground)' : 'var(--text-dim)',
+                        }}
+                      >
+                        {brand.name.slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
                     <span className="sc-brand-name">{brand.name}</span>
                     {isCenter && (
                       <span

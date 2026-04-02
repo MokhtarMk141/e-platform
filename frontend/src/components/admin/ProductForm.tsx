@@ -121,25 +121,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-<<<<<<< HEAD
 
-    try {
-      let imageUrl = formData.imageUrl;
-      if (selectedImage) {
-        setUploadingImage(true);
-        imageUrl = await ProductService.uploadImage(selectedImage);
-      }
-
-      const dataToSave = {
-        name: formData.name,
-        sku: formData.sku,
-        categoryId: formData.categoryId || undefined,
-        brandId: formData.brandId || undefined,
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock),
-        description: formData.description || undefined,
-        imageUrl: imageUrl || undefined,
-=======
     try {
       const parsedPrice = Number.parseFloat(formData.price);
       const parsedStock = Number.parseInt(formData.stock, 10);
@@ -162,11 +144,11 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         name: formData.name.trim(),
         sku: formData.sku.trim(),
         categoryId: formData.categoryId || undefined,
+        brandId: formData.brandId || undefined,
         price: parsedPrice,
         stock: parsedStock,
         description: formData.description.trim() || undefined,
         imageUrl: imageUrl.trim() || undefined,
->>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
       };
 
       if (isEdit && initialData) {
@@ -194,7 +176,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
 
-<<<<<<< HEAD
         .gap-page {
           font-family: 'Plus Jakarta Sans', sans-serif;
           padding: 32px;
@@ -205,20 +186,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             radial-gradient(circle at top right, rgba(255,40,0,0.08) 0%, transparent 28%),
             linear-gradient(180deg, var(--background) 0%, var(--surface) 52%, var(--background) 100%);
           min-height: 100vh;
-=======
-        .gap-page { font-family: 'Plus Jakarta Sans', sans-serif; padding: 32px; flex: 1; display: flex; flex-direction: column; }
-
-        /* ── Page Header & Toolbar ── */
-        .page-header { display: flex; align-items: flex-start; justifyContent: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
-        .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0; color: var(--foreground); }
-        .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
-        
-        .btn-back {
-          display: inline-flex; align-items: center; gap: 6px;
-          color: var(--text-muted); font-size: 13.5px; font-weight: 600;
-          background: transparent; border: none; cursor: pointer; padding: 0;
-          margin-bottom: 24px; transition: color 0.2s;
->>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
         }
 
         .btn-back {
@@ -235,7 +202,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           margin-bottom: 24px;
           transition: color 0.2s;
         }
-
         .btn-back:hover { color: var(--foreground); }
 
         .hero-shell {
@@ -248,7 +214,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           background: linear-gradient(135deg, var(--background) 0%, var(--surface) 100%);
           box-shadow: 0 24px 60px rgba(0,0,0,0.05);
         }
-
         .hero-shell::before {
           content: "";
           position: absolute;
@@ -258,7 +223,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           background-size: 28px 28px;
           pointer-events: none;
         }
-
         .hero-glow {
           position: absolute;
           right: -80px;
@@ -280,7 +244,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           gap: 16px;
           flex-wrap: wrap;
         }
-
         .eyebrow {
           display: inline-flex;
           align-items: center;
@@ -292,14 +255,12 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           color: var(--brand-red);
           margin-bottom: 14px;
         }
-
         .eyebrow-line {
           width: 28px;
           height: 2px;
           border-radius: 2px;
           background: var(--brand-red);
         }
-
         .page-title {
           font-size: clamp(28px, 4vw, 48px);
           font-weight: 900;
@@ -309,7 +270,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           line-height: 1.05;
           max-width: 620px;
         }
-
         .page-sub {
           font-size: 15px;
           color: var(--text-muted);
@@ -338,13 +298,11 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           box-shadow: 0 4px 14px rgba(255,40,0,0.25);
           letter-spacing: -0.01em;
         }
-
         .btn-save:hover:not(:disabled) {
           background: var(--brand-red-hover);
           transform: translateY(-1px);
           box-shadow: 0 6px 18px rgba(255,40,0,0.32);
         }
-
         .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .form-grid {
@@ -353,7 +311,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           gap: 24px;
           align-items: start;
         }
-
         @media (max-width: 900px) {
           .form-grid { grid-template-columns: 1fr; }
         }
@@ -369,7 +326,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           overflow: hidden;
           position: relative;
         }
-
         .form-card::before {
           content: "";
           position: absolute;
@@ -379,15 +335,12 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           opacity: 0;
           transition: opacity 0.25s;
         }
-
         .form-card:hover {
           border-color: var(--brand-red);
           box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(255,40,0,0.08);
           transform: translateY(-4px);
         }
-
         .form-card:hover::before { opacity: 1; }
-
         .card-kicker {
           font-size: 11px;
           color: var(--text-dim);
@@ -397,7 +350,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           text-transform: uppercase;
           margin-bottom: 8px;
         }
-
         .card-title {
           font-size: 18px;
           font-weight: 800;
@@ -409,7 +361,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
 
         .form-group { margin-bottom: 20px; }
         .form-group:last-child { margin-bottom: 0; }
-
         .form-label {
           display: block;
           font-size: 12px;
@@ -419,14 +370,12 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           text-transform: uppercase;
           margin-bottom: 8px;
         }
-
         .form-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 16px;
           margin-bottom: 20px;
         }
-
         @media (max-width: 600px) {
           .form-row { grid-template-columns: 1fr; }
         }
@@ -445,13 +394,11 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           outline: none;
           box-sizing: border-box;
         }
-
         .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
         .form-input:focus, .form-select:focus, .form-textarea:focus {
           border-color: var(--brand-red);
           box-shadow: 0 0 0 3px rgba(255,40,0,0.08);
         }
-
         .form-textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
         .form-select { appearance: none; cursor: pointer; padding-right: 36px; }
         .select-wrapper { position: relative; }
@@ -466,7 +413,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         }
 
         .input-with-prefix { position: relative; display: flex; align-items: center; }
-<<<<<<< HEAD
         .input-prefix {
           position: absolute;
           left: 14px;
@@ -475,12 +421,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           font-size: 14px;
           pointer-events: none;
         }
-
-        .input-with-prefix .form-input { padding-left: 28px; }
-=======
-        .input-prefix { position: absolute; left: 14px; color: var(--text-dim); font-weight: 600; font-size: 14px; pointer-events: none; }
         .input-with-prefix .form-input { padding-left: 42px; }
->>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
 
         .upload-area {
           border: 1px dashed var(--border-strong);
@@ -492,7 +433,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           transition: all 0.2s;
           overflow: hidden;
         }
-
         .upload-area:hover { border-color: var(--brand-red); }
         .upload-icon { color: var(--text-dim); margin-bottom: 12px; }
         .upload-text { font-size: 13.5px; font-weight: 700; color: var(--foreground); margin-bottom: 4px; }
@@ -500,12 +440,11 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         .preview-img { width: 100%; max-height: 220px; object-fit: contain; }
         .upload-input { display: none; }
         .upload-meta { margin-top: 12px; font-size: 12.5px; color: var(--text-muted); text-align: center; }
-
         .upload-link {
           margin-top: 12px;
           display: inline-flex;
           align-items: center;
-          justifyContent: center;
+          justify-content: center;
           border: 1px solid var(--border);
           background: var(--background);
           color: var(--foreground);
@@ -516,7 +455,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           cursor: pointer;
           transition: all 0.2s;
         }
-
         .upload-link:hover { border-color: var(--brand-red); color: var(--brand-red); }
       `}</style>
 
@@ -558,15 +496,9 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
 
                 <div className="form-group">
                   <label className="form-label">Product Name</label>
-<<<<<<< HEAD
                   <input
                     className="form-input"
                     placeholder="Product name"
-=======
-                  <input 
-                    className="form-input" 
-                    placeholder="product name "
->>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -594,19 +526,11 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                   <div className="form-group">
                     <label className="form-label">Price</label>
                     <div className="input-with-prefix">
-<<<<<<< HEAD
-                      <span className="input-prefix">$</span>
+                      <span className="input-prefix">TND</span>
                       <input
                         type="number"
                         step="0.01"
                         className="form-input"
-=======
-                      <span className="input-prefix">TND</span>
-                      <input 
-                        type="number" 
-                        step="0.01" 
-                        className="form-input" 
->>>>>>> 699a94c76fdb9e4e1851c7abf315440dea07d6d9
                         placeholder="0.00"
                         name="price"
                         value={formData.price}
