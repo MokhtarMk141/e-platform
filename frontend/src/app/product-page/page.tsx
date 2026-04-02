@@ -225,29 +225,30 @@ function GridCard({ product, wished, onWish, delay }: {
         style={{
           background: 'var(--background)',
           border: `1px solid ${hovered ? 'var(--brand-red)' : 'var(--border)'}`,
-          borderRadius: 20, overflow: 'hidden',
+          borderRadius: 24, overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
           animation: `fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay * 50}ms both`,
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: hovered
-            ? '0 20px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(255,40,0,0.08)'
+            ? '0 20px 40px rgba(0,0,0,0.12), 0 8px 16px rgba(255,40,0,0.08)'
             : '0 4px 12px rgba(0,0,0,0.04)',
           cursor: 'pointer', position: 'relative',
-          transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+          transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+          height: 460, // Fixed height for uniformity
         }}
       >
         {/* Image Container */}
         <div style={{
-          position: 'relative', height: 320,
-          background: 'var(--surface)',
+          position: 'relative', height: 200,
+          background: 'linear-gradient(180deg, var(--surface) 0%, var(--background) 100%)',
           overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {product.imageUrl ? (
             <img
               src={product.imageUrl} alt={product.name}
               style={{
-                width: '85%', height: '85%', objectFit: 'contain',
-                transform: hovered ? 'scale(1.05)' : 'scale(1)',
+                width: '80%', height: '80%', objectFit: 'contain',
+                transform: hovered ? 'scale(1.02)' : 'scale(1)',
                 transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                 filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.1))',
               }}
@@ -316,9 +317,11 @@ function GridCard({ product, wished, onWish, delay }: {
             </div>
 
             <p style={{
-              margin: 0, fontSize: 16, fontWeight: 800,
-              color: 'var(--foreground)', lineHeight: 1.4,
-              fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.02em',
+              margin: 0, fontSize: 18, fontWeight: 800,
+              color: 'var(--foreground)', lineHeight: 1.3,
+              fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.03em',
+              height: 48, overflow: 'hidden',
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
             }}>
               {product.name}
             </p>
@@ -326,10 +329,10 @@ function GridCard({ product, wished, onWish, delay }: {
 
           {product.description && (
             <p style={{
-              margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6,
+              margin: 0, fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.5,
               fontFamily: "'DM Sans', sans-serif",
-              display: '-webkit-box', WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              height: 63, overflow: 'hidden',
+              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
             }}>
               {product.description}
             </p>
@@ -337,7 +340,7 @@ function GridCard({ product, wished, onWish, delay }: {
 
           <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10 }}>
             <span style={{
-              fontSize: 22, fontWeight: 900, color: 'var(--foreground)',
+              fontSize: 20, fontWeight: 800, color: 'var(--foreground)',
               fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
             }}>
               TND {product.price ? product.price.toFixed(2) : "0.00"}
@@ -359,15 +362,24 @@ function GridCard({ product, wished, onWish, delay }: {
                 background: product.stock === 0 ? 'transparent' : 'var(--brand-red)',
                 color: product.stock === 0 ? 'var(--text-dim)' : '#fff',
                 border: product.stock === 0 ? '1px solid var(--border)' : 'none',
-                padding: '10px 20px', borderRadius: 12,
-                fontSize: 13, fontWeight: 800,
+                width: 38, height: 38, borderRadius: 12,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                letterSpacing: '-0.01em', transition: 'all 0.2s',
+                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                 boxShadow: product.stock === 0 ? 'none' : '0 4px 12px rgba(255,40,0,0.2)',
+                opacity: hovered ? 1 : 0,
+                transform: hovered ? 'translateX(0)' : 'translateX(10px)',
+                visibility: hovered ? 'visible' : 'hidden',
               }}
             >
-              {product.stock === 0 ? 'Sold Out' : 'Add to Bag +'}
+              {product.stock === 0 ? (
+                <span style={{ fontSize: 10 }}>Sold</span>
+              ) : (
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+                  <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
@@ -892,7 +904,7 @@ function ProductsPageInner() {
             <>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: viewMode === 'grid' ? 'repeat(3, 1fr)' : '1fr',
+                gridTemplateColumns: viewMode === 'grid' ? 'repeat(4, 1fr)' : '1fr',
                 gap: viewMode === 'grid' ? 24 : 16,
               }}>
                 {products.map((product, i) =>
