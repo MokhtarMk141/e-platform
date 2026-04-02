@@ -61,6 +61,19 @@ export default function CheckoutPage() {
     void fetchCart();
   }, [fetchCart, isAuthenticated, router]);
 
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        customerName: user.name || prev.customerName,
+        customerEmail: user.email || prev.customerEmail,
+        customerPhone: user.phone || prev.customerPhone,
+      }));
+    }
+  }, [user]);
+
   const isEmpty = useMemo(() => !cart || cart.items.length === 0, [cart]);
 
   const finalTotal = useMemo(() => {
@@ -156,11 +169,13 @@ export default function CheckoutPage() {
             <div style={gridTwoCols}>
               <Field label="Full Name" value={form.customerName} required onChange={(value) => setForm((prev) => ({ ...prev, customerName: value }))} />
               <Field
-                label="Email Address"
+                label="Email Address (Linked to Account)"
                 value={form.customerEmail}
                 type="email"
                 required
-                onChange={(value) => setForm((prev) => ({ ...prev, customerEmail: value }))}
+                readOnly
+                onChange={() => { }} // Email is read-only
+                style={{ background: "#f3f4f6", cursor: "not-allowed", color: "#6b7280" }}
               />
             </div>
             <Field label="Phone Number" value={form.customerPhone} required onChange={(value) => setForm((prev) => ({ ...prev, customerPhone: value }))} />
@@ -362,19 +377,30 @@ function Field({
   onChange,
   type = "text",
   required = false,
+  readOnly = false,
+  style = {},
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   required?: boolean;
+  readOnly?: boolean;
+  style?: CSSProperties;
 }) {
   return (
     <label style={fieldCardStyle}>
       <span style={{ fontSize: 12, fontWeight: 700 }}>
         {label} {required ? "*" : ""}
       </span>
-      <input type={type} value={value} required={required} onChange={(e) => onChange(e.target.value)} style={inputStyle} />
+      <input
+        type={type}
+        value={value}
+        required={required}
+        readOnly={readOnly}
+        onChange={(e) => !readOnly && onChange(e.target.value)}
+        style={{ ...inputStyle, ...style }}
+      />
     </label>
   );
 }

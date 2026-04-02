@@ -6,15 +6,16 @@ import { AppError } from "../../exceptions/app-error";
 import { User } from "@prisma/client";
 
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private userRepository: UserRepository) { }
 
   private toResponse(
-    user: Pick<User, "id" | "name" | "email" | "role" | "createdAt">
+    user: any
   ): UserResponseDto {
     return {
       id: user.id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       role: user.role,
       createdAt: user.createdAt,
     };
@@ -43,7 +44,7 @@ export class UserService {
     return users.map((user) => this.toResponse(user));
   }
 
-  async updateUser(id: string, dto: { name?: string; email?: string }): Promise<UserResponseDto> {
+  async updateUser(id: string, dto: { name?: string; email?: string; phone?: string }): Promise<UserResponseDto> {
     const user = await this.userRepository.update(id, dto);
     if (!user) throw new AppError("User not found", 404);
     return this.toResponse(user);

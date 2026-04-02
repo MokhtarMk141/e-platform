@@ -19,4 +19,8 @@ export class UserService {
   static delete(id: string): Promise<void> {
     return ApiClient.delete<void>(`/users/${id}`);
   }
+
+  static getById(id: string): Promise<UserResponse> {
+    return ApiClient.get<UserResponse>(`/users/${id}`);
+  }
 }

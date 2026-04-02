@@ -13,15 +13,16 @@ import { sendEmail } from "../../utils/send-email";
 import { AuthEmailService } from "./auth.email";
 
 export class AuthService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private userRepository: UserRepository) { }
 
   private toResponse(
-    user: Pick<User, "id" | "name" | "email" | "role" | "createdAt">
+    user: Pick<User, "id" | "name" | "email" | "role" | "createdAt"> & { phone?: string | null }
   ): UserResponseDto {
     return {
       id: user.id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       role: user.role,
       createdAt: user.createdAt,
     };

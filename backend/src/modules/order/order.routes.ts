@@ -9,6 +9,7 @@ const controller = new OrderController();
 router.post("/checkout", authMiddleware, controller.checkout);
 router.get("/me", authMiddleware, controller.getMyOrders);
 router.get("/", authMiddleware, checkRole(["ADMIN"]), controller.getAllOrders);
+router.get("/user/:userId", authMiddleware, checkRole(["ADMIN"]), controller.getOrdersByUserId);
 router.patch("/:id/status", authMiddleware, checkRole(["ADMIN"]), controller.updateStatus);
 
 export default router;
