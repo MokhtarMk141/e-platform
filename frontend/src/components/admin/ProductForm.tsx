@@ -93,19 +93,32 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     e.preventDefault();
     setLoading(true);
     try {
-      const dataToSave = new FormData();
-      dataToSave.append("name", formData.name);
-      dataToSave.append("sku", formData.sku);
-      dataToSave.append("categoryId", formData.categoryId);
-      dataToSave.append("price", String(parseFloat(formData.price)));
-      dataToSave.append("stock", String(parseInt(formData.stock)));
-      dataToSave.append("description", formData.description);
+      const parsedPrice = Number.parseFloat(formData.price);
+      const parsedStock = Number.parseInt(formData.stock, 10);
 
-      if (selectedImage) {
-        dataToSave.append("image", selectedImage);
-      } else if (formData.imageUrl) {
-        dataToSave.append("imageUrl", formData.imageUrl);
+      if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+        throw new Error("Price must be a valid positive number");
       }
+
+      if (!Number.isFinite(parsedStock) || parsedStock < 0) {
+        throw new Error("Stock must be a valid non-negative integer");
+      }
+
+      let imageUrl = formData.imageUrl || "";
+      if (selectedImage) {
+        setUploadingImage(true);
+        imageUrl = await ProductService.uploadImage(selectedImage);
+      }
+
+      const dataToSave = {
+        name: formData.name.trim(),
+        sku: formData.sku.trim(),
+        categoryId: formData.categoryId || undefined,
+        price: parsedPrice,
+        stock: parsedStock,
+        description: formData.description.trim() || undefined,
+        imageUrl: imageUrl.trim() || undefined,
+      };
 
       if (isEdit && initialData) {
         await ProductService.update(initialData.id, dataToSave);
@@ -117,9 +130,11 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
       router.push("/admin/products/getall");
       router.refresh();
     } catch (err) {
-      alert("Failed to save product");
+      const message = err instanceof Error ? err.message : "Failed to save product";
+      alert(message);
       console.error(err);
     } finally {
+      setUploadingImage(false);
       setLoading(false);
     }
   };
@@ -132,7 +147,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         .gap-page { font-family: 'Plus Jakarta Sans', sans-serif; padding: 32px; flex: 1; display: flex; flex-direction: column; }
 
         /* ── Page Header & Toolbar ── */
-        .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .page-header { display: flex; align-items: flex-start; justifyContent: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
         .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0; color: var(--foreground); }
         .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
         
@@ -207,7 +222,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
 
         .input-with-prefix { position: relative; display: flex; align-items: center; }
         .input-prefix { position: absolute; left: 14px; color: var(--text-dim); font-weight: 600; font-size: 14px; pointer-events: none; }
-        .input-with-prefix .form-input { padding-left: 28px; }
+        .input-with-prefix .form-input { padding-left: 42px; }
 
         /* ── Image Upload Box ── */
         .upload-area {
@@ -231,7 +246,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           margin-top: 12px;
           display: inline-flex;
           align-items: center;
-          justify-content: center;
+          justifyContent: center;
           border: 1px solid var(--border);
           background: var(--surface-hover);
           color: var(--foreground);
@@ -273,7 +288,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                   <label className="form-label">Product Name</label>
                   <input 
                     className="form-input" 
-                    placeholder="e.g. Nike Air Max 270"
+                    placeholder="product name "
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -300,7 +315,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                   <div className="form-group">
                     <label className="form-label">Price</label>
                     <div className="input-with-prefix">
-                      <span className="input-prefix">$</span>
+                      <span className="input-prefix">TND</span>
                       <input 
                         type="number" 
                         step="0.01" 

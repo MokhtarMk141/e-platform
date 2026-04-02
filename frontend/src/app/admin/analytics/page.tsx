@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 const currency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "TND", maximumFractionDigits: 2 }).format(value);
 
 const monthLabel = (key: string) => {
   const [year, month] = key.split("-").map(Number);
@@ -47,9 +47,9 @@ export default function AnalyticsPage() {
               gap: 12,
             }}
           >
-            <StatCard label="Total Revenue" value={currency(analytics.revenue.gross)} sub="Non-cancelled orders" />
-            <StatCard label="Delivered Revenue" value={currency(analytics.revenue.deliveredRevenue)} sub="Delivered orders only" />
-            <StatCard label="Average Order Value" value={currency(analytics.revenue.averageOrderValue)} sub="Across all orders" />
+            <StatCard label="Realized Profit" value={currency(analytics.revenue.realized)} sub="Delivered orders only" />
+            <StatCard label="Potential Revenue" value={currency(analytics.revenue.potential)} sub="All non-cancelled orders" />
+            <StatCard label="Average Order Value" value={currency(analytics.revenue.averageOrderValue)} sub="Based on profit / total orders" />
             <StatCard label="Total Orders" value={String(analytics.totals.orders)} sub={`${analytics.totals.pendingOrders} pending`} />
             <StatCard label="Users" value={String(analytics.totals.users)} sub={`${analytics.totals.customers} customers · ${analytics.totals.admins} admins`} />
             <StatCard label="Catalog" value={`${analytics.totals.products} products`} sub={`${analytics.totals.categories} categories`} />
@@ -63,7 +63,7 @@ export default function AnalyticsPage() {
 
           <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 12 }}>
             <section style={panelStyle}>
-              <h2 style={panelTitleStyle}>Monthly Revenue (Last 6 Months)</h2>
+              <h2 style={panelTitleStyle}>Realized Monthly Profit (Last 6 Months)</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 10, alignItems: "end", minHeight: 220 }}>
                 {analytics.monthly.map((month) => {
                   const height = Math.max(8, (month.revenue / maxRevenue) * 160);

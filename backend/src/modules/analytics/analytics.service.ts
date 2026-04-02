@@ -18,9 +18,9 @@ export interface AnalyticsOverview {
     pendingOrders: number;
   };
   revenue: {
-    gross: number;
+    realized: number;
+    potential: number;
     averageOrderValue: number;
-    deliveredRevenue: number;
   };
   carts: {
     itemsInOpenCarts: number;
@@ -158,8 +158,12 @@ export class AnalyticsService {
       if (order.status === OrderStatus.CANCELLED) continue;
       const key = toMonthKey(order.createdAt);
       if (!monthlySeed[key]) continue;
+      
       monthlySeed[key].orders += 1;
-      monthlySeed[key].revenue += order.total;
+      // Monthly chart now strictly shows REALIZED profit (Delivered)
+      if (order.status === OrderStatus.DELIVERED) {
+        monthlySeed[key].revenue += order.total;
+      }
     }
 
     for (const user of recentUsers) {
@@ -175,9 +179,10 @@ export class AnalyticsService {
       newUsers: monthlySeed[key].newUsers,
     }));
 
-    const gross = grossRevenueAgg._sum.total ?? 0;
-    const deliveredRevenue = deliveredRevenueAgg._sum.total ?? 0;
-    const averageOrderValue = orders > 0 ? gross / orders : 0;
+    const realized = deliveredRevenueAgg._sum.total ?? 0;
+    const potential = grossRevenueAgg._sum.total ?? 0;
+    // AOV based on realized revenue / total orders (or delivered orders? let's stick to total for general value)
+    const averageOrderValue = orders > 0 ? realized / orders : 0;
 
     const itemsInOpenCarts = openCartItems.reduce((sum, item) => sum + item.quantity, 0);
     const estimatedOpenCartValue = openCartItems.reduce(
@@ -200,9 +205,9 @@ export class AnalyticsService {
         pendingOrders,
       },
       revenue: {
-        gross: Number(gross.toFixed(2)),
+        realized: Number(realized.toFixed(2)),
+        potential: Number(potential.toFixed(2)),
         averageOrderValue: Number(averageOrderValue.toFixed(2)),
-        deliveredRevenue: Number(deliveredRevenue.toFixed(2)),
       },
       carts: {
         itemsInOpenCarts,

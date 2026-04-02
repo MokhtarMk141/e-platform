@@ -118,7 +118,7 @@ export default function CartDrawer() {
                                             </button>
                                         </div>
                                         <span style={{ fontWeight: 900, fontSize: 16, color: 'var(--brand-red)' }}>
-                                            DTN {(item.price * item.quantity).toFixed(2)}
+                                            TND {(item.price * item.quantity).toFixed(2)}
                                         </span>
                                     </div>
                                 </div>
@@ -132,7 +132,7 @@ export default function CartDrawer() {
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 600 }}>Subtotal ({cart.totalItems} items)</span>
-                            <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.02em' }}>DTN {cart.totalAmount.toFixed(2)}</span>
+                            <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.02em' }}>TND {cart.totalAmount.toFixed(2)}</span>
                         </div>
 
                         <button

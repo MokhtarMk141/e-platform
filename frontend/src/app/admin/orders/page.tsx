@@ -8,8 +8,6 @@ import type { Order } from "@/types/order.types";
 import { OrderStatus } from "@/types/order.types";
 import OrderDetailSidebar from "@/components/admin/OrderDetailSidebar";
 
-const STATUS_OPTIONS: OrderStatus[] = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
-
 const statusColor = (status: OrderStatus) => {
   if (status === "DELIVERED") return { bg: "rgba(34,197,94,0.12)", fg: "#16a34a" };
   if (status === "SHIPPED") return { bg: "rgba(37,99,235,0.12)", fg: "#2563eb" };
@@ -19,17 +17,12 @@ const statusColor = (status: OrderStatus) => {
 };
 
 const currency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "TND", maximumFractionDigits: 2 }).format(value);
 
 /* ── Initials from name ── */
 const getInitials = (name: string | null) => {
   if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 };
 
 /* ── Generate stable color from string ── */
@@ -43,7 +36,6 @@ const nameToColor = (name: string | null) => {
 
 export default function AdminOrdersPage() {
   const { orders, loading, error, refetch } = useOrders(true);
-  const [savingOrderId, setSavingOrderId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -58,17 +50,16 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
     try {
-      setSavingOrderId(orderId);
       await OrderService.updateStatus(orderId, status);
       await refetch();
+      // Update the selected order with the new status so the sidebar reflects it
+      setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, status } : prev));
     } catch (err: unknown) {
       const message =
         err && typeof err === "object" && "message" in err && typeof (err as { message?: unknown }).message === "string"
           ? (err as { message: string }).message
           : "Failed to update order status";
       alert(message);
-    } finally {
-      setSavingOrderId(null);
     }
   };
 
@@ -79,7 +70,6 @@ export default function AdminOrdersPage() {
 
   const handleCloseSidebar = () => {
     setSidebarOpen(false);
-    // Delay clearing selected order until animation finishes
     setTimeout(() => setSelectedOrder(null), 500);
   };
 
@@ -105,7 +95,7 @@ export default function AdminOrdersPage() {
         ) : orders.length === 0 ? (
           <p style={{ padding: 16, margin: 0, color: "var(--text-muted)" }}>No orders yet.</p>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 980 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 780 }}>
             <thead>
               <tr style={{ background: "var(--background)", borderBottom: "1px solid var(--border)" }}>
                 <th style={thStyle}>Order</th>
@@ -113,7 +103,6 @@ export default function AdminOrdersPage() {
                 <th style={thStyle}>Status</th>
                 <th style={thStyle}>Total</th>
                 <th style={thStyle}>Date</th>
-                <th style={thStyle}>Update</th>
                 <th style={{ ...thStyle, width: 40 }}></th>
               </tr>
             </thead>
@@ -146,7 +135,6 @@ export default function AdminOrdersPage() {
                     {/* Customer */}
                     <td style={tdStyle}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        {/* Avatar */}
                         <div
                           style={{
                             width: 34,
@@ -168,9 +156,7 @@ export default function AdminOrdersPage() {
                         <div>
                           <div style={{ fontWeight: 700, fontSize: 13 }}>{order.customerName || "Unknown"}</div>
                           {order.customerEmail && (
-                            <div style={{ color: "var(--text-dim)", fontSize: 11, marginTop: 1 }}>
-                              {order.customerEmail}
-                            </div>
+                            <div style={{ color: "var(--text-dim)", fontSize: 11, marginTop: 1 }}>{order.customerEmail}</div>
                           )}
                         </div>
                       </div>
@@ -191,30 +177,6 @@ export default function AdminOrdersPage() {
                       <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
                         {new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
-                    </td>
-
-                    {/* Update Status */}
-                    <td style={tdStyle} onClick={(e) => e.stopPropagation()}>
-                      <select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
-                        disabled={savingOrderId === order.id}
-                        style={{
-                          padding: "7px 10px",
-                          borderRadius: 8,
-                          border: "1px solid var(--border)",
-                          background: "var(--background)",
-                          color: "var(--foreground)",
-                          fontSize: 12,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {STATUS_OPTIONS.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
                     </td>
 
                     {/* More icon */}
@@ -238,6 +200,7 @@ export default function AdminOrdersPage() {
         order={selectedOrder}
         isOpen={sidebarOpen}
         onClose={handleCloseSidebar}
+        onStatusChange={handleStatusChange}
       />
     </div>
   );

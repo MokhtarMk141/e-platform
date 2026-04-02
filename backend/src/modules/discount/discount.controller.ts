@@ -74,4 +74,17 @@ export class DiscountController {
       next(error);
     }
   }
+
+  static async validateDiscount(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { code, cartItems } = req.body;
+      if (!code || !cartItems || !Array.isArray(cartItems)) {
+        throw new AppError("Code and cartItems are required", 400);
+      }
+      const result = await DiscountService.validateDiscountCode(code, cartItems);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

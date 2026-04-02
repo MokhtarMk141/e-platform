@@ -39,4 +39,17 @@ export class DiscountService {
     const response = await ApiClient.delete<{ success: boolean; message: string }>(`/discounts/${id}`);
     return response;
   }
+
+  static async validateCode(code: string, cartItems: { productId: string; quantity: number; price: number }[]) {
+    const response = await ApiClient.post<{
+      data: {
+        discountId: string;
+        code: string;
+        discountAmount: number;
+        type: string;
+        value: number;
+      };
+    }>("/discounts/validate", { code, cartItems });
+    return response.data;
+  }
 }

@@ -311,7 +311,7 @@ export default function CouponsPage() {
                     <label className="form-label">Type</label>
                     <select className="form-input" value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value as any})}>
                       <option value="PERCENTAGE">Percentage (%)</option>
-                      <option value="FIXED">Fixed Amount ($)</option>
+                      <option value="FIXED">Fixed Amount (TND)</option>
                     </select>
                   </div>
                   <div className="form-group">
@@ -464,7 +464,7 @@ export default function CouponsPage() {
                       </td>
                       <td>
                         <span className={`badge ${coupon.type === "PERCENTAGE" ? "discount-percentage" : "discount-fixed"}`}>
-                          {coupon.type === "PERCENTAGE" ? `${coupon.discount}%` : `$${coupon.discount}`}
+                          {coupon.type === "PERCENTAGE" ? `${coupon.discount}%` : `TND ${coupon.discount}`}
                         </span>
                       </td>
                       <td>

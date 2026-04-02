@@ -10,6 +10,7 @@ import { AppError } from "../../exceptions/app-error";
 import { prisma } from "../../config/database";
 import { env } from "../../config/env";
 import { sendEmail } from "../../utils/send-email";
+import { AuthEmailService } from "./auth.email";
 
 export class AuthService {
   constructor(private userRepository: UserRepository) {}
@@ -184,18 +185,7 @@ export class AuthService {
     // Build reset URL (frontend will handle this route)
     const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${rawToken}`;
 
-    await sendEmail({
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
-        <h2>Password Reset</h2>
-        <p>Hi ${user.name},</p>
-        <p>You requested a password reset. Click the link below to set a new password:</p>
-        <p><a href="${resetUrl}">${resetUrl}</a></p>
-        <p>This link expires in <strong>1 hour</strong>.</p>
-        <p>If you did not request this, please ignore this email.</p>
-      `,
-    });
+    await AuthEmailService.sendPasswordReset(user, resetUrl);
   }
 
   async resetPassword(rawToken: string, newPassword: string) {

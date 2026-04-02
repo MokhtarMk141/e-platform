@@ -49,6 +49,7 @@ export interface CheckoutRequest {
   deliveryMode: DeliveryMode;
   paymentMethod: PaymentMethod;
   orderNotes?: string;
+  discountCode?: string;
 }
 
 export interface OrdersResponse {

@@ -17,10 +17,10 @@ const FONTS = `
 const sortOptions = ['Featured', 'Price: Low', 'Price: High']
 
 const PRICE_FILTER_RANGES: Record<string, { minPrice?: number; maxPrice?: number }> = {
-  'Under DTN 100': { maxPrice: 100 },
-  'DTN 100 - 250': { minPrice: 100, maxPrice: 250 },
-  'DTN 250 - 500': { minPrice: 250, maxPrice: 500 },
-  'DTN 500+': { minPrice: 500 },
+  'Under TND 100': { maxPrice: 100 },
+  'TND 100 - 250': { minPrice: 100, maxPrice: 250 },
+  'TND 250 - 500': { minPrice: 250, maxPrice: 500 },
+  'TND 500+': { minPrice: 500 },
 }
 
 const SORT_BY_INDEX: Record<number, 'featured' | 'price_asc' | 'price_desc'> = {
@@ -340,7 +340,7 @@ function GridCard({ product, wished, onWish, delay }: {
               fontSize: 22, fontWeight: 900, color: 'var(--foreground)',
               fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
             }}>
-              DTN {product.price ? product.price.toFixed(2) : "0.00"}
+              TND {product.price ? product.price.toFixed(2) : "0.00"}
             </span>
             <button
               disabled={product.stock === 0}
@@ -440,7 +440,7 @@ function ListCard({ product, wished, onWish, delay }: {
               fontSize: 24, fontWeight: 900, color: 'var(--brand-red)',
               fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
             }}>
-              ${product.price ? product.price.toFixed(2) : "0.00"}
+              TND {product.price ? product.price.toFixed(2) : "0.00"}
             </span>
             <div style={{ display: 'flex', gap: 10 }}>
               <button

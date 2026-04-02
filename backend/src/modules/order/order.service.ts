@@ -4,6 +4,8 @@ import { AppError } from "../../exceptions/app-error";
 import { OrderResponseDto } from "./dto/order-response.dto";
 import { OrderRepository } from "./order.repository";
 import { CheckoutOrderDto } from "./dto/checkout-order.dto";
+import { OrderEmailService } from "./order.email";
+import { DiscountService } from "../discount/discount.service";
 
 export class OrderService {
   constructor(private orderRepository: OrderRepository = new OrderRepository()) {}
@@ -28,8 +30,32 @@ export class OrderService {
         }
       }
 
-      const total = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+      let total = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+      let discountAmount = 0;
 
+      if (checkoutData.discountCode) {
+        const cartForValidation = cart.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.product.price,
+        }));
+
+        const validation = await DiscountService.validateDiscountCode(
+          checkoutData.discountCode,
+          cartForValidation
+        );
+
+        discountAmount = validation.discountAmount;
+        total -= discountAmount;
+
+        // Increment usage count
+        await tx.discount.update({
+          where: { id: validation.discountId },
+          data: { usageCount: { increment: 1 } },
+        });
+      }
+
+      // Restore stock decrement logic
       for (const item of cart.items) {
         const updated = await tx.product.updateMany({
           where: { id: item.productId, stock: { gte: item.quantity } },
@@ -45,7 +71,7 @@ export class OrderService {
         data: {
           userId,
           status: "PENDING",
-          total: Number(total.toFixed(2)),
+          total: Number(Math.max(0, total).toFixed(2)),
           customerName: checkoutData.customerName.trim(),
           customerEmail: checkoutData.customerEmail.trim(),
           customerPhone: checkoutData.customerPhone.trim(),
@@ -80,6 +106,11 @@ export class OrderService {
       throw new AppError("Failed to create order", 500);
     }
 
+    // Send order confirmation email asynchronously
+    void OrderEmailService.sendOrderConfirmation(createdOrder).catch((err) =>
+      console.error("Failed to send order confirmation email:", err)
+    );
+
     return new OrderResponseDto(createdOrder);
   }
 
@@ -104,6 +135,11 @@ export class OrderService {
       data: { status },
       include: { items: { include: { product: true } } },
     });
+
+    // Send status update email asynchronously
+    void OrderEmailService.sendStatusUpdate(updated).catch((err) =>
+      console.error("Failed to send status update email:", err)
+    );
 
     return new OrderResponseDto(updated);
   }
