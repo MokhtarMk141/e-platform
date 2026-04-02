@@ -16,7 +16,7 @@ const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth={1.7}
+    strokeWidth={2}
     strokeLinecap="round"
     strokeLinejoin="round"
   >
@@ -121,7 +121,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
     try {
       const parsedPrice = Number.parseFloat(formData.price);
       const parsedStock = Number.parseInt(formData.stock, 10);
@@ -176,38 +179,53 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
 
+<<<<<<< HEAD
+=======
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .gap-page {
           font-family: 'Plus Jakarta Sans', sans-serif;
-          padding: 32px;
+          padding: 40px;
           flex: 1;
           display: flex;
           flex-direction: column;
           background:
-            radial-gradient(circle at top right, rgba(255,40,0,0.08) 0%, transparent 28%),
-            linear-gradient(180deg, var(--background) 0%, var(--surface) 52%, var(--background) 100%);
+            radial-gradient(circle at top right, rgba(255,40,0,0.06) 0%, transparent 35%),
+            var(--background);
           min-height: 100vh;
         }
 
         .btn-back {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          color: var(--text-muted);
-          font-size: 13.5px;
-          font-weight: 600;
+          gap: 8px;
+          color: var(--text-dim);
+          font-size: 13px;
+          font-weight: 800;
           background: transparent;
           border: none;
           cursor: pointer;
           padding: 0;
-          margin-bottom: 24px;
-          transition: color 0.2s;
+          margin-bottom: 28px;
+          transition: all 0.2s;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
         }
+<<<<<<< HEAD
         .btn-back:hover { color: var(--foreground); }
+=======
+        .btn-back:hover { color: var(--brand-red); transform: translateX(-4px); }
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
 
         .hero-shell {
           position: relative;
           overflow: hidden;
           border: 1px solid var(--border);
+<<<<<<< HEAD
           border-radius: 28px;
           padding: 28px 30px;
           margin-bottom: 28px;
@@ -222,19 +240,26 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           background-image: radial-gradient(var(--foreground) 1.1px, transparent 1.1px);
           background-size: 28px 28px;
           pointer-events: none;
+=======
+          border-radius: 32px;
+          padding: 40px;
+          margin-bottom: 32px;
+          background: var(--surface);
+          box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+          animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         }
         .hero-glow {
           position: absolute;
-          right: -80px;
-          top: 50%;
-          width: 280px;
-          height: 280px;
-          border-radius: 50%;
-          transform: translateY(-50%);
-          background: radial-gradient(circle, rgba(255,40,0,0.12) 0%, transparent 70%);
+          right: -40px;
+          top: -40px;
+          width: 320px;
+          height: 320px;
+          background: radial-gradient(circle, rgba(255,40,0,0.08) 0%, transparent 70%);
           pointer-events: none;
         }
 
+<<<<<<< HEAD
         .page-header {
           position: relative;
           z-index: 1;
@@ -244,15 +269,18 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           gap: 16px;
           flex-wrap: wrap;
         }
+=======
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .eyebrow {
           display: inline-flex;
           align-items: center;
           gap: 12px;
           font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 0.16em;
+          font-weight: 900;
+          letter-spacing: 0.2em;
           text-transform: uppercase;
           color: var(--brand-red);
+<<<<<<< HEAD
           margin-bottom: 14px;
         }
         .eyebrow-line {
@@ -261,47 +289,50 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           border-radius: 2px;
           background: var(--brand-red);
         }
+=======
+          margin-bottom: 16px;
+        }
+        .eyebrow-line { width: 32px; height: 2.5px; background: var(--brand-red); border-radius: 4px; }
+
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .page-title {
-          font-size: clamp(28px, 4vw, 48px);
+          font-size: clamp(32px, 5vw, 44px);
           font-weight: 900;
-          letter-spacing: -0.04em;
+          letter-spacing: -0.05em;
           margin: 0;
           color: var(--foreground);
-          line-height: 1.05;
-          max-width: 620px;
+          line-height: 1;
         }
         .page-sub {
-          font-size: 15px;
+          font-size: 16px;
           color: var(--text-muted);
-          margin-top: 14px;
+          margin-top: 16px;
           font-weight: 500;
-          max-width: 560px;
-          line-height: 1.7;
+          max-width: 600px;
+          line-height: 1.6;
           font-family: 'DM Sans', sans-serif;
         }
 
         .btn-save {
           display: flex;
           align-items: center;
-          gap: 7px;
-          padding: 12px 22px;
+          gap: 10px;
+          padding: 14px 28px;
           background: var(--brand-red);
           color: #fff;
           border: none;
-          border-radius: 12px;
-          font-size: 13.5px;
-          font-weight: 800;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          border-radius: 16px;
+          font-size: 14.5px;
+          font-weight: 900;
           cursor: pointer;
-          white-space: nowrap;
-          transition: all 0.2s, transform 0.2s, box-shadow 0.2s;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           box-shadow: 0 4px 14px rgba(255,40,0,0.25);
           letter-spacing: -0.01em;
         }
         .btn-save:hover:not(:disabled) {
           background: var(--brand-red-hover);
-          transform: translateY(-1px);
-          box-shadow: 0 6px 18px rgba(255,40,0,0.32);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(255,40,0,0.35);
         }
         .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -311,21 +342,24 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           gap: 24px;
           align-items: start;
         }
+<<<<<<< HEAD
         @media (max-width: 900px) {
           .form-grid { grid-template-columns: 1fr; }
         }
+=======
+        @media (max-width: 1000px) { .form-grid { grid-template-columns: 1fr; } }
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
 
         .form-card {
-          background: var(--background);
+          background: var(--surface);
           border: 1px solid var(--border);
-          border-radius: 20px;
-          padding: 24px;
+          border-radius: 24px;
+          padding: 32px;
           margin-bottom: 24px;
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-          overflow: hidden;
-          position: relative;
+          animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
+<<<<<<< HEAD
         .form-card::before {
           content: "";
           position: absolute;
@@ -335,39 +369,47 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           opacity: 0;
           transition: opacity 0.25s;
         }
+=======
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .form-card:hover {
-          border-color: var(--brand-red);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(255,40,0,0.08);
-          transform: translateY(-4px);
+          transform: translateY(-2px);
+          border-color: var(--border-strong);
+          box-shadow: 0 4px 24px rgba(0,0,0,0.06);
         }
+<<<<<<< HEAD
         .form-card:hover::before { opacity: 1; }
+=======
+
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .card-kicker {
           font-size: 11px;
           color: var(--text-dim);
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 700;
-          letter-spacing: 0.08em;
+          font-weight: 900;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
-          margin-bottom: 8px;
+          margin-bottom: 12px;
         }
         .card-title {
-          font-size: 18px;
-          font-weight: 800;
+          font-size: 20px;
+          font-weight: 900;
           color: var(--foreground);
-          margin-bottom: 20px;
-          letter-spacing: -0.02em;
-          margin-top: 0;
+          margin: 0 0 24px;
+          letter-spacing: -0.03em;
         }
 
+<<<<<<< HEAD
         .form-group { margin-bottom: 20px; }
         .form-group:last-child { margin-bottom: 0; }
+=======
+        .form-group { margin-bottom: 24px; }
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .form-label {
           display: block;
           font-size: 12px;
-          font-weight: 700;
+          font-weight: 800;
           color: var(--text-dim);
-          letter-spacing: 0.05em;
           text-transform: uppercase;
+<<<<<<< HEAD
           margin-bottom: 8px;
         }
         .form-row {
@@ -378,22 +420,26 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         }
         @media (max-width: 600px) {
           .form-row { grid-template-columns: 1fr; }
+=======
+          letter-spacing: 0.08em;
+          margin-bottom: 10px;
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         }
 
         .form-input, .form-select, .form-textarea {
           width: 100%;
-          padding: 12px 14px;
-          background: var(--surface);
+          padding: 14px 18px;
+          background: var(--background);
           border: 1px solid var(--border);
           border-radius: 14px;
-          font-size: 14px;
+          font-size: 15px;
           color: var(--foreground);
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-weight: 500;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          font-family: inherit;
+          font-weight: 600;
+          transition: all 0.2s;
           outline: none;
-          box-sizing: border-box;
         }
+<<<<<<< HEAD
         .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
         .form-input:focus, .form-select:focus, .form-textarea:focus {
           border-color: var(--brand-red);
@@ -422,12 +468,24 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           pointer-events: none;
         }
         .input-with-prefix .form-input { padding-left: 42px; }
+=======
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+          border-color: var(--brand-red);
+          box-shadow: 0 0 0 4px rgba(255,40,0,0.08);
+          background: var(--surface);
+        }
+
+        .input-with-prefix { position: relative; display: flex; align-items: center; }
+        .input-prefix { position: absolute; left: 18px; color: var(--text-dim); font-weight: 900; font-size: 13px; pointer-events: none; }
+        .input-with-prefix .form-input { padding-left: 52px; }
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
 
         .upload-area {
-          border: 1px dashed var(--border-strong);
+          border: 2px dashed var(--border);
           border-radius: 20px;
-          padding: 44px 20px;
+          padding: 48px;
           text-align: center;
+<<<<<<< HEAD
           cursor: default;
           background: var(--surface);
           transition: all 0.2s;
@@ -452,53 +510,69 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           padding: 10px 14px;
           font-size: 13px;
           font-weight: 700;
+=======
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
           cursor: pointer;
+          background: var(--background);
           transition: all 0.2s;
+          display: block;
         }
+<<<<<<< HEAD
         .upload-link:hover { border-color: var(--brand-red); color: var(--brand-red); }
+=======
+        .upload-area:hover { border-color: var(--brand-red); background: var(--surface); }
+        .upload-icon { color: var(--text-dim); margin-bottom: 16px; opacity: 0.6; }
+        .upload-text { font-size: 15px; font-weight: 800; color: var(--foreground); margin-bottom: 6px; }
+        .upload-sub { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .preview-img { width: 100%; max-height: 280px; object-fit: contain; border-radius: 12px; }
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
       `}</style>
 
       <div className="gap-page">
-        <div>
-          <button className="btn-back" type="button" onClick={() => router.push("/admin/products/getall")}>
-            <Icon d={icons.chevronLeft} size={15} /> Back to products
-          </button>
-        </div>
+        <button className="btn-back" type="button" onClick={() => router.push("/admin/products/getall")}>
+          <Icon d={icons.chevronLeft} size={16} /> Back to Catalog
+        </button>
 
         <form onSubmit={handleSubmit}>
           <div className="hero-shell">
             <div className="hero-glow" />
-            <div className="page-header">
+            <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 24 }}>
               <div>
                 <div className="eyebrow">
                   <span className="eyebrow-line" />
-                  Admin Catalog
+                  Product Management
                 </div>
-                <h1 className="page-title">{isEdit ? "Edit Product" : "Add New Product"}</h1>
+                <h1 className="page-title">{isEdit ? "Refine Product" : "New Collection Asset"}</h1>
                 <p className="page-sub">
                   {isEdit
-                    ? `Update details for ${initialData?.name}`
-                    : "Create a new product card for your catalog with the same polished storefront feel used on the product page."}
+                    ? `Fine-tune the presentation for ${initialData?.name}. Quality data drives higher conversion rates.`
+                    : "Expand your catalog with high-fidelity product listings. Our premium " + "feel good" + " design system ensures every item looks elite."}
                 </p>
               </div>
-
               <button className="btn-save" type="submit" disabled={loading || uploadingImage}>
-                <Icon d={icons.save} size={15} /> {loading ? "Saving..." : uploadingImage ? "Uploading image..." : isEdit ? "Update Product" : "Save Product"}
+                <Icon d={icons.save} size={18} /> {loading ? "Synchronizing..." : uploadingImage ? "Uploading Asset..." : isEdit ? "Commit Changes" : "Publish Product"}
               </button>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="left-col">
-              <div className="form-card">
-                <div className="card-kicker">Storefront Details</div>
-                <h2 className="card-title">Basic Information</h2>
+              <div className="form-card" style={{ animationDelay: "0.1s" }}>
+                <div className="card-kicker">Core Attributes</div>
+                <h2 className="card-title">Identity & Narrative</h2>
 
                 <div className="form-group">
+<<<<<<< HEAD
                   <label className="form-label">Product Name</label>
                   <input
                     className="form-input"
                     placeholder="Product name"
+=======
+                  <label className="form-label">Commercial Name</label>
+                  <input
+                    className="form-input"
+                    placeholder="Enter the premium product title..."
+>>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -507,24 +581,25 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Description</label>
+                  <label className="form-label">Narrative Description</label>
                   <textarea
                     className="form-textarea"
-                    placeholder="Write a detailed description of the product..."
+                    placeholder="Craft a compelling story about this product..."
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
+                    style={{ minHeight: 180 }}
                   />
                 </div>
               </div>
 
-              <div className="form-card">
-                <div className="card-kicker">Pricing Setup</div>
-                <h2 className="card-title">Pricing & Inventory</h2>
+              <div className="form-card" style={{ animationDelay: "0.2s" }}>
+                <div className="card-kicker">Value Metrics</div>
+                <h2 className="card-title">Pricing & Availability</h2>
 
-                <div className="form-row" style={{ marginBottom: 0 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                   <div className="form-group">
-                    <label className="form-label">Price</label>
+                    <label className="form-label">MSRP Price</label>
                     <div className="input-with-prefix">
                       <span className="input-prefix">TND</span>
                       <input
@@ -541,11 +616,11 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Stock Quantity</label>
+                    <label className="form-label">Inventory Level</label>
                     <input
                       type="number"
                       className="form-input"
-                      placeholder="0"
+                      placeholder="Units in stock"
                       name="stock"
                       value={formData.stock}
                       onChange={handleChange}
@@ -554,11 +629,11 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                   </div>
                 </div>
 
-                <div className="form-group" style={{ marginTop: 20 }}>
-                  <label className="form-label">SKU (Stock Keeping Unit)</label>
+                <div className="form-group" style={{ marginTop: 8 }}>
+                  <label className="form-label">Global Identity (SKU)</label>
                   <input
                     className="form-input"
-                    placeholder="e.g. NK-AM270-BLK"
+                    placeholder="e.g. PRD-2026-XJL"
                     name="sku"
                     value={formData.sku}
                     onChange={handleChange}
@@ -569,76 +644,66 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             </div>
 
             <div className="right-col">
-              <div className="form-card">
-                <div className="card-kicker">Catalog Placement</div>
-                <h2 className="card-title">Organization</h2>
+              <div className="form-card" style={{ animationDelay: "0.3s" }}>
+                <div className="card-kicker">Taxonomy</div>
+                <h2 className="card-title">Classification</h2>
 
                 <div className="form-group">
-                  <label className="form-label">Category</label>
-                  <div className="select-wrapper">
-                    <select
-                      className="form-select"
-                      name="categoryId"
-                      value={formData.categoryId}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="" disabled>{fetchingCategories ? "Loading..." : "Select a category"}</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                    <span className="select-icon">v</span>
-                  </div>
+                  <label className="form-label">Product Category</label>
+                  <select
+                    className="form-select"
+                    name="categoryId"
+                    value={formData.categoryId}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="" disabled>{fetchingCategories ? "Loading Assets..." : "Select Category"}</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Brand</label>
-                  <div className="select-wrapper">
-                    <select
-                      className="form-select"
-                      name="brandId"
-                      value={formData.brandId}
-                      onChange={handleChange}
-                    >
-                      <option value="">{fetchingBrands ? "Loading..." : "Select a brand"}</option>
-                      {brands.map((brand) => (
-                        <option key={brand.id} value={brand.id}>{brand.name}</option>
-                      ))}
-                    </select>
-                    <span className="select-icon">v</span>
-                  </div>
+                  <label className="form-label">Manufacturer Brand</label>
+                  <select
+                    className="form-select"
+                    name="brandId"
+                    value={formData.brandId}
+                    onChange={handleChange}
+                  >
+                    <option value="">{fetchingBrands ? "Loading Assets..." : "Select Brand"}</option>
+                    {brands.map((brand) => (
+                      <option key={brand.id} value={brand.id}>{brand.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
-              <div className="form-card">
-                <div className="card-kicker">Visual Asset</div>
-                <h2 className="card-title">Product Image</h2>
+              <div className="form-card" style={{ animationDelay: "0.4s" }}>
+                <div className="card-kicker">Visual Identity</div>
+                <h2 className="card-title">Media Asset</h2>
                 <div className="form-group">
-                  <label className="form-label">Upload Image</label>
                   <label className="upload-area">
                     <input
-                      className="upload-input"
+                      style={{ display: "none" }}
                       type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      accept="image/*"
                       onChange={handleFileChange}
                     />
 
                     {imagePreview ? (
-                      <>
+                      <div style={{ position: "relative" }}>
                         <img src={imagePreview} alt="Preview" className="preview-img" />
-                        <div className="upload-meta">
-                          {selectedImage ? selectedImage.name : "Current product image"}
-                        </div>
-                        <span className="upload-link">Choose another image</span>
-                      </>
+                        <div style={{ marginTop: 16, fontSize: 12, fontWeight: 800, color: "var(--brand-red)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Update Asset</div>
+                      </div>
                     ) : (
                       <>
                         <div className="upload-icon">
-                          <Icon d={icons.upload} size={36} />
+                          <Icon d={icons.upload} size={44} />
                         </div>
-                        <p className="upload-text">Click to upload a product image</p>
-                        <p className="upload-sub">PNG, JPG, WEBP, or GIF up to 10MB</p>
+                        <p className="upload-text">Upload High-Res Media</p>
+                        <p className="upload-sub">PNG, WEBP or JPG (Max 10MB)</p>
                       </>
                     )}
                   </label>
