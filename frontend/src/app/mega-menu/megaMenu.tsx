@@ -135,7 +135,7 @@ const menus = {
       title: "PC Builder Tool",
       desc: "Answer a few questions and get a full parts list tailored to your budget and goals.",
       cta: "Start Building",
-      href: "/product-page",
+      href: "/build-with-ai",
     },
   },
 };

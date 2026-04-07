@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback, useRef } from 'react'
 import { useProducts } from '@/hooks/useProducts'
 import { useBrands } from '@/hooks/useBrands'
 import { useCart } from '@/hooks/useCart'
 
+/* ─── Types ─── */
 interface ShowcaseProduct {
   id: string
   name: string
@@ -24,443 +25,412 @@ interface ShowcaseBrand {
   products: ShowcaseProduct[]
 }
 
-interface PositionedProduct {
-  product: ShowcaseProduct
-  offset: number
+/* ─── Constants ─── */
+const VISIBLE_PRODUCT_OFFSETS = [-2, -1, 0, 1, 2]
+
+const isAccessoryCategory = (categoryName: string | null | undefined) => {
+  if (!categoryName) return false
+  const normalized = categoryName.trim().toLowerCase()
+  return normalized === 'accessory' || normalized === 'accessories'
 }
 
-const PRODUCT_OFFSETS = [-2, -1, 0, 1, 2]
 
-const getCircularOffset = (index: number, activeIndex: number, length: number) => {
-  if (length <= 1) return 0
-
-  let diff = index - activeIndex
-  const half = Math.floor(length / 2)
-
-  if (diff > half) diff -= length
-  if (diff < -half) diff += length
-
-  return diff
-}
-
-const getBrandArcStyle = (offset: number, total: number) => {
-  const half = Math.max(1, Math.ceil((total - 1) / 2))
-  const step = Math.min(22, 80 / half)
-  const angle = (90 - offset * step) * (Math.PI / 180)
-  const radius = total > 8 ? 270 : 300
-  const x = Math.cos(angle) * radius
-  const y = Math.sin(angle) * radius
-  const distance = Math.abs(offset)
-  const scale = offset === 0 ? 1.18 : Math.max(0.68, 1 - distance * 0.1)
-  const opacity = offset === 0 ? 1 : Math.max(0.26, 0.9 - distance * 0.16)
-
-  return {
-    left: `calc(50% + ${x}px)`,
-    top: `${radius - y + 92}px`,
-    transform: `translate(-50%, -50%) scale(${scale})`,
-    opacity,
-    zIndex: total - distance,
-  }
-}
-
-const getProductWindow = (products: ShowcaseProduct[], activeIndex: number): PositionedProduct[] => {
+/* ─── Helpers ─── */
+const getProductWindow = (products: ShowcaseProduct[], activeIndex: number) => {
   if (products.length === 0) return []
+  const count = Math.min(products.length, VISIBLE_PRODUCT_OFFSETS.length)
+  const start = 2 - Math.floor(count / 2)
+  const offsets = VISIBLE_PRODUCT_OFFSETS.slice(start, start + count)
 
-  const visibleCount = Math.min(products.length, PRODUCT_OFFSETS.length)
-  const start = 2 - Math.floor(visibleCount / 2)
-  const visibleOffsets = PRODUCT_OFFSETS.slice(start, start + visibleCount)
-
-  return visibleOffsets.map((offset) => {
-    const productIndex = (activeIndex + offset + products.length) % products.length
-
-    return {
-      product: products[productIndex],
-      offset,
-    }
+  return offsets.map((offset) => {
+    const idx = (activeIndex + offset + products.length) % products.length
+    return { product: products[idx], offset }
   })
 }
 
+/* ─── Component ─── */
 export default function BrandAccessoryShowcase() {
   const { products: dbProducts, loading } = useProducts({ limit: 100 })
-  const { brands: dbBrands } = useBrands()
+  const { brands: dbBrands, loading: brandsLoading } = useBrands()
   const { addItem } = useCart()
+
   const [activeBrandIndex, setActiveBrandIndex] = useState(0)
-  const [activeProductIndex, setActiveProductIndex] = useState(0)
-  const [transitioning, setTransitioning] = useState(false)
+  const [activeProductIndex, setActiveProductIndex] = useState<number | null>(null)
   const [productFade, setProductFade] = useState<'in' | 'out' | 'none'>('none')
+  const [transitioning, setTransitioning] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
+  /* ─── Derive brands with their products ─── */
   const brands = useMemo<ShowcaseBrand[]>(() => {
-    const productsWithBrands = dbProducts.filter((product) => product.brand)
+    const accessoryProducts = dbProducts.filter((p) => isAccessoryCategory(p.category?.name))
+    const withBrand = accessoryProducts.filter((p) => p.brand)
+    const mappedBrands = dbBrands
+      .map((b) => ({
+        id: b.id,
+        name: b.name,
+        logo: b.logoUrl,
+        products: withBrand
+          .filter((p) => p.brand?.id === b.id)
+          .slice(0, 10)
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price ?? 0,
+            sku: p.sku || '',
+            description: p.description,
+            stock: p.stock ?? 0,
+            image: p.imageUrl || '/showcase/keyboard.png',
+            category: p.category?.name || 'Accessory',
+          })),
+      }))
+      .filter((b) => b.products.length > 0)
 
-    return dbBrands
-      .map((brand) => {
-        const brandProducts = productsWithBrands
-          .filter((product) => product.brand?.id === brand.id)
-          .slice(0, 8)
-          .map((product) => ({
-            id: product.id,
-            name: product.name,
-            price: product.price ?? 0,
-            sku: product.sku || '',
-            description: product.description,
-            stock: product.stock ?? 0,
-            image: product.imageUrl || '/showcase/keyboard.png',
-            category: product.category?.name || 'Accessory',
-          }))
+    if (mappedBrands.length > 0) {
+      return mappedBrands
+    }
 
-        return {
-          id: brand.id,
-          name: brand.name,
-          logo: brand.logoUrl,
-          products: brandProducts,
-        }
-      })
-      .filter((brand) => brand.products.length > 0)
+    const fallbackProducts = accessoryProducts.slice(0, 10).map((p) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price ?? 0,
+      sku: p.sku || '',
+      description: p.description,
+      stock: p.stock ?? 0,
+      image: p.imageUrl || '/showcase/keyboard.png',
+      category: p.category?.name || 'Accessory',
+    }))
+
+    if (fallbackProducts.length === 0) {
+      return []
+    }
+
+    return [
+      {
+        id: 'featured-accessories',
+        name: 'Featured Accessories',
+        logo: null,
+        products: fallbackProducts,
+      },
+    ]
   }, [dbBrands, dbProducts])
 
-  const safeBrandIndex = brands.length === 0 ? 0 : Math.min(activeBrandIndex, brands.length - 1)
-  const currentBrand = brands[safeBrandIndex]
-  const hasShowcaseData = brands.length > 0 && currentBrand
+  const safeBrand = Math.min(activeBrandIndex, Math.max(0, brands.length - 1))
+  const currentBrand = brands[safeBrand]
   const products = useMemo(() => currentBrand?.products ?? [], [currentBrand])
-  const safeProductIndex = products.length === 0 ? 0 : Math.min(activeProductIndex, products.length - 1)
-  const visibleProducts = useMemo(() => getProductWindow(products, safeProductIndex), [products, safeProductIndex])
+  const defaultProductIndex = products.length === 0 ? 0 : Math.floor(products.length / 2)
+  const safeProd =
+    products.length === 0
+      ? 0
+      : Math.min(activeProductIndex ?? defaultProductIndex, products.length - 1)
+  const visibleProducts = useMemo(() => getProductWindow(products, safeProd), [products, safeProd])
 
-  if (loading && brands.length === 0) return null
-  if (!hasShowcaseData) return null
-
-  const switchBrand = (index: number) => {
-    if (index === safeBrandIndex || transitioning) return
-
-    setTransitioning(true)
-    setProductFade('out')
-
-    setTimeout(() => {
-      setActiveBrandIndex(index)
-      setActiveProductIndex(Math.floor(brands[index].products.length / 2))
-      setProductFade('in')
+  /* ─── Brand switch ─── */
+  const switchBrand = useCallback(
+    (index: number) => {
+      if (index === safeBrand || transitioning) return
+      setTransitioning(true)
+      setProductFade('out')
 
       setTimeout(() => {
-        setProductFade('none')
-        setTransitioning(false)
-      }, 420)
-    }, 220)
-  }
+        setActiveBrandIndex(index)
+        setActiveProductIndex(Math.floor(brands[index].products.length / 2))
+        setProductFade('in')
 
-  const featureProduct = products[safeProductIndex]
+        setTimeout(() => {
+          setProductFade('none')
+          setTransitioning(false)
+        }, 450)
+      }, 250)
+    },
+    [safeBrand, transitioning, brands],
+  )
 
+  /* ─── Product click ─── */
+  const focusProduct = useCallback(
+    (productId: string) => {
+      const idx = products.findIndex((p) => p.id === productId)
+      if (idx >= 0 && idx !== safeProd) {
+        setActiveProductIndex(idx)
+      }
+    },
+    [products, safeProd],
+  )
+
+  /* ─── Auto-rotate brands on mount ─── */
+  if ((loading || brandsLoading) && brands.length === 0) return null
+
+  const featureProduct = products[safeProd]
+
+  /* ─── Brand arc positioning ─── */
   return (
     <section
       id="brand-showcase"
+      ref={containerRef}
       style={{
         position: 'relative',
         width: '100vw',
         marginLeft: 'calc(50% - 50vw)',
         overflow: 'hidden',
-        padding: '92px 0 46px',
+        padding: '80px 0 40px',
         fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif",
         background:
-          'radial-gradient(circle at top center, rgba(255,40,0,0.12) 0%, transparent 24%), radial-gradient(circle at 0% 100%, rgba(255,40,0,0.06) 0%, transparent 28%), linear-gradient(180deg, var(--background) 0%, var(--surface) 48%, var(--background) 100%)',
+          'radial-gradient(ellipse at top center, rgba(255,40,0,0.10) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(255,40,0,0.06) 0%, transparent 40%), linear-gradient(180deg, var(--background) 0%, var(--surface) 50%, var(--background) 100%)',
       }}
     >
       <style>{`
-        .sc-shell {
-          width: min(1240px, calc(100vw - 40px));
+        /* ═══════════════════════════════════════════
+           BRAND ACCESSORY SHOWCASE — REDESIGN
+           ═══════════════════════════════════════════ */
+
+        .bas-shell {
+          width: min(1320px, calc(100vw - 40px));
           margin: 0 auto;
-          padding: 0 10px;
+          padding: 0 20px;
         }
 
-        .sc-stage {
-          position: relative;
-          border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
-          border-radius: 40px;
-          padding: 44px 28px 340px;
-          overflow: hidden;
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--background) 86%, transparent) 0%, color-mix(in srgb, var(--surface) 98%, transparent) 100%);
-          box-shadow:
-            0 26px 60px rgba(17, 24, 39, 0.08),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(18px);
-        }
-
-        .sc-stage::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background:
-            radial-gradient(circle at 50% 0%, rgba(255,40,0,0.14), transparent 36%),
-            linear-gradient(135deg, rgba(255,255,255,0.05), transparent 36%);
-        }
-
-        .sc-brand-ring {
-          position: relative;
-          height: 360px;
-          margin: 8px 0 0;
-        }
-
-        .sc-ring-svg {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          pointer-events: none;
-        }
-
-        .sc-brand-button {
-          position: absolute;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          transition:
-            transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-            opacity 0.35s ease;
-        }
-
-        .sc-brand-button::before {
-          content: '';
-          position: absolute;
-          inset: -6px -8px -10px;
-          border-radius: 999px;
-          background: radial-gradient(circle, rgba(255,40,0,0.08), transparent 68%);
-          opacity: 0;
-          transform: scale(0.9);
-          transition:
-            opacity 0.3s ease,
-            transform 0.3s ease;
-          pointer-events: none;
-        }
-
-        .sc-brand-button:hover::before,
-        .sc-brand-button.active::before {
-          opacity: 1;
-          transform: scale(1);
-        }
-
-        .sc-brand-badge {
-          width: 72px;
-          height: 72px;
-          border-radius: 22px;
-          border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, rgba(255,255,255,0.04)) 0%, color-mix(in srgb, var(--background) 96%, transparent) 100%);
-          box-shadow:
-            0 10px 22px rgba(15, 23, 42, 0.07),
-            inset 0 1px 0 rgba(255,255,255,0.08);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          position: relative;
-          transition:
-            transform 0.35s ease,
-            border-color 0.35s ease,
-            box-shadow 0.35s ease,
-            background 0.35s ease;
-        }
-
-        .sc-brand-badge::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.08), transparent 36%),
-            radial-gradient(circle at 85% 100%, rgba(255,40,0,0.08), transparent 32%);
-          pointer-events: none;
-        }
-
-        .sc-brand-button:hover .sc-brand-badge {
-          transform: translateY(-1px);
-          border-color: rgba(255,40,0,0.22);
-          box-shadow:
-            0 14px 26px rgba(15, 23, 42, 0.1),
-            0 0 0 4px rgba(255,40,0,0.05);
-        }
-
-        .sc-brand-button.active .sc-brand-badge {
-          transform: translateY(-2px) scale(1.04);
-          border-color: rgba(255,40,0,0.38);
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, rgba(255,40,0,0.08)) 0%, color-mix(in srgb, var(--background) 94%, rgba(255,40,0,0.04)) 100%);
-          box-shadow:
-            0 14px 28px rgba(255,40,0,0.14),
-            0 0 0 6px rgba(255,40,0,0.08);
-        }
-
-        .sc-brand-logo {
-          width: 42px;
-          height: 42px;
-          object-fit: contain;
-          filter: saturate(1) contrast(1.02);
-          position: relative;
-          z-index: 1;
-          transition:
-            transform 0.35s ease,
-            filter 0.35s ease,
-            opacity 0.35s ease;
-        }
-
-        .sc-brand-button:hover .sc-brand-logo {
-          transform: scale(1.04);
-        }
-
-        .sc-brand-button.active .sc-brand-logo {
-          transform: scale(1.06);
-        }
-
-        .sc-brand-fallback {
-          font-size: 24px;
-          font-weight: 900;
-          color: var(--foreground);
-          letter-spacing: -0.04em;
-          position: relative;
-          z-index: 1;
-        }
-
-        .sc-brand-name {
-          font-size: 9px;
-          font-weight: 800;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: var(--text-dim);
-          max-width: 88px;
+        /* ── Section Header ── */
+        .bas-header {
           text-align: center;
-          line-height: 1.3;
-          padding: 0;
-          border: none;
-          background: transparent;
-          box-shadow: none;
-          transition:
-            color 0.3s ease,
-            opacity 0.3s ease;
+          margin-bottom: 40px;
+          position: relative;
+          z-index: 2;
         }
 
-        .sc-brand-button.active .sc-brand-name {
+        .bas-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--brand-red);
+          margin-bottom: 14px;
+        }
+
+        .bas-badge-line {
+          width: 26px;
+          height: 2px;
+          background: var(--brand-red);
+          border-radius: 999px;
+        }
+
+        .bas-title {
+          font-size: clamp(30px, 4.2vw, 48px);
+          font-weight: 900;
+          letter-spacing: -0.05em;
           color: var(--foreground);
-          opacity: 1;
+          margin: 0 0 12px;
+          line-height: 1.05;
         }
 
-        .sc-products-stage {
+        .bas-subtitle {
+          font-size: 14px;
+          color: var(--text-dim);
+          margin: 0 auto;
+          max-width: 560px;
+          line-height: 1.65;
+        }
+
+        /* ── Stage Container ── */
+        .bas-stage {
+          position: relative;
+          border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+          border-radius: 36px;
+          overflow: hidden;
+          background:
+            linear-gradient(180deg,
+              color-mix(in srgb, var(--background) 90%, transparent) 0%,
+              color-mix(in srgb, var(--surface) 98%, transparent) 100%);
+          box-shadow:
+            0 30px 80px rgba(0,0,0,0.08),
+            inset 0 1px 0 rgba(255,255,255,0.06);
+          backdrop-filter: blur(16px);
+        }
+
+        .bas-stage::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(ellipse at 50% 0%, rgba(255,40,0,0.12), transparent 40%),
+            linear-gradient(135deg, rgba(255,255,255,0.04), transparent 30%);
+        }
+
+        .bas-empty {
+          position: relative;
+          z-index: 1;
+          padding: 56px 24px;
+          display: grid;
+          gap: 12px;
+          justify-items: center;
+          text-align: center;
+        }
+
+        .bas-empty-title {
+          margin: 0;
+          font-size: clamp(22px, 3vw, 30px);
+          font-weight: 900;
+          letter-spacing: -0.04em;
+          color: var(--foreground);
+        }
+
+        .bas-empty-copy {
+          margin: 0;
+          max-width: 560px;
+          font-size: 14px;
+          line-height: 1.7;
+          color: var(--text-dim);
+        }
+
+        .dark .bas-stage {
+          box-shadow:
+            0 30px 80px rgba(0,0,0,0.4),
+            inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+
+        /* ── Products Carousel ── */
+        .bas-products {
           position: relative;
           height: 470px;
-          margin-bottom: 10px;
+          padding: 40px 0 0;
           opacity: 1;
           transform: translateY(0);
           transition:
-            opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-            transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity 0.35s cubic-bezier(0.16,1,0.3,1),
+            transform 0.35s cubic-bezier(0.16,1,0.3,1);
         }
 
-        .sc-products-stage.fade-out {
+        .bas-products.fade-out {
           opacity: 0;
-          transform: translateY(14px);
+          transform: translateY(16px);
         }
 
-        .sc-product-link {
+        .bas-product-link {
           position: absolute;
-          top: 16px;
+          top: 20px;
           left: 50%;
-          width: min(34vw, 300px);
+          width: min(32vw, 280px);
           text-decoration: none;
           color: inherit;
+          cursor: pointer;
           transition:
-            transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-            opacity 0.35s ease,
-            filter 0.35s ease;
+            transform 0.55s cubic-bezier(0.16,1,0.3,1),
+            opacity 0.4s ease,
+            filter 0.4s ease;
         }
 
-        .sc-product-card {
+        .bas-product-card {
           height: 100%;
-          min-height: 390px;
-          border-radius: 28px;
+          min-height: 380px;
+          border-radius: 24px;
           border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
           background:
-            linear-gradient(180deg, color-mix(in srgb, var(--background) 98%, transparent) 0%, color-mix(in srgb, var(--surface) 98%, transparent) 100%);
+            linear-gradient(180deg,
+              color-mix(in srgb, var(--background) 98%, transparent) 0%,
+              color-mix(in srgb, var(--surface) 98%, transparent) 100%);
           overflow: hidden;
           box-shadow:
-            0 22px 46px rgba(15, 23, 42, 0.12),
-            inset 0 1px 0 rgba(255,255,255,0.08);
+            0 20px 50px rgba(0,0,0,0.10),
+            inset 0 1px 0 rgba(255,255,255,0.06);
           display: flex;
           flex-direction: column;
           transition:
-            transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.45s cubic-bezier(0.16,1,0.3,1),
             box-shadow 0.3s ease,
             border-color 0.3s ease;
         }
 
-        .sc-product-link:hover .sc-product-card {
-          border-color: rgba(255,40,0,0.42);
+        .bas-product-link.featured .bas-product-card {
           box-shadow:
-            0 28px 56px rgba(255,40,0,0.14),
-            0 10px 30px rgba(15, 23, 42, 0.12);
+            0 30px 70px rgba(255,40,0,0.12),
+            0 10px 30px rgba(0,0,0,0.12),
+            inset 0 1px 0 rgba(255,255,255,0.08);
+          border-color: rgba(255,40,0,0.20);
         }
 
-        .sc-product-media {
+        .bas-product-link:hover .bas-product-card {
+          border-color: rgba(255,40,0,0.45);
+          box-shadow:
+            0 30px 60px rgba(255,40,0,0.16),
+            0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        /* Product Image */
+        .bas-product-media {
           position: relative;
-          height: 214px;
-          padding: 26px;
+          height: 200px;
+          padding: 18px;
           display: flex;
           align-items: center;
           justify-content: center;
+          border-radius: 20px;
+          margin: 16px 16px 0;
+          overflow: hidden;
           background:
-            radial-gradient(circle at 50% 10%, rgba(255,40,0,0.14), transparent 58%),
-            linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, transparent) 0%, color-mix(in srgb, var(--background) 100%, transparent) 100%);
+            radial-gradient(circle at 50% 20%, rgba(255,40,0,0.12), transparent 58%),
+            linear-gradient(180deg,
+              color-mix(in srgb, var(--surface) 90%, transparent) 0%,
+              color-mix(in srgb, var(--background) 100%, transparent) 100%);
+          box-shadow:
+            inset 0 0 0 1px color-mix(in srgb, var(--border) 75%, transparent),
+            0 12px 28px rgba(0,0,0,0.08);
         }
 
-        .sc-product-link.featured .sc-product-media {
-          height: 264px;
+        .bas-product-link.featured .bas-product-media {
+          height: 250px;
         }
 
-        .sc-product-image {
+        .bas-product-img {
           width: 100%;
           height: 100%;
+          aspect-ratio: 4 / 3;
           object-fit: contain;
-          filter: drop-shadow(0 18px 18px rgba(15, 23, 42, 0.18));
-          transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+          filter: drop-shadow(0 16px 20px rgba(0,0,0,0.16));
+          transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
         }
 
-        .sc-product-link:hover .sc-product-image {
-          transform: scale(1.05);
+        .bas-product-link:hover .bas-product-img {
+          transform: scale(1.06);
         }
 
-        .sc-product-chip {
+        .bas-product-chip {
           position: absolute;
-          top: 18px;
-          left: 18px;
-          padding: 7px 12px;
+          top: 16px;
+          left: 16px;
+          padding: 6px 12px;
           border-radius: 999px;
           border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
           background: color-mix(in srgb, var(--background) 92%, transparent);
           color: var(--foreground);
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 800;
           letter-spacing: 0.08em;
           text-transform: uppercase;
+          backdrop-filter: blur(8px);
         }
 
-        .sc-product-content {
+        /* Product Content */
+        .bas-product-body {
           flex: 1;
-          padding: 22px 22px 20px;
+          padding: 18px 20px 16px;
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 8px;
         }
 
-        .sc-product-kicker {
-          font-size: 11px;
+        .bas-product-kicker {
+          font-size: 10px;
           font-weight: 800;
           letter-spacing: 0.14em;
           text-transform: uppercase;
           color: var(--text-dim);
         }
 
-        .sc-product-title {
+        .bas-product-name {
           margin: 0;
-          font-size: 16px;
+          font-size: 15px;
           font-weight: 800;
           line-height: 1.35;
           color: var(--foreground);
@@ -471,14 +441,14 @@ export default function BrandAccessoryShowcase() {
           overflow: hidden;
         }
 
-        .sc-product-link.featured .sc-product-title {
-          font-size: 21px;
+        .bas-product-link.featured .bas-product-name {
+          font-size: 20px;
         }
 
-        .sc-product-desc {
+        .bas-product-desc {
           margin: 0;
-          font-size: 13px;
-          line-height: 1.65;
+          font-size: 12px;
+          line-height: 1.6;
           color: var(--text-muted);
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -486,273 +456,469 @@ export default function BrandAccessoryShowcase() {
           overflow: hidden;
         }
 
-        .sc-product-footer {
+        .bas-product-footer {
           margin-top: auto;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 16px;
-          padding-top: 10px;
+          gap: 12px;
+          padding-top: 8px;
         }
 
-        .sc-price {
-          font-size: 19px;
+        .bas-price {
+          font-size: 18px;
           font-weight: 900;
           letter-spacing: -0.04em;
           color: var(--foreground);
         }
 
-        .sc-product-link.featured .sc-price {
-          font-size: 24px;
+        .bas-product-link.featured .bas-price {
+          font-size: 22px;
         }
 
-        .sc-add-button {
+        .bas-add-btn {
           border: none;
-          border-radius: 14px;
-          padding: 11px 18px;
+          border-radius: 12px;
+          padding: 10px 16px;
           background: linear-gradient(135deg, #ff2800 0%, #ff5b36 100%);
           color: #fff;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 800;
           cursor: pointer;
-          box-shadow: 0 10px 22px rgba(255,40,0,0.22);
+          box-shadow: 0 8px 20px rgba(255,40,0,0.22);
           transition:
             transform 0.2s ease,
-            box-shadow 0.2s ease,
-            opacity 0.2s ease;
+            box-shadow 0.2s ease;
+          font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        .sc-add-button:hover {
+        .bas-add-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 14px 28px rgba(255,40,0,0.28);
+          box-shadow: 0 12px 28px rgba(255,40,0,0.30);
         }
 
-        .sc-add-button:disabled {
+        .bas-add-btn:disabled {
           cursor: not-allowed;
-          opacity: 0.6;
+          opacity: 0.5;
           background: color-mix(in srgb, var(--surface) 90%, transparent);
           color: var(--text-dim);
           box-shadow: none;
-          border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+          border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
         }
 
-        .sc-brand-meta {
+        /* ── Brand Selector ── */
+        .bas-arc-section {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 18px;
           margin-top: 22px;
+          padding: 0 24px 8px;
+        }
+
+        .bas-brand-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          background: transparent;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          transition:
+            transform 0.3s cubic-bezier(0.16,1,0.3,1),
+            opacity 0.3s ease;
+        }
+
+        .bas-brand-btn::after {
+          content: '';
+          position: absolute;
+          inset: -8px;
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(255,40,0,0.10), transparent 70%);
+          opacity: 0;
+          transform: scale(0.8);
+          transition: opacity 0.3s ease, transform 0.3s ease;
+          pointer-events: none;
+        }
+
+        .bas-brand-btn:hover::after,
+        .bas-brand-btn.active::after {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        /* Brand Badge Circle */
+        .bas-brand-badge {
+          width: 70px;
+          height: 70px;
+          border-radius: 22px;
+          border: 1.5px solid color-mix(in srgb, var(--border) 76%, transparent);
+          background:
+            linear-gradient(180deg,
+              color-mix(in srgb, var(--surface) 92%, rgba(255,255,255,0.04)) 0%,
+              color-mix(in srgb, var(--background) 96%, transparent) 100%);
+          box-shadow:
+            0 10px 24px rgba(0,0,0,0.08),
+            inset 0 1px 0 rgba(255,255,255,0.06);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          position: relative;
+          transition:
+            transform 0.4s cubic-bezier(0.16,1,0.3,1),
+            border-color 0.35s ease,
+            box-shadow 0.35s ease,
+            background 0.35s ease;
+        }
+
+        .bas-brand-badge::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.06), transparent 40%),
+            radial-gradient(circle at 80% 100%, rgba(255,40,0,0.06), transparent 30%);
+          pointer-events: none;
+        }
+
+        .bas-brand-btn:hover .bas-brand-badge {
+          transform: translateY(-2px);
+          border-color: rgba(255,40,0,0.25);
+          box-shadow:
+            0 14px 28px rgba(0,0,0,0.12),
+            0 0 0 4px rgba(255,40,0,0.06);
+        }
+
+        .bas-brand-btn.active .bas-brand-badge {
+          transform: translateY(-3px) scale(1.06);
+          border-color: rgba(255,40,0,0.45);
+          background:
+            linear-gradient(180deg,
+              color-mix(in srgb, var(--surface) 88%, rgba(255,40,0,0.06)) 0%,
+              color-mix(in srgb, var(--background) 92%, rgba(255,40,0,0.04)) 100%);
+          box-shadow:
+            0 16px 32px rgba(255,40,0,0.16),
+            0 0 0 6px rgba(255,40,0,0.10),
+            0 0 40px rgba(255,40,0,0.08);
+        }
+
+
+        .bas-brand-logo {
+          width: 40px;
+          height: 40px;
+          object-fit: contain;
+          position: relative;
+          z-index: 1;
+          transition:
+            transform 0.35s ease,
+            filter 0.35s ease;
+        }
+
+        .bas-brand-btn:hover .bas-brand-logo {
+          transform: scale(1.05);
+        }
+
+        .bas-brand-btn.active .bas-brand-logo {
+          transform: scale(1.08);
+        }
+
+        .bas-brand-fallback {
+          font-size: 22px;
+          font-weight: 900;
+          color: var(--foreground);
+          letter-spacing: -0.04em;
+          position: relative;
+          z-index: 1;
+        }
+
+        .bas-brand-label {
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--text-dim);
+          max-width: 88px;
+          text-align: center;
+          line-height: 1.3;
+          transition: color 0.3s ease;
+        }
+
+        .bas-brand-btn.active .bas-brand-label {
+          color: var(--foreground);
+        }
+
+        /* ── Active brand indicator ── */
+        .bas-brand-indicator {
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: var(--brand-red);
+          opacity: 0;
+          transition: opacity 0.35s ease;
+        }
+
+        .bas-brand-btn.active .bas-brand-indicator {
+          opacity: 1;
+        }
+
+        /* ── Bottom Info Bar ── */
+        .bas-info {
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
+          padding: 18px 0 24px;
           color: var(--text-dim);
           font-size: 13px;
           text-align: center;
         }
 
-        .sc-brand-meta strong {
+        .bas-info strong {
           color: var(--foreground);
+          font-weight: 800;
         }
 
-        .sc-brand-meta-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 999px;
-          background: rgba(255,40,0,0.45);
+        .bas-info-dot {
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: rgba(255,40,0,0.5);
         }
 
-        .dark .sc-stage {
-          box-shadow:
-            0 26px 60px rgba(0, 0, 0, 0.34),
-            inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        /* ── Navigation Arrows ── */
+        .bas-nav-arrows {
+          position: absolute;
+          top: 50%;
+          left: 0;
+          right: 0;
+          transform: translateY(-50%);
+          display: flex;
+          justify-content: space-between;
+          padding: 0 16px;
+          pointer-events: none;
+          z-index: 10;
         }
 
+        .bas-arrow-btn {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+          background: color-mix(in srgb, var(--background) 90%, transparent);
+          color: var(--foreground);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          pointer-events: all;
+          backdrop-filter: blur(8px);
+          transition: all 0.25s ease;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        .bas-arrow-btn:hover {
+          border-color: rgba(255,40,0,0.4);
+          background: rgba(255,40,0,0.08);
+          color: var(--brand-red);
+          transform: scale(1.08);
+          box-shadow: 0 8px 24px rgba(255,40,0,0.12);
+        }
+
+        /* ── Product counter dots ── */
+        .bas-dots {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 6px;
+        }
+
+        .bas-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--border);
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          transition: all 0.3s ease;
+        }
+
+        .bas-dot.active {
+          width: 24px;
+          border-radius: 3px;
+          background: var(--brand-red);
+        }
+
+        /* ── Responsive ── */
         @media (max-width: 1100px) {
-          .sc-stage {
-            padding-bottom: 320px;
-          }
-
-          .sc-products-stage {
+          .bas-products {
             height: 430px;
           }
-
-          .sc-product-link {
-            width: min(32vw, 264px);
+          .bas-product-link {
+            width: min(30vw, 260px);
           }
+
         }
 
         @media (max-width: 860px) {
-          .sc-stage {
-            padding: 34px 18px 26px;
+          .bas-stage {
+            border-radius: 24px;
           }
 
-          .sc-products-stage {
+          .bas-products {
             height: auto;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 18px;
-            margin-bottom: 28px;
+            padding: 24px 16px 0;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
           }
 
-          .sc-product-link {
-            position: relative;
-            top: auto;
-            left: auto;
-            width: 100%;
+          .bas-product-link {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            width: 260px !important;
+            min-width: 260px;
             transform: none !important;
             opacity: 1 !important;
+            filter: none !important;
+            scroll-snap-align: center;
           }
 
-          .sc-product-card,
-          .sc-product-link.featured .sc-product-card {
+          .bas-product-card,
+          .bas-product-link.featured .bas-product-card {
             min-height: 0;
           }
 
-          .sc-product-media,
-          .sc-product-link.featured .sc-product-media {
-            height: 220px;
+          .bas-product-media,
+          .bas-product-link.featured .bas-product-media {
+            height: 200px;
           }
 
-          .sc-brand-ring {
-            height: auto;
-            display: flex;
-            gap: 14px;
+          .bas-arc-section {
+            flex-wrap: nowrap;
+            gap: 12px;
             overflow-x: auto;
-            padding: 10px 2px 6px;
+            padding: 12px 16px;
             scroll-snap-type: x proximity;
           }
 
-          .sc-ring-svg {
-            display: none;
-          }
-
-          .sc-brand-button {
-            position: relative;
-            left: auto !important;
-            top: auto !important;
-            transform: none !important;
-            opacity: 1 !important;
-            z-index: auto !important;
+          .bas-brand-btn {
             flex: 0 0 auto;
             scroll-snap-align: center;
           }
 
-          .sc-brand-badge {
-            width: 62px;
-            height: 62px;
-            border-radius: 18px;
-          }
-
-          .sc-brand-logo {
-            width: 36px;
-            height: 36px;
+          .bas-nav-arrows {
+            display: none;
           }
         }
       `}</style>
 
-      <div className="sc-shell">
-        <div
-          style={{
-            textAlign: 'center',
-            marginBottom: 34,
-            padding: '0 8px',
-            position: 'relative',
-            zIndex: 2,
-          }}
-        >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: '0.16em',
-              textTransform: 'uppercase',
-              color: 'var(--brand-red)',
-              marginBottom: 14,
-            }}
-          >
-            <span style={{ width: 26, height: 2, background: 'var(--brand-red)', borderRadius: 999 }} />
-            Gaming Gear
-            <span style={{ width: 26, height: 2, background: 'var(--brand-red)', borderRadius: 999 }} />
+      <div className="bas-shell">
+        {/* ── Header ── */}
+        <div className="bas-header">
+          <div className="bas-badge">
+            <span className="bas-badge-line" />
+            PC Accessories
+            <span className="bas-badge-line" />
           </div>
-
-          <h2
-            style={{
-              fontSize: 'clamp(30px, 4.2vw, 46px)',
-              fontWeight: 900,
-              letterSpacing: '-0.05em',
-              color: 'var(--foreground)',
-              margin: '0 0 10px',
-              lineHeight: 1.05,
-            }}
-          >
-            Premium Accessories
-          </h2>
-
-          <p
-            style={{
-              fontSize: 14,
-              color: 'var(--text-dim)',
-              margin: 0,
-              maxWidth: 560,
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              lineHeight: 1.65,
-            }}
-          >
-            Browse each brand on the arc below and bring its gear into focus with one oversized product in the center.
+          <h2 className="bas-title">Premium Accessories</h2>
+          <p className="bas-subtitle">
+            Select a brand below to explore their accessories. Click any side product to bring it to center stage.
           </p>
         </div>
 
-        <div className="sc-stage">
-          <div className={`sc-products-stage ${productFade === 'out' ? 'fade-out' : ''}`}>
+        {/* ── Stage ── */}
+        <div className="bas-stage">
+          {!currentBrand && (
+            <div className="bas-empty">
+              <h3 className="bas-empty-title">Accessories are on the way</h3>
+              <p className="bas-empty-copy">
+                This showcase stays visible now, but it needs products in the catalog before we can build out the brand carousel.
+              </p>
+            </div>
+          )}
+
+          {currentBrand && (
+            <>
+          {/* Products Carousel */}
+          <div className={`bas-products ${productFade === 'out' ? 'fade-out' : ''}`}>
+            {/* Navigation Arrows */}
+            <div className="bas-nav-arrows">
+              <button
+                className="bas-arrow-btn"
+                onClick={() => {
+                  const prev = (safeProd - 1 + products.length) % products.length
+                  setActiveProductIndex(prev)
+                }}
+                aria-label="Previous product"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <button
+                className="bas-arrow-btn"
+                onClick={() => {
+                  const next = (safeProd + 1) % products.length
+                  setActiveProductIndex(next)
+                }}
+                aria-label="Next product"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+
             {visibleProducts.map(({ product, offset }) => {
               const isFeatured = offset === 0
               const absOffset = Math.abs(offset)
-              const translateX = offset * 220
-              const translateY = isFeatured ? 0 : absOffset === 1 ? 38 : 66
-              const scale = isFeatured ? 1 : absOffset === 1 ? 0.9 : 0.78
-              const opacity = isFeatured ? 1 : absOffset === 1 ? 0.88 : 0.62
+              const translateX = offset * 230
+              const translateY = isFeatured ? 0 : absOffset === 1 ? 40 : 72
+              const scale = isFeatured ? 1 : absOffset === 1 ? 0.88 : 0.75
+              const opacity = isFeatured ? 1 : absOffset === 1 ? 0.85 : 0.55
               const zIndex = isFeatured ? 5 : 5 - absOffset
 
               return (
                 <Link
                   key={`${currentBrand.id}-${product.id}-${offset}`}
                   href={`/product-page/${product.id}`}
-                  className={`sc-product-link ${isFeatured ? 'featured' : ''}`}
-                  onClick={(event) => {
+                  className={`bas-product-link ${isFeatured ? 'featured' : ''}`}
+                  onClick={(e) => {
                     if (!isFeatured) {
-                      event.preventDefault()
-                      setActiveProductIndex(products.findIndex((item) => item.id === product.id))
+                      e.preventDefault()
+                      focusProduct(product.id)
                     }
                   }}
                   style={{
                     transform: `translateX(calc(-50% + ${translateX}px)) translateY(${translateY}px) scale(${scale})`,
                     opacity,
                     zIndex,
-                    filter: isFeatured ? 'none' : 'saturate(0.88)',
+                    filter: isFeatured ? 'none' : `saturate(0.85) brightness(${absOffset === 1 ? 0.95 : 0.85})`,
                   }}
                 >
-                  <article className="sc-product-card">
-                    <div className="sc-product-media">
-                      <img className="sc-product-image" src={product.image} alt={product.name} />
-                      <span className="sc-product-chip">{product.category}</span>
+                  <article className="bas-product-card">
+                    <div className="bas-product-media">
+                      <img className="bas-product-img" src={product.image} alt={product.name} />
+                      <span className="bas-product-chip">{product.category}</span>
                     </div>
-
-                    <div className="sc-product-content">
-                      <div className="sc-product-kicker">{product.sku || currentBrand.name}</div>
-                      <h3 className="sc-product-title">{product.name}</h3>
-
-                      {product.description && <p className="sc-product-desc">{product.description}</p>}
-
-                      <div className="sc-product-footer">
-                        <span className="sc-price">TND {product.price.toFixed(2)}</span>
-
+                    <div className="bas-product-body">
+                      <div className="bas-product-kicker">{product.sku || currentBrand.name}</div>
+                      <h3 className="bas-product-name">{product.name}</h3>
+                      {product.description && <p className="bas-product-desc">{product.description}</p>}
+                      <div className="bas-product-footer">
+                        <span className="bas-price">TND {product.price.toFixed(2)}</span>
                         <button
-                          className="sc-add-button"
+                          className="bas-add-btn"
                           disabled={product.stock === 0}
-                          onClick={(event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
                             addItem(product.id, 1, {
                               productId: product.id,
                               name: product.name,
@@ -762,7 +928,7 @@ export default function BrandAccessoryShowcase() {
                             })
                           }}
                         >
-                          {product.stock === 0 ? 'Out of Stock' : 'Add to Bag +'}
+                          {product.stock === 0 ? 'Out of Stock' : 'Add +'}
                         </button>
                       </div>
                     </div>
@@ -772,62 +938,65 @@ export default function BrandAccessoryShowcase() {
             })}
           </div>
 
-          <div className="sc-brand-ring">
-            <svg className="sc-ring-svg" viewBox="0 0 1000 360" preserveAspectRatio="none" aria-hidden="true">
-              <path
-                d="M120 78C252 262 748 262 880 78"
-                fill="none"
-                stroke="rgba(255,40,0,0.18)"
-                strokeWidth="2"
-                strokeDasharray="6 10"
-              />
-              <path
-                d="M190 60C308 210 692 210 810 60"
-                fill="none"
-                stroke="rgba(255,40,0,0.08)"
-                strokeWidth="1.5"
-              />
-            </svg>
+          {/* Product dots */}
+          {products.length > 1 && (
+            <div className="bas-dots">
+              {products.map((_, i) => (
+                <button
+                  key={i}
+                  className={`bas-dot ${i === safeProd ? 'active' : ''}`}
+                  onClick={() => setActiveProductIndex(i)}
+                  aria-label={`Go to product ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
 
+          {/* Brand Selector */}
+          <div className="bas-arc-section">
             {brands.map((brand, index) => {
-              const offset = getCircularOffset(index, safeBrandIndex, brands.length)
-              const brandStyle = getBrandArcStyle(offset, brands.length)
-              const isActive = index === safeBrandIndex
+              const isActive = index === safeBrand
 
               return (
                 <button
                   key={brand.id}
                   type="button"
-                  className={`sc-brand-button ${isActive ? 'active' : ''}`}
-                  style={brandStyle}
+                  className={`bas-brand-btn ${isActive ? 'active' : ''}`}
                   onClick={() => switchBrand(index)}
                   aria-pressed={isActive}
-                  aria-label={`Show ${brand.name} products`}
+                  aria-label={`Show ${brand.name} accessories`}
                 >
-                  <span className="sc-brand-badge">
+                  <span className="bas-brand-badge">
                     {brand.logo ? (
-                      <img className="sc-brand-logo" src={brand.logo} alt={brand.name} />
+                      <img className="bas-brand-logo" src={brand.logo} alt={brand.name} />
                     ) : (
-                      <span className="sc-brand-fallback">{brand.name.charAt(0)}</span>
+                      <span className="bas-brand-fallback">{brand.name.charAt(0)}</span>
                     )}
                   </span>
-                  <span className="sc-brand-name">{brand.name}</span>
+                  <span className="bas-brand-label">{brand.name}</span>
+                  <span className="bas-brand-indicator" />
                 </button>
               )
             })}
           </div>
 
+          {/* Info Bar */}
           {featureProduct && (
-            <div className="sc-brand-meta">
+            <div className="bas-info">
               <strong>{currentBrand.name}</strong>
-              <span className="sc-brand-meta-dot" />
-              <span>{products.length} products in spotlight</span>
-              <span className="sc-brand-meta-dot" />
-              <span>Tap a side product to bring it to the center</span>
+              <span className="bas-info-dot" />
+              <span>{products.length} accessories</span>
+              <span className="bas-info-dot" />
+              <span>Click a side product to bring it to center</span>
             </div>
+          )}
+            </>
           )}
         </div>
       </div>
     </section>
   )
 }
+
+
+
