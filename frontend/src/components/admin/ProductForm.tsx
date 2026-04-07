@@ -121,10 +121,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-<<<<<<< HEAD
-
-=======
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
     try {
       const parsedPrice = Number.parseFloat(formData.price);
       const parsedStock = Number.parseInt(formData.stock, 10);
@@ -179,14 +175,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
 
-<<<<<<< HEAD
-=======
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .gap-page {
           font-family: 'Plus Jakarta Sans', sans-serif;
           padding: 40px;
@@ -215,22 +207,18 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           text-transform: uppercase;
           letter-spacing: 0.1em;
         }
-<<<<<<< HEAD
-        .btn-back:hover { color: var(--foreground); }
-=======
         .btn-back:hover { color: var(--brand-red); transform: translateX(-4px); }
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
 
         .hero-shell {
           position: relative;
           overflow: hidden;
           border: 1px solid var(--border);
-<<<<<<< HEAD
-          border-radius: 28px;
-          padding: 28px 30px;
-          margin-bottom: 28px;
+          border-radius: 32px;
+          padding: 40px;
+          margin-bottom: 32px;
           background: linear-gradient(135deg, var(--background) 0%, var(--surface) 100%);
           box-shadow: 0 24px 60px rgba(0,0,0,0.05);
+          animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         .hero-shell::before {
           content: "";
@@ -240,14 +228,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           background-image: radial-gradient(var(--foreground) 1.1px, transparent 1.1px);
           background-size: 28px 28px;
           pointer-events: none;
-=======
-          border-radius: 32px;
-          padding: 40px;
-          margin-bottom: 32px;
-          background: var(--surface);
-          box-shadow: 0 4px 24px rgba(0,0,0,0.03);
-          animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         }
         .hero-glow {
           position: absolute;
@@ -259,18 +239,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           pointer-events: none;
         }
 
-<<<<<<< HEAD
-        .page-header {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 16px;
-          flex-wrap: wrap;
-        }
-=======
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .eyebrow {
           display: inline-flex;
           align-items: center;
@@ -280,21 +248,9 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           letter-spacing: 0.2em;
           text-transform: uppercase;
           color: var(--brand-red);
-<<<<<<< HEAD
-          margin-bottom: 14px;
-        }
-        .eyebrow-line {
-          width: 28px;
-          height: 2px;
-          border-radius: 2px;
-          background: var(--brand-red);
-        }
-=======
           margin-bottom: 16px;
         }
         .eyebrow-line { width: 32px; height: 2.5px; background: var(--brand-red); border-radius: 4px; }
-
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .page-title {
           font-size: clamp(32px, 5vw, 44px);
           font-weight: 900;
@@ -342,15 +298,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           gap: 24px;
           align-items: start;
         }
-<<<<<<< HEAD
-        @media (max-width: 900px) {
-          .form-grid { grid-template-columns: 1fr; }
-        }
-=======
         @media (max-width: 1000px) { .form-grid { grid-template-columns: 1fr; } }
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
 
         .form-card {
+          position: relative;
           background: var(--surface);
           border: 1px solid var(--border);
           border-radius: 24px;
@@ -359,7 +310,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
           animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
-<<<<<<< HEAD
         .form-card::before {
           content: "";
           position: absolute;
@@ -369,18 +319,12 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           opacity: 0;
           transition: opacity 0.25s;
         }
-=======
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .form-card:hover {
           transform: translateY(-2px);
           border-color: var(--border-strong);
           box-shadow: 0 4px 24px rgba(0,0,0,0.06);
         }
-<<<<<<< HEAD
         .form-card:hover::before { opacity: 1; }
-=======
-
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         .card-kicker {
           font-size: 11px;
           color: var(--text-dim);
@@ -397,33 +341,16 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           letter-spacing: -0.03em;
         }
 
-<<<<<<< HEAD
-        .form-group { margin-bottom: 20px; }
-        .form-group:last-child { margin-bottom: 0; }
-=======
         .form-group { margin-bottom: 24px; }
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
+        .form-group:last-child { margin-bottom: 0; }
         .form-label {
           display: block;
           font-size: 12px;
           font-weight: 800;
           color: var(--text-dim);
           text-transform: uppercase;
-<<<<<<< HEAD
-          margin-bottom: 8px;
-        }
-        .form-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-          margin-bottom: 20px;
-        }
-        @media (max-width: 600px) {
-          .form-row { grid-template-columns: 1fr; }
-=======
           letter-spacing: 0.08em;
           margin-bottom: 10px;
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
         }
 
         .form-input, .form-select, .form-textarea {
@@ -439,93 +366,35 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           transition: all 0.2s;
           outline: none;
         }
-<<<<<<< HEAD
         .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-          border-color: var(--brand-red);
-          box-shadow: 0 0 0 3px rgba(255,40,0,0.08);
-        }
-        .form-textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
-        .form-select { appearance: none; cursor: pointer; padding-right: 36px; }
-        .select-wrapper { position: relative; }
-        .select-icon {
-          position: absolute;
-          right: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          pointer-events: none;
-          color: var(--text-dim);
-          font-size: 10px;
-        }
-
-        .input-with-prefix { position: relative; display: flex; align-items: center; }
-        .input-prefix {
-          position: absolute;
-          left: 14px;
-          color: var(--text-dim);
-          font-weight: 600;
-          font-size: 14px;
-          pointer-events: none;
-        }
-        .input-with-prefix .form-input { padding-left: 42px; }
-=======
         .form-input:focus, .form-select:focus, .form-textarea:focus {
           border-color: var(--brand-red);
           box-shadow: 0 0 0 4px rgba(255,40,0,0.08);
           background: var(--surface);
         }
+        .form-textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+        .form-select { appearance: none; cursor: pointer; }
 
         .input-with-prefix { position: relative; display: flex; align-items: center; }
         .input-prefix { position: absolute; left: 18px; color: var(--text-dim); font-weight: 900; font-size: 13px; pointer-events: none; }
         .input-with-prefix .form-input { padding-left: 52px; }
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
 
         .upload-area {
           border: 2px dashed var(--border);
           border-radius: 20px;
           padding: 48px;
           text-align: center;
-<<<<<<< HEAD
-          cursor: default;
-          background: var(--surface);
-          transition: all 0.2s;
-          overflow: hidden;
-        }
-        .upload-area:hover { border-color: var(--brand-red); }
-        .upload-icon { color: var(--text-dim); margin-bottom: 12px; }
-        .upload-text { font-size: 13.5px; font-weight: 700; color: var(--foreground); margin-bottom: 4px; }
-        .upload-sub { font-size: 12.5px; color: var(--text-dim); }
-        .preview-img { width: 100%; max-height: 220px; object-fit: contain; }
-        .upload-input { display: none; }
-        .upload-meta { margin-top: 12px; font-size: 12.5px; color: var(--text-muted); text-align: center; }
-        .upload-link {
-          margin-top: 12px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid var(--border);
-          background: var(--background);
-          color: var(--foreground);
-          border-radius: 12px;
-          padding: 10px 14px;
-          font-size: 13px;
-          font-weight: 700;
-=======
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
           cursor: pointer;
           background: var(--background);
           transition: all 0.2s;
           display: block;
+          overflow: hidden;
         }
-<<<<<<< HEAD
-        .upload-link:hover { border-color: var(--brand-red); color: var(--brand-red); }
-=======
         .upload-area:hover { border-color: var(--brand-red); background: var(--surface); }
         .upload-icon { color: var(--text-dim); margin-bottom: 16px; opacity: 0.6; }
         .upload-text { font-size: 15px; font-weight: 800; color: var(--foreground); margin-bottom: 6px; }
         .upload-sub { font-size: 13px; color: var(--text-muted); font-weight: 500; }
         .preview-img { width: 100%; max-height: 280px; object-fit: contain; border-radius: 12px; }
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
       `}</style>
 
       <div className="gap-page">
@@ -562,17 +431,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                 <h2 className="card-title">Identity & Narrative</h2>
 
                 <div className="form-group">
-<<<<<<< HEAD
-                  <label className="form-label">Product Name</label>
-                  <input
-                    className="form-input"
-                    placeholder="Product name"
-=======
                   <label className="form-label">Commercial Name</label>
                   <input
                     className="form-input"
                     placeholder="Enter the premium product title..."
->>>>>>> 54e6e4cd62557eaa100f452505e72c7e697bcbee
                     name="name"
                     value={formData.name}
                     onChange={handleChange}

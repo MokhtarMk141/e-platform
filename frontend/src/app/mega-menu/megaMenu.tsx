@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import logoimg from "../../../public/website_logo.png";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -156,8 +156,13 @@ const toCategorySlug = (label: string) =>
 export default function MegaMenu() {
   const router = useRouter();
   const [active, setActive] = useState<MenuKey | null>(null);
+  const [mounted, setMounted] = useState(false);
   const { cart, toggleCart, resetCart } = useCart();
   const { isAuthenticated, user, logout } = useAuthStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div style={{ background: "var(--background)", fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", borderBottom: "1px solid var(--border)" }}>
@@ -554,7 +559,7 @@ export default function MegaMenu() {
               )}
             </button>
 
-            {isAuthenticated ? (
+            {mounted && isAuthenticated ? (
               <div className="account-actions">
                 {user?.role === 'ADMIN' && (
                   <button className="action-btn primary" onClick={() => router.push('/admin')}>

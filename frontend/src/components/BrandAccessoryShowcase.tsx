@@ -1,15 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useMemo, useState } from 'react'
 import { useProducts } from '@/hooks/useProducts'
 import { useBrands } from '@/hooks/useBrands'
-import type { Product as StoreProduct } from '@/types/product.types'
+import { useCart } from '@/hooks/useCart'
 
 interface ShowcaseProduct {
   id: string
   name: string
-  price: string
+  price: number
+  sku: string
+  description: string | null
+  stock: number
   image: string
   category: string
 }
@@ -21,40 +24,86 @@ interface ShowcaseBrand {
   products: ShowcaseProduct[]
 }
 
-const ACCESSORY_KEYWORDS = ['monitor', 'keyboard', 'mouse', 'headset', 'audio', 'speaker', 'webcam', 'accessor', 'microphone']
+interface PositionedProduct {
+  product: ShowcaseProduct
+  offset: number
+}
 
-const isAccessoryProduct = (product: StoreProduct) => {
-  const searchable = `${product.name} ${product.description ?? ''} ${product.category?.name ?? ''}`.toLowerCase()
-  return ACCESSORY_KEYWORDS.some((keyword) => searchable.includes(keyword))
+const PRODUCT_OFFSETS = [-2, -1, 0, 1, 2]
+
+const getCircularOffset = (index: number, activeIndex: number, length: number) => {
+  if (length <= 1) return 0
+
+  let diff = index - activeIndex
+  const half = Math.floor(length / 2)
+
+  if (diff > half) diff -= length
+  if (diff < -half) diff += length
+
+  return diff
+}
+
+const getBrandArcStyle = (offset: number, total: number) => {
+  const half = Math.max(1, Math.ceil((total - 1) / 2))
+  const step = Math.min(22, 80 / half)
+  const angle = (90 - offset * step) * (Math.PI / 180)
+  const radius = total > 8 ? 270 : 300
+  const x = Math.cos(angle) * radius
+  const y = Math.sin(angle) * radius
+  const distance = Math.abs(offset)
+  const scale = offset === 0 ? 1.18 : Math.max(0.68, 1 - distance * 0.1)
+  const opacity = offset === 0 ? 1 : Math.max(0.26, 0.9 - distance * 0.16)
+
+  return {
+    left: `calc(50% + ${x}px)`,
+    top: `${radius - y + 92}px`,
+    transform: `translate(-50%, -50%) scale(${scale})`,
+    opacity,
+    zIndex: total - distance,
+  }
+}
+
+const getProductWindow = (products: ShowcaseProduct[], activeIndex: number): PositionedProduct[] => {
+  if (products.length === 0) return []
+
+  const visibleCount = Math.min(products.length, PRODUCT_OFFSETS.length)
+  const start = 2 - Math.floor(visibleCount / 2)
+  const visibleOffsets = PRODUCT_OFFSETS.slice(start, start + visibleCount)
+
+  return visibleOffsets.map((offset) => {
+    const productIndex = (activeIndex + offset + products.length) % products.length
+
+    return {
+      product: products[productIndex],
+      offset,
+    }
+  })
 }
 
 export default function BrandAccessoryShowcase() {
   const { products: dbProducts, loading } = useProducts({ limit: 100 })
   const { brands: dbBrands } = useBrands()
-  const [activeBrandIndex, setActiveBrandIndex] = useState(2)
-  const [centerProductIndex, setCenterProductIndex] = useState(2)
+  const { addItem } = useCart()
+  const [activeBrandIndex, setActiveBrandIndex] = useState(0)
+  const [activeProductIndex, setActiveProductIndex] = useState(0)
   const [transitioning, setTransitioning] = useState(false)
   const [productFade, setProductFade] = useState<'in' | 'out' | 'none'>('none')
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const brands = useMemo<ShowcaseBrand[]>(() => {
     const productsWithBrands = dbProducts.filter((product) => product.brand)
-    const accessoryProducts = productsWithBrands.filter(isAccessoryProduct)
-    const sourceProducts = accessoryProducts.length > 0 ? accessoryProducts : productsWithBrands
 
     return dbBrands
       .map((brand) => {
-        const brandProducts = sourceProducts
+        const brandProducts = productsWithBrands
           .filter((product) => product.brand?.id === brand.id)
-          .slice(0, 5)
+          .slice(0, 8)
           .map((product) => ({
             id: product.id,
             name: product.name,
-            price: (product.price ?? 0).toFixed(2),
+            price: product.price ?? 0,
+            sku: product.sku || '',
+            description: product.description,
+            stock: product.stock ?? 0,
             image: product.imageUrl || '/showcase/keyboard.png',
             category: product.category?.name || 'Accessory',
           }))
@@ -69,94 +118,35 @@ export default function BrandAccessoryShowcase() {
       .filter((brand) => brand.products.length > 0)
   }, [dbBrands, dbProducts])
 
-  useEffect(() => {
-    if (brands.length === 0) {
-      setActiveBrandIndex(0)
-      setCenterProductIndex(0)
-      return
-    }
-
-    setActiveBrandIndex((prev) => Math.min(prev, brands.length - 1))
-  }, [brands.length])
-
-  useEffect(() => {
-    const currentProductsLength = brands[activeBrandIndex]?.products.length ?? 0
-    if (currentProductsLength === 0) {
-      setCenterProductIndex(0)
-      return
-    }
-
-    setCenterProductIndex((prev) => Math.min(prev, currentProductsLength - 1))
-  }, [activeBrandIndex, brands])
-
-  const currentBrand = brands[activeBrandIndex]
+  const safeBrandIndex = brands.length === 0 ? 0 : Math.min(activeBrandIndex, brands.length - 1)
+  const currentBrand = brands[safeBrandIndex]
   const hasShowcaseData = brands.length > 0 && currentBrand
+  const products = useMemo(() => currentBrand?.products ?? [], [currentBrand])
+  const safeProductIndex = products.length === 0 ? 0 : Math.min(activeProductIndex, products.length - 1)
+  const visibleProducts = useMemo(() => getProductWindow(products, safeProductIndex), [products, safeProductIndex])
 
-  if (!mounted) return null
-
-  if (loading && brands.length === 0) {
-    return null
-  }
-
-  if (!hasShowcaseData) {
-    return null
-  }
-
-  const products = currentBrand.products
+  if (loading && brands.length === 0) return null
+  if (!hasShowcaseData) return null
 
   const switchBrand = (index: number) => {
-    if (index === activeBrandIndex || transitioning) return
+    if (index === safeBrandIndex || transitioning) return
+
     setTransitioning(true)
     setProductFade('out')
 
     setTimeout(() => {
       setActiveBrandIndex(index)
-      setCenterProductIndex(0)
+      setActiveProductIndex(Math.floor(brands[index].products.length / 2))
       setProductFade('in')
 
       setTimeout(() => {
         setProductFade('none')
         setTransitioning(false)
-      }, 450)
-    }, 260)
-  }
-
-  const switchProduct = (index: number) => {
-    if (index === centerProductIndex || transitioning) return
-    setTransitioning(true)
-    setProductFade('out')
-
-    setTimeout(() => {
-      setCenterProductIndex(index)
-      setProductFade('in')
-
-      setTimeout(() => {
-        setProductFade('none')
-        setTransitioning(false)
-      }, 380)
+      }, 420)
     }, 220)
   }
 
-  const getProductPosition = (index: number) => index - centerProductIndex
-  const getBrandPosition = (index: number) => index - activeBrandIndex
-
-  const getProductCardStyle = (index: number): CSSProperties => {
-    const position = getProductPosition(index)
-    const absPos = Math.abs(position)
-    const isCenter = position === 0
-
-    return {
-      position: 'absolute',
-      left: '50%',
-      top: '50%',
-      transform: `translate(calc(-50% + ${position * 300}px), calc(-50% + ${isCenter ? 0 : absPos === 1 ? 24 : 42}px)) scale(${isCenter ? 1.04 : absPos === 1 ? 0.86 : 0.72})`,
-      zIndex: isCenter ? 10 : 5 - absPos,
-      opacity: productFade === 'out' ? 0 : absPos > 2 ? 0 : 1,
-      transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-      cursor: isCenter ? 'default' : 'pointer',
-      pointerEvents: absPos > 2 ? 'none' : 'auto',
-    }
-  }
+  const featureProduct = products[safeProductIndex]
 
   return (
     <section
@@ -166,525 +156,677 @@ export default function BrandAccessoryShowcase() {
         width: '100vw',
         marginLeft: 'calc(50% - 50vw)',
         overflow: 'hidden',
-        padding: '88px 0 38px',
+        padding: '92px 0 46px',
         fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif",
         background:
-          'radial-gradient(circle at top center, rgba(255,40,0,0.08) 0%, transparent 32%), linear-gradient(180deg, var(--background) 0%, var(--surface) 56%, var(--background) 100%)',
+          'radial-gradient(circle at top center, rgba(255,40,0,0.12) 0%, transparent 24%), radial-gradient(circle at 0% 100%, rgba(255,40,0,0.06) 0%, transparent 28%), linear-gradient(180deg, var(--background) 0%, var(--surface) 48%, var(--background) 100%)',
       }}
     >
       <style>{`
-        @keyframes scPulse {
-          0%, 100% { opacity: 0.35; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.08); }
+        .sc-shell {
+          width: min(1240px, calc(100vw - 40px));
+          margin: 0 auto;
+          padding: 0 10px;
         }
 
-        .sc-brand-pill {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px 12px 14px;
-          border: none;
-          border-bottom: 2px solid transparent;
-          background: transparent;
-          transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-          cursor: pointer;
-          white-space: nowrap;
-        }
-
-        .sc-brand-pill:hover {
-          border-bottom-color: rgba(255,40,0,0.35);
-          transform: translateY(-3px);
-        }
-
-        .sc-brand-pill.active {
-          border-bottom-color: var(--brand-red);
-        }
-
-        .sc-brand-logo {
-          height: 22px;
-          object-fit: contain;
-          transition: all 0.3s ease;
-        }
-
-        .dark .sc-brand-logo {
-          filter: grayscale(1) brightness(0) invert(1);
-          opacity: 0.55;
-        }
-
-        :root .sc-brand-logo {
-          filter: grayscale(1) brightness(0.22);
-          opacity: 0.5;
-        }
-
-        .sc-brand-pill.active .sc-brand-logo {
-          opacity: 1 !important;
-        }
-
-        .dark .sc-brand-pill.active .sc-brand-logo {
-          filter: brightness(0) invert(1) !important;
-        }
-
-        :root .sc-brand-pill.active .sc-brand-logo {
-          filter: none !important;
-        }
-
-        .sc-brand-name {
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          transition: color 0.2s;
-        }
-
-        .dark .sc-brand-name { color: rgba(255,255,255,0.45); }
-        :root .sc-brand-name { color: rgba(0,0,0,0.36); }
-        .sc-brand-pill.active .sc-brand-name { color: var(--foreground) !important; }
-
-        .sc-product-card {
-          width: 285px;
-          border-radius: 20px;
-          overflow: hidden;
-          border: 1px solid var(--border);
-          background: var(--background);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .sc-product-card:hover {
-          border-color: var(--brand-red);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(255,40,0,0.08);
-          transform: translateY(-4px) !important;
-        }
-
-        .sc-product-card.center-card {
-          width: 340px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,40,0,0.08);
-        }
-
-        .sc-product-img-wrap {
+        .sc-stage {
           position: relative;
-          height: 250px;
-          background: var(--surface);
+          border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+          border-radius: 40px;
+          padding: 44px 28px 340px;
+          overflow: hidden;
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--background) 86%, transparent) 0%, color-mix(in srgb, var(--surface) 98%, transparent) 100%);
+          box-shadow:
+            0 26px 60px rgba(17, 24, 39, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(18px);
+        }
+
+        .sc-stage::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(circle at 50% 0%, rgba(255,40,0,0.14), transparent 36%),
+            linear-gradient(135deg, rgba(255,255,255,0.05), transparent 36%);
+        }
+
+        .sc-brand-ring {
+          position: relative;
+          height: 360px;
+          margin: 8px 0 0;
+        }
+
+        .sc-ring-svg {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+        }
+
+        .sc-brand-button {
+          position: absolute;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition:
+            transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+            opacity 0.35s ease;
+        }
+
+        .sc-brand-button::before {
+          content: '';
+          position: absolute;
+          inset: -6px -8px -10px;
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(255,40,0,0.08), transparent 68%);
+          opacity: 0;
+          transform: scale(0.9);
+          transition:
+            opacity 0.3s ease,
+            transform 0.3s ease;
+          pointer-events: none;
+        }
+
+        .sc-brand-button:hover::before,
+        .sc-brand-button.active::before {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        .sc-brand-badge {
+          width: 72px;
+          height: 72px;
+          border-radius: 22px;
+          border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, rgba(255,255,255,0.04)) 0%, color-mix(in srgb, var(--background) 96%, transparent) 100%);
+          box-shadow:
+            0 10px 22px rgba(15, 23, 42, 0.07),
+            inset 0 1px 0 rgba(255,255,255,0.08);
           display: flex;
           align-items: center;
           justify-content: center;
           overflow: hidden;
+          position: relative;
+          transition:
+            transform 0.35s ease,
+            border-color 0.35s ease,
+            box-shadow 0.35s ease,
+            background 0.35s ease;
         }
 
-        .sc-product-card.center-card .sc-product-img-wrap {
-          height: 310px;
+        .sc-brand-badge::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.08), transparent 36%),
+            radial-gradient(circle at 85% 100%, rgba(255,40,0,0.08), transparent 32%);
+          pointer-events: none;
         }
 
-        .sc-product-img-wrap img {
-          width: 82%;
-          height: 82%;
+        .sc-brand-button:hover .sc-brand-badge {
+          transform: translateY(-1px);
+          border-color: rgba(255,40,0,0.22);
+          box-shadow:
+            0 14px 26px rgba(15, 23, 42, 0.1),
+            0 0 0 4px rgba(255,40,0,0.05);
+        }
+
+        .sc-brand-button.active .sc-brand-badge {
+          transform: translateY(-2px) scale(1.04);
+          border-color: rgba(255,40,0,0.38);
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, rgba(255,40,0,0.08)) 0%, color-mix(in srgb, var(--background) 94%, rgba(255,40,0,0.04)) 100%);
+          box-shadow:
+            0 14px 28px rgba(255,40,0,0.14),
+            0 0 0 6px rgba(255,40,0,0.08);
+        }
+
+        .sc-brand-logo {
+          width: 42px;
+          height: 42px;
           object-fit: contain;
-          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-          filter: drop-shadow(0 0 10px rgba(0,0,0,0.1));
+          filter: saturate(1) contrast(1.02);
+          position: relative;
+          z-index: 1;
+          transition:
+            transform 0.35s ease,
+            filter 0.35s ease,
+            opacity 0.35s ease;
         }
 
-        .sc-product-card:hover .sc-product-img-wrap img {
+        .sc-brand-button:hover .sc-brand-logo {
+          transform: scale(1.04);
+        }
+
+        .sc-brand-button.active .sc-brand-logo {
           transform: scale(1.06);
         }
 
-        .sc-product-category-tag {
+        .sc-brand-fallback {
+          font-size: 24px;
+          font-weight: 900;
+          color: var(--foreground);
+          letter-spacing: -0.04em;
+          position: relative;
+          z-index: 1;
+        }
+
+        .sc-brand-name {
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--text-dim);
+          max-width: 88px;
+          text-align: center;
+          line-height: 1.3;
+          padding: 0;
+          border: none;
+          background: transparent;
+          box-shadow: none;
+          transition:
+            color 0.3s ease,
+            opacity 0.3s ease;
+        }
+
+        .sc-brand-button.active .sc-brand-name {
+          color: var(--foreground);
+          opacity: 1;
+        }
+
+        .sc-products-stage {
+          position: relative;
+          height: 470px;
+          margin-bottom: 10px;
+          opacity: 1;
+          transform: translateY(0);
+          transition:
+            opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sc-products-stage.fade-out {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+
+        .sc-product-link {
           position: absolute;
           top: 16px;
-          left: 16px;
-          background: var(--background);
+          left: 50%;
+          width: min(34vw, 300px);
+          text-decoration: none;
+          color: inherit;
+          transition:
+            transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+            opacity 0.35s ease,
+            filter 0.35s ease;
+        }
+
+        .sc-product-card {
+          height: 100%;
+          min-height: 390px;
+          border-radius: 28px;
+          border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--background) 98%, transparent) 0%, color-mix(in srgb, var(--surface) 98%, transparent) 100%);
+          overflow: hidden;
+          box-shadow:
+            0 22px 46px rgba(15, 23, 42, 0.12),
+            inset 0 1px 0 rgba(255,255,255,0.08);
+          display: flex;
+          flex-direction: column;
+          transition:
+            transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.3s ease,
+            border-color 0.3s ease;
+        }
+
+        .sc-product-link:hover .sc-product-card {
+          border-color: rgba(255,40,0,0.42);
+          box-shadow:
+            0 28px 56px rgba(255,40,0,0.14),
+            0 10px 30px rgba(15, 23, 42, 0.12);
+        }
+
+        .sc-product-media {
+          position: relative;
+          height: 214px;
+          padding: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background:
+            radial-gradient(circle at 50% 10%, rgba(255,40,0,0.14), transparent 58%),
+            linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, transparent) 0%, color-mix(in srgb, var(--background) 100%, transparent) 100%);
+        }
+
+        .sc-product-link.featured .sc-product-media {
+          height: 264px;
+        }
+
+        .sc-product-image {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 18px 18px rgba(15, 23, 42, 0.18));
+          transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sc-product-link:hover .sc-product-image {
+          transform: scale(1.05);
+        }
+
+        .sc-product-chip {
+          position: absolute;
+          top: 18px;
+          left: 18px;
+          padding: 7px 12px;
+          border-radius: 999px;
+          border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+          background: color-mix(in srgb, var(--background) 92%, transparent);
           color: var(--foreground);
           font-size: 11px;
           font-weight: 800;
-          letter-spacing: 0.02em;
-          padding: 5px 12px;
-          border-radius: 30px;
-          border: 1px solid var(--border);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
 
-        .sc-product-info {
-          padding: 20px;
+        .sc-product-content {
+          flex: 1;
+          padding: 22px 22px 20px;
           display: flex;
           flex-direction: column;
           gap: 10px;
         }
 
-        .sc-stage-fill { fill: #f4efef; }
-        .dark .sc-stage-fill { fill: #121212; }
-        .sc-stage-stroke { stroke: rgba(0,0,0,0.06); }
-        .dark .sc-stage-stroke { stroke: rgba(255,255,255,0.08); }
-        .sc-stage-inner-stroke { stroke: rgba(0,0,0,0.03); }
-        .dark .sc-stage-inner-stroke { stroke: rgba(255,40,0,0.04); }
-
-        .sc-nav-btn {
-          position: absolute;
-          z-index: 30;
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          border: 1px solid var(--border);
-          background: var(--background);
-          color: var(--foreground);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        .sc-product-kicker {
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--text-dim);
         }
 
-        .sc-nav-btn:hover {
-          border-color: var(--brand-red);
-          box-shadow: 0 8px 24px rgba(255,40,0,0.15);
+        .sc-product-title {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 800;
+          line-height: 1.35;
+          color: var(--foreground);
+          letter-spacing: -0.03em;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .sc-product-link.featured .sc-product-title {
+          font-size: 21px;
+        }
+
+        .sc-product-desc {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.65;
+          color: var(--text-muted);
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .sc-product-footer {
+          margin-top: auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding-top: 10px;
+        }
+
+        .sc-price {
+          font-size: 19px;
+          font-weight: 900;
+          letter-spacing: -0.04em;
+          color: var(--foreground);
+        }
+
+        .sc-product-link.featured .sc-price {
+          font-size: 24px;
+        }
+
+        .sc-add-button {
+          border: none;
+          border-radius: 14px;
+          padding: 11px 18px;
+          background: linear-gradient(135deg, #ff2800 0%, #ff5b36 100%);
+          color: #fff;
+          font-size: 13px;
+          font-weight: 800;
+          cursor: pointer;
+          box-shadow: 0 10px 22px rgba(255,40,0,0.22);
+          transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            opacity 0.2s ease;
+        }
+
+        .sc-add-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 28px rgba(255,40,0,0.28);
+        }
+
+        .sc-add-button:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+          background: color-mix(in srgb, var(--surface) 90%, transparent);
+          color: var(--text-dim);
+          box-shadow: none;
+          border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+        }
+
+        .sc-brand-meta {
+          margin-top: 22px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 12px;
+          color: var(--text-dim);
+          font-size: 13px;
+          text-align: center;
+        }
+
+        .sc-brand-meta strong {
+          color: var(--foreground);
+        }
+
+        .sc-brand-meta-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 999px;
+          background: rgba(255,40,0,0.45);
+        }
+
+        .dark .sc-stage {
+          box-shadow:
+            0 26px 60px rgba(0, 0, 0, 0.34),
+            inset 0 1px 0 rgba(255, 255, 255, 0.03);
         }
 
         @media (max-width: 1100px) {
-          .sc-product-card { width: 220px !important; }
-          .sc-product-card.center-card { width: 270px !important; }
-          .sc-product-img-wrap { height: 180px !important; }
-          .sc-product-card.center-card .sc-product-img-wrap { height: 220px !important; }
+          .sc-stage {
+            padding-bottom: 320px;
+          }
+
+          .sc-products-stage {
+            height: 430px;
+          }
+
+          .sc-product-link {
+            width: min(32vw, 264px);
+          }
         }
 
-        @media (max-width: 768px) {
-          .sc-product-card { width: 180px !important; }
-          .sc-product-card.center-card { width: 220px !important; }
-          .sc-product-img-wrap { height: 140px !important; }
-          .sc-product-card.center-card .sc-product-img-wrap { height: 170px !important; }
-          .sc-brand-pill { gap: 8px !important; padding-bottom: 12px !important; }
-          .sc-brand-logo { height: 18px !important; }
-          .sc-brand-name { font-size: 10px !important; }
+        @media (max-width: 860px) {
+          .sc-stage {
+            padding: 34px 18px 26px;
+          }
+
+          .sc-products-stage {
+            height: auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            margin-bottom: 28px;
+          }
+
+          .sc-product-link {
+            position: relative;
+            top: auto;
+            left: auto;
+            width: 100%;
+            transform: none !important;
+            opacity: 1 !important;
+          }
+
+          .sc-product-card,
+          .sc-product-link.featured .sc-product-card {
+            min-height: 0;
+          }
+
+          .sc-product-media,
+          .sc-product-link.featured .sc-product-media {
+            height: 220px;
+          }
+
+          .sc-brand-ring {
+            height: auto;
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding: 10px 2px 6px;
+            scroll-snap-type: x proximity;
+          }
+
+          .sc-ring-svg {
+            display: none;
+          }
+
+          .sc-brand-button {
+            position: relative;
+            left: auto !important;
+            top: auto !important;
+            transform: none !important;
+            opacity: 1 !important;
+            z-index: auto !important;
+            flex: 0 0 auto;
+            scroll-snap-align: center;
+          }
+
+          .sc-brand-badge {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+          }
+
+          .sc-brand-logo {
+            width: 36px;
+            height: 36px;
+          }
         }
       `}</style>
 
-      <div
-        style={{
-          textAlign: 'center',
-          marginBottom: 48,
-          padding: '0 40px',
-          position: 'relative',
-          zIndex: 20,
-        }}
-      >
+      <div className="sc-shell">
         <div
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: '0.15em',
-            textTransform: 'uppercase',
-            color: 'var(--brand-red)',
-            marginBottom: 14,
-          }}
-        >
-          <span style={{ width: 24, height: 2, background: 'var(--brand-red)', borderRadius: 2 }} />
-          Gaming Gear
-          <span style={{ width: 24, height: 2, background: 'var(--brand-red)', borderRadius: 2 }} />
-        </div>
-
-        <h2
-          style={{
-            fontSize: 'clamp(28px, 4vw, 44px)',
-            fontWeight: 900,
-            letterSpacing: '-0.04em',
-            color: 'var(--foreground)',
-            margin: '0 0 8px',
-            lineHeight: 1.1,
-          }}
-        >
-          Premium Accessories
-        </h2>
-
-        <p
-          style={{
-            fontSize: 14,
-            color: 'var(--text-dim)',
-            margin: 0,
-            maxWidth: 460,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            lineHeight: 1.6,
-          }}
-        >
-          Explore top-tier peripherals from the world&apos;s leading gaming brands
-        </p>
-      </div>
-
-      <div style={{ position: 'relative', width: '100%', height: 430, marginBottom: 64 }}>
-        <button
-          className="sc-nav-btn"
-          onClick={() => switchProduct((centerProductIndex - 1 + products.length) % products.length)}
-          style={{ left: 40, top: '50%', transform: 'translateY(-50%)' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <button
-          className="sc-nav-btn"
-          onClick={() => switchProduct((centerProductIndex + 1) % products.length)}
-          style={{ right: 40, top: '50%', transform: 'translateY(-50%)' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </button>
-
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          {products.map((product, i) => {
-            const position = getProductPosition(i)
-            const isCenter = position === 0
-
-            return (
-              <div key={product.id} style={getProductCardStyle(i)} onClick={() => !isCenter && switchProduct(i)}>
-                <div className={`sc-product-card ${isCenter ? 'center-card' : ''}`}>
-                  <div className="sc-product-img-wrap">
-                    <img src={product.image} alt={product.name} />
-                    <span className="sc-product-category-tag">{product.category}</span>
-                  </div>
-
-                  <div className="sc-product-info">
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: 'var(--text-dim)',
-                        fontWeight: 700,
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {currentBrand.name}
-                    </div>
-
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: isCenter ? 16 : 14,
-                        fontWeight: 800,
-                        color: 'var(--foreground)',
-                        lineHeight: 1.4,
-                        letterSpacing: '-0.02em',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {product.name}
-                    </p>
-
-                    <div
-                      style={{
-                        marginTop: 'auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        paddingTop: 10,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: isCenter ? 22 : 18,
-                          fontWeight: 900,
-                          color: 'var(--foreground)',
-                          letterSpacing: '-0.04em',
-                        }}
-                      >
-                        DTN {product.price}
-                      </span>
-
-                      {isCenter && (
-                        <Link
-                          href={`/product-page/${product.id}`}
-                          style={{
-                            background: 'var(--brand-red)',
-                            color: '#fff',
-                            border: 'none',
-                            padding: '10px 18px',
-                            borderRadius: 12,
-                            fontSize: 13,
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: '0 4px 12px rgba(255,40,0,0.2)',
-                            fontFamily: "'Plus Jakarta Sans', sans-serif",
-                            textDecoration: 'none',
-                          }}
-                        >
-                          View Product +
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        <div
-          style={{
-            position: 'absolute',
-            bottom: -30,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: 8,
-            zIndex: 20,
-          }}
-        >
-          {products.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => switchProduct(i)}
-              style={{
-                width: i === centerProductIndex ? 28 : 8,
-                height: 8,
-                borderRadius: 4,
-                border: 'none',
-                background: i === centerProductIndex ? 'var(--brand-red)' : 'var(--border)',
-                cursor: 'pointer',
-                transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                padding: 0,
-              }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div style={{ position: 'relative', width: '100%', height: 350 }}>
-        <svg
-          viewBox="0 0 1400 350"
-          preserveAspectRatio="none"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-          }}
-        >
-          <defs>
-            <linearGradient id="scStroke" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="rgba(255,40,0,0)" />
-              <stop offset="25%" stopColor="rgba(255,40,0,0.16)" />
-              <stop offset="50%" stopColor="rgba(255,40,0,0.28)" />
-              <stop offset="75%" stopColor="rgba(255,40,0,0.16)" />
-              <stop offset="100%" stopColor="rgba(255,40,0,0)" />
-            </linearGradient>
-          </defs>
-
-          <ellipse className="sc-stage-fill" cx="700" cy="350" rx="730" ry="325" />
-          <ellipse className="sc-stage-stroke" cx="700" cy="350" rx="730" ry="325" fill="none" stroke="url(#scStroke)" strokeWidth="1.5" />
-          <ellipse className="sc-stage-inner-stroke" cx="700" cy="356" rx="610" ry="275" fill="none" strokeWidth="0.5" />
-          <ellipse className="sc-stage-inner-stroke" cx="700" cy="362" rx="490" ry="224" fill="none" strokeWidth="0.5" />
-
-          {[...Array(9)].map((_, i) => (
-            <line
-              key={i}
-              x1={200 + i * 125}
-              y1="56"
-              x2={200 + i * 125}
-              y2="350"
-              stroke="rgba(255,40,0,0.02)"
-              strokeWidth="0.5"
-            />
-          ))}
-        </svg>
-
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 36,
-            left: 0,
-            right: 0,
-            height: 300,
-            pointerEvents: 'none',
+            textAlign: 'center',
+            marginBottom: 34,
+            padding: '0 8px',
+            position: 'relative',
+            zIndex: 2,
           }}
         >
           <div
             style={{
-              position: 'relative',
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              pointerEvents: 'auto',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: 'var(--brand-red)',
+              marginBottom: 14,
             }}
           >
-            {brands.map((brand, i) => {
-              const position = getBrandPosition(i)
-              const absPos = Math.abs(position)
-              const isCenter = position === 0
-              const angleRad = ((position * 20) * Math.PI) / 180
-              const arcRadius = 360
-              const xOffset = Math.sin(angleRad) * arcRadius
-              const yOffset = (1 - Math.cos(angleRad)) * arcRadius * 0.58
+            <span style={{ width: 26, height: 2, background: 'var(--brand-red)', borderRadius: 999 }} />
+            Gaming Gear
+            <span style={{ width: 26, height: 2, background: 'var(--brand-red)', borderRadius: 999 }} />
+          </div>
+
+          <h2
+            style={{
+              fontSize: 'clamp(30px, 4.2vw, 46px)',
+              fontWeight: 900,
+              letterSpacing: '-0.05em',
+              color: 'var(--foreground)',
+              margin: '0 0 10px',
+              lineHeight: 1.05,
+            }}
+          >
+            Premium Accessories
+          </h2>
+
+          <p
+            style={{
+              fontSize: 14,
+              color: 'var(--text-dim)',
+              margin: 0,
+              maxWidth: 560,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              lineHeight: 1.65,
+            }}
+          >
+            Browse each brand on the arc below and bring its gear into focus with one oversized product in the center.
+          </p>
+        </div>
+
+        <div className="sc-stage">
+          <div className={`sc-products-stage ${productFade === 'out' ? 'fade-out' : ''}`}>
+            {visibleProducts.map(({ product, offset }) => {
+              const isFeatured = offset === 0
+              const absOffset = Math.abs(offset)
+              const translateX = offset * 220
+              const translateY = isFeatured ? 0 : absOffset === 1 ? 38 : 66
+              const scale = isFeatured ? 1 : absOffset === 1 ? 0.9 : 0.78
+              const opacity = isFeatured ? 1 : absOffset === 1 ? 0.88 : 0.62
+              const zIndex = isFeatured ? 5 : 5 - absOffset
 
               return (
-                <div
-                  key={brand.id}
-                  style={{
-                    position: 'absolute',
-                    left: '50%',
-                    bottom: 12,
-                    transform: `translateX(calc(-50% + ${xOffset}px)) translateY(${-yOffset}px) scale(${isCenter ? 1.1 : absPos === 1 ? 0.9 : 0.74})`,
-                    zIndex: isCenter ? 10 : 5 - absPos,
-                    opacity: absPos > 2 ? 0.18 : 1,
-                    transition: 'all 0.65s cubic-bezier(0.16, 1, 0.3, 1)',
-                    pointerEvents: absPos > 2 ? 'none' : 'auto',
+                <Link
+                  key={`${currentBrand.id}-${product.id}-${offset}`}
+                  href={`/product-page/${product.id}`}
+                  className={`sc-product-link ${isFeatured ? 'featured' : ''}`}
+                  onClick={(event) => {
+                    if (!isFeatured) {
+                      event.preventDefault()
+                      setActiveProductIndex(products.findIndex((item) => item.id === product.id))
+                    }
                   }}
-                  onClick={() => switchBrand(i)}
+                  style={{
+                    transform: `translateX(calc(-50% + ${translateX}px)) translateY(${translateY}px) scale(${scale})`,
+                    opacity,
+                    zIndex,
+                    filter: isFeatured ? 'none' : 'saturate(0.88)',
+                  }}
                 >
-                  <div className={`sc-brand-pill ${isCenter ? 'active' : ''}`}>
-                    {brand.logo ? (
-                      <img src={brand.logo} alt={brand.name} className="sc-brand-logo" />
-                    ) : (
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 900,
-                          letterSpacing: '0.08em',
-                          color: isCenter ? 'var(--foreground)' : 'var(--text-dim)',
-                        }}
-                      >
-                        {brand.name.slice(0, 2).toUpperCase()}
-                      </span>
-                    )}
-                    <span className="sc-brand-name">{brand.name}</span>
-                    {isCenter && (
-                      <span
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          background: 'var(--brand-red)',
-                          animation: 'scPulse 2s ease-in-out infinite',
-                          flexShrink: 0,
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
+                  <article className="sc-product-card">
+                    <div className="sc-product-media">
+                      <img className="sc-product-image" src={product.image} alt={product.name} />
+                      <span className="sc-product-chip">{product.category}</span>
+                    </div>
+
+                    <div className="sc-product-content">
+                      <div className="sc-product-kicker">{product.sku || currentBrand.name}</div>
+                      <h3 className="sc-product-title">{product.name}</h3>
+
+                      {product.description && <p className="sc-product-desc">{product.description}</p>}
+
+                      <div className="sc-product-footer">
+                        <span className="sc-price">TND {product.price.toFixed(2)}</span>
+
+                        <button
+                          className="sc-add-button"
+                          disabled={product.stock === 0}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            addItem(product.id, 1, {
+                              productId: product.id,
+                              name: product.name,
+                              price: product.price,
+                              imageUrl: product.image,
+                              sku: product.sku,
+                            })
+                          }}
+                        >
+                          {product.stock === 0 ? 'Out of Stock' : 'Add to Bag +'}
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
               )
             })}
           </div>
+
+          <div className="sc-brand-ring">
+            <svg className="sc-ring-svg" viewBox="0 0 1000 360" preserveAspectRatio="none" aria-hidden="true">
+              <path
+                d="M120 78C252 262 748 262 880 78"
+                fill="none"
+                stroke="rgba(255,40,0,0.18)"
+                strokeWidth="2"
+                strokeDasharray="6 10"
+              />
+              <path
+                d="M190 60C308 210 692 210 810 60"
+                fill="none"
+                stroke="rgba(255,40,0,0.08)"
+                strokeWidth="1.5"
+              />
+            </svg>
+
+            {brands.map((brand, index) => {
+              const offset = getCircularOffset(index, safeBrandIndex, brands.length)
+              const brandStyle = getBrandArcStyle(offset, brands.length)
+              const isActive = index === safeBrandIndex
+
+              return (
+                <button
+                  key={brand.id}
+                  type="button"
+                  className={`sc-brand-button ${isActive ? 'active' : ''}`}
+                  style={brandStyle}
+                  onClick={() => switchBrand(index)}
+                  aria-pressed={isActive}
+                  aria-label={`Show ${brand.name} products`}
+                >
+                  <span className="sc-brand-badge">
+                    {brand.logo ? (
+                      <img className="sc-brand-logo" src={brand.logo} alt={brand.name} />
+                    ) : (
+                      <span className="sc-brand-fallback">{brand.name.charAt(0)}</span>
+                    )}
+                  </span>
+                  <span className="sc-brand-name">{brand.name}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {featureProduct && (
+            <div className="sc-brand-meta">
+              <strong>{currentBrand.name}</strong>
+              <span className="sc-brand-meta-dot" />
+              <span>{products.length} products in spotlight</span>
+              <span className="sc-brand-meta-dot" />
+              <span>Tap a side product to bring it to the center</span>
+            </div>
+          )}
         </div>
-
-        <button className="sc-nav-btn" onClick={() => switchBrand((activeBrandIndex - 1 + brands.length) % brands.length)} style={{ left: '8%', bottom: 66 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <button className="sc-nav-btn" onClick={() => switchBrand((activeBrandIndex + 1) % brands.length)} style={{ right: '8%', bottom: 66 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </button>
       </div>
     </section>
   )
