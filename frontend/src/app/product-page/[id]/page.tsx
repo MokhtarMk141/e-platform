@@ -7,7 +7,7 @@ import { ProductService } from '@/services/product.service'
 import { Product } from '@/types/product.types'
 import { useCart } from '@/hooks/useCart'
 import MegaMenu from '../../mega-menu/megaMenu'
-
+//hello worlddddd
 const FONTS = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
 `
