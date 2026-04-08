@@ -8,6 +8,7 @@ const controller = new ProductController();
 
 router.get("/", controller.getAll);
 router.post("/upload-image", authMiddleware, checkRole(["ADMIN"]), controller.uploadImage);
+router.post("/generate-content", authMiddleware, checkRole(["ADMIN"]), controller.generateContent);
 router.get("/:id", controller.getById);
 
 // Write operations restricted to ADMIN

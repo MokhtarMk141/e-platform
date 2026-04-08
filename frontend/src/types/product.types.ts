@@ -62,6 +62,14 @@ export interface ProductResponse {
   data: Product
 }
 
+export interface GeneratedProductContentResponse {
+  success: boolean
+  message: string
+  data: {
+    description: string
+  }
+}
+
 export interface ProductListMeta {
   total: number
   page: number

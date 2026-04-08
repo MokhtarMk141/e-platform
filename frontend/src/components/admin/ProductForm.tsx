@@ -29,6 +29,8 @@ const icons = {
   chevronLeft: "M15 18l-6-6 6-6",
   upload: "M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12",
   save: "M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z M17 21v-8H7v8 M7 3v5h8V3",
+  sparkle:
+    "M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3 M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15",
 };
 
 interface ProductFormProps {
@@ -46,6 +48,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
   const [fetchingCategories, setFetchingCategories] = useState(true);
   const [fetchingSubcategories, setFetchingSubcategories] = useState(true);
   const [fetchingBrands, setFetchingBrands] = useState(true);
+  const [generatingContent, setGeneratingContent] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(initialData?.imageUrl || "");
 
@@ -210,6 +213,42 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     }
   };
 
+  const handleGenerateContent = async () => {
+    if (!formData.name.trim()) {
+      alert("Enter the product name first.");
+      return;
+    }
+
+    setGeneratingContent(true);
+
+    try {
+      const selectedCategory = categories.find((category) => category.id === formData.categoryId);
+      const selectedSubcategory = subcategories.find((subcategory) => subcategory.id === formData.subcategoryId);
+      const selectedBrand = brands.find((brand) => brand.id === formData.brandId);
+
+      const response = await ProductService.generateContent({
+        name: formData.name.trim(),
+        sku: formData.sku.trim() || undefined,
+        categoryName: selectedCategory?.name,
+        subcategoryName: selectedSubcategory?.name,
+        brandName: selectedBrand?.name,
+        price: formData.price ? Number.parseFloat(formData.price) : undefined,
+        stock: formData.stock ? Number.parseInt(formData.stock, 10) : undefined,
+      });
+
+      setFormData((current) => ({
+        ...current,
+        description: response.data.description,
+      }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to generate content";
+      alert(message);
+      console.error(err);
+    } finally {
+      setGeneratingContent(false);
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -236,6 +275,15 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         }
         .btn-save:hover:not(:disabled) { background: var(--brand-red-hover); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,40,0,0.32); }
         .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 9px 16px; background: var(--surface); color: var(--foreground);
+          border: 1px solid var(--border); border-radius: 10px; font-size: 13.5px; font-weight: 700;
+          font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+          transition: border-color 0.2s, background 0.2s, transform 0.2s;
+        }
+        .btn-secondary:hover:not(:disabled) { border-color: var(--brand-red); color: var(--brand-red); transform: translateY(-1px); }
+        .btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
         .form-grid { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
         .form-card {
           background: var(--surface);
@@ -290,9 +338,19 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
               <h1 className="page-title">{isEdit ? "Edit Product" : "Add New Product"}</h1>
               <p className="page-sub">{isEdit ? `Update details for ${initialData?.name}` : "Create a new catalog product"}</p>
             </div>
-            <button className="btn-save" type="submit" disabled={loading || uploadingImage}>
-              <Icon d={icons.save} size={15} /> {loading ? "Saving..." : uploadingImage ? "Uploading..." : isEdit ? "Update Product" : "Save Product"}
-            </button>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                className="btn-secondary"
+                type="button"
+                onClick={handleGenerateContent}
+                disabled={generatingContent || loading || uploadingImage}
+              >
+                <Icon d={icons.sparkle} size={15} /> {generatingContent ? "Generating..." : "AI Fill Description"}
+              </button>
+              <button className="btn-save" type="submit" disabled={loading || uploadingImage || generatingContent}>
+                <Icon d={icons.save} size={15} /> {loading ? "Saving..." : uploadingImage ? "Uploading..." : isEdit ? "Update Product" : "Save Product"}
+              </button>
+            </div>
           </div>
 
           <div className="form-grid">

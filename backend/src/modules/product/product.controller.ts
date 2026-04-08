@@ -3,8 +3,10 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { ProductService } from "./product.service";
+import { ProductContentService } from "./product-content.service";
 import { asyncHandler } from "../../utils/async-handler";
 import { createProductSchema } from "./dto/create-product.dto";
+import { generateProductContentSchema } from "./dto/generate-product-content.dto";
 import { updateProductSchema } from "./dto/update-product.dto";
 import { sendSuccess } from "../../utils/api-response";
 import { ProductSortBy } from "./product.repository";
@@ -14,9 +16,11 @@ const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export class ProductController {
   private productService: ProductService;
+  private productContentService: ProductContentService;
 
   constructor() {
     this.productService = new ProductService();
+    this.productContentService = new ProductContentService();
   }
 
   private parseNumberArray(value: unknown): Array<number | undefined> | undefined {
@@ -138,6 +142,27 @@ export class ProductController {
       statusCode: 201,
       message: "Image uploaded successfully",
       data: { imageUrl },
+    });
+  });
+
+  generateContent = asyncHandler(async (req: Request, res: Response) => {
+    const dto = generateProductContentSchema.parse({
+      ...req.body,
+      price:
+        req.body.price !== undefined && req.body.price !== ""
+          ? Number(req.body.price)
+          : undefined,
+      stock:
+        req.body.stock !== undefined && req.body.stock !== ""
+          ? Number(req.body.stock)
+          : undefined,
+    });
+
+    const generated = this.productContentService.generateDescription(dto);
+
+    return sendSuccess(res, {
+      message: "Product content generated successfully",
+      data: generated,
     });
   });
 

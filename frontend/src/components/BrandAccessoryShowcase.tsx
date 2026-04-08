@@ -302,6 +302,18 @@ export default function BrandAccessoryShowcase() {
             transform 0.35s cubic-bezier(0.16,1,0.3,1);
         }
 
+        @keyframes basPop {
+          0% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-10px) scale(1.15); }
+          100% { transform: translateY(-5px) scale(1.08); }
+        }
+
+        @keyframes basPulse {
+          0% { box-shadow: 0 0 0 0 rgba(255,40,0,0.4); }
+          70% { box-shadow: 0 0 0 15px rgba(255,40,0,0); }
+          100% { box-shadow: 0 0 0 0 rgba(255,40,0,0); }
+        }
+
         .bas-products.fade-out {
           opacity: 0;
           transform: translateY(16px);
@@ -309,73 +321,53 @@ export default function BrandAccessoryShowcase() {
 
         .bas-product-link {
           position: absolute;
-          top: 20px;
+          width: 320px;
           left: 50%;
-          width: min(32vw, 280px);
+          top: 40px;
           text-decoration: none;
           color: inherit;
-          cursor: pointer;
-          transition:
-            transform 0.55s cubic-bezier(0.16,1,0.3,1),
-            opacity 0.4s ease,
-            filter 0.4s ease;
+          transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .bas-product-card {
           height: 100%;
           min-height: 380px;
-          border-radius: 24px;
-          border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
-          background:
-            linear-gradient(180deg,
-              color-mix(in srgb, var(--background) 98%, transparent) 0%,
-              color-mix(in srgb, var(--surface) 98%, transparent) 100%);
+          border-radius: 20px;
+          border: 1px solid var(--border);
+          background: var(--background);
           overflow: hidden;
-          box-shadow:
-            0 20px 50px rgba(0,0,0,0.10),
-            inset 0 1px 0 rgba(255,255,255,0.06);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
           display: flex;
           flex-direction: column;
-          transition:
-            transform 0.45s cubic-bezier(0.16,1,0.3,1),
+          transition: 
+            transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
             box-shadow 0.3s ease,
             border-color 0.3s ease;
         }
 
         .bas-product-link.featured .bas-product-card {
-          box-shadow:
-            0 30px 70px rgba(255,40,0,0.12),
-            0 10px 30px rgba(0,0,0,0.12),
-            inset 0 1px 0 rgba(255,255,255,0.08);
-          border-color: rgba(255,40,0,0.20);
+          box-shadow: 
+            0 20px 40px rgba(0,0,0,0.12),
+            0 4px 12px rgba(255,40,0,0.08);
+          border-color: var(--brand-red);
         }
 
         .bas-product-link:hover .bas-product-card {
-          border-color: rgba(255,40,0,0.45);
-          box-shadow:
-            0 30px 60px rgba(255,40,0,0.16),
-            0 10px 30px rgba(0,0,0,0.12);
+          border-color: var(--brand-red);
+          box-shadow: 
+            0 20px 40px rgba(0,0,0,0.12),
+            0 4px 12px rgba(255,40,0,0.08);
         }
 
         /* Product Image */
         .bas-product-media {
           position: relative;
-          height: 200px;
-          padding: 18px;
+          height: 220px;
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 20px;
-          margin: 16px 16px 0;
+          background: var(--surface);
           overflow: hidden;
-          background:
-            radial-gradient(circle at 50% 20%, rgba(255,40,0,0.12), transparent 58%),
-            linear-gradient(180deg,
-              color-mix(in srgb, var(--surface) 90%, transparent) 0%,
-              color-mix(in srgb, var(--background) 100%, transparent) 100%);
-          box-shadow:
-            inset 0 0 0 1px color-mix(in srgb, var(--border) 75%, transparent),
-            0 12px 28px rgba(0,0,0,0.08);
         }
 
         .bas-product-link.featured .bas-product-media {
@@ -430,11 +422,12 @@ export default function BrandAccessoryShowcase() {
 
         .bas-product-name {
           margin: 0;
-          font-size: 15px;
+          font-size: 14px;
           font-weight: 800;
-          line-height: 1.35;
           color: var(--foreground);
-          letter-spacing: -0.03em;
+          line-height: 1.4;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          letter-spacing: -0.02em;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -468,28 +461,23 @@ export default function BrandAccessoryShowcase() {
         .bas-price {
           font-size: 18px;
           font-weight: 900;
-          letter-spacing: -0.04em;
           color: var(--foreground);
-        }
-
-        .bas-product-link.featured .bas-price {
-          font-size: 22px;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          letter-spacing: -0.04em;
         }
 
         .bas-add-btn {
-          border: none;
-          border-radius: 12px;
-          padding: 10px 16px;
-          background: linear-gradient(135deg, #ff2800 0%, #ff5b36 100%);
+          background: var(--brand-red);
           color: #fff;
+          border: none;
+          padding: 8px 14px;
+          border-radius: 10px;
           font-size: 12px;
           font-weight: 800;
           cursor: pointer;
-          box-shadow: 0 8px 20px rgba(255,40,0,0.22);
-          transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease;
           font-family: 'Plus Jakarta Sans', sans-serif;
+          transition: all 0.2s;
+          box-shadow: 0 4px 12px rgba(255,40,0,0.2);
         }
 
         .bas-add-btn:hover {
@@ -512,7 +500,7 @@ export default function BrandAccessoryShowcase() {
           flex-wrap: wrap;
           justify-content: center;
           gap: 18px;
-          margin-top: 22px;
+          margin-top: 80px;
           padding: 0 24px 8px;
         }
 
@@ -548,72 +536,61 @@ export default function BrandAccessoryShowcase() {
           transform: scale(1);
         }
 
-        /* Brand Badge Circle */
+        /* Brand Badge (Interactive Transition) */
         .bas-brand-badge {
-          width: 70px;
-          height: 70px;
-          border-radius: 22px;
-          border: 1.5px solid color-mix(in srgb, var(--border) 76%, transparent);
-          background:
-            linear-gradient(180deg,
-              color-mix(in srgb, var(--surface) 92%, rgba(255,255,255,0.04)) 0%,
-              color-mix(in srgb, var(--background) 96%, transparent) 100%);
-          box-shadow:
-            0 10px 24px rgba(0,0,0,0.08),
-            inset 0 1px 0 rgba(255,255,255,0.06);
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          border: 1.5px solid rgba(255,255,255,0.15);
+          background: rgba(255,40,0,0.12); /* Default muted red */
+          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
           display: flex;
           align-items: center;
           justify-content: center;
           overflow: hidden;
           position: relative;
-          transition:
-            transform 0.4s cubic-bezier(0.16,1,0.3,1),
-            border-color 0.35s ease,
-            box-shadow 0.35s ease,
-            background 0.35s ease;
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .bas-brand-badge::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.06), transparent 40%),
-            radial-gradient(circle at 80% 100%, rgba(255,40,0,0.06), transparent 30%);
-          pointer-events: none;
+        .dark .bas-brand-badge {
+          background: rgba(255,40,0,0.08);
+          border-color: rgba(255,255,255,0.1);
         }
 
         .bas-brand-btn:hover .bas-brand-badge {
-          transform: translateY(-2px);
-          border-color: rgba(255,40,0,0.25);
-          box-shadow:
-            0 14px 28px rgba(0,0,0,0.12),
-            0 0 0 4px rgba(255,40,0,0.06);
+          transform: translateY(-4px);
+          border-color: rgba(255,40,0,0.4);
+          box-shadow: 
+            0 12px 28px rgba(0,0,0,0.12),
+            0 0 0 4px rgba(255,40,0,0.08);
         }
 
         .bas-brand-btn.active .bas-brand-badge {
-          transform: translateY(-3px) scale(1.06);
-          border-color: rgba(255,40,0,0.45);
-          background:
-            linear-gradient(180deg,
-              color-mix(in srgb, var(--surface) 88%, rgba(255,40,0,0.06)) 0%,
-              color-mix(in srgb, var(--background) 92%, rgba(255,40,0,0.04)) 100%);
-          box-shadow:
-            0 16px 32px rgba(255,40,0,0.16),
-            0 0 0 6px rgba(255,40,0,0.10),
-            0 0 40px rgba(255,40,0,0.08);
+          background: var(--brand-red); /* Vibrant Red when selected */
+          border-color: rgba(255,255,255,0.3);
+          box-shadow: 
+            0 20px 40px rgba(255,40,0,0.2),
+            0 0 0 5px rgba(255,40,0,0.1);
+          animation: basPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both, basPulse 1.5s ease-out infinite;
         }
 
+        .bas-brand-btn.active .bas-brand-logo {
+          transform: scale(1.15);
+        }
 
         .bas-brand-logo {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           object-fit: contain;
           position: relative;
           z-index: 1;
-          transition:
-            transform 0.35s ease,
-            filter 0.35s ease;
+          /* Red & White Look: Invert to pure white for perfect contrast on red background */
+          filter: brightness(0) invert(1);
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dark .bas-brand-logo {
+          filter: brightness(0) invert(1);
         }
 
         .bas-brand-btn:hover .bas-brand-logo {
@@ -731,7 +708,7 @@ export default function BrandAccessoryShowcase() {
           display: flex;
           justify-content: center;
           gap: 8px;
-          margin-top: 6px;
+          margin-top: 20px;
         }
 
         .bas-dot {
@@ -878,10 +855,10 @@ export default function BrandAccessoryShowcase() {
             {visibleProducts.map(({ product, offset }) => {
               const isFeatured = offset === 0
               const absOffset = Math.abs(offset)
-              const translateX = offset * 230
-              const translateY = isFeatured ? 0 : absOffset === 1 ? 40 : 72
-              const scale = isFeatured ? 1 : absOffset === 1 ? 0.88 : 0.75
-              const opacity = isFeatured ? 1 : absOffset === 1 ? 0.85 : 0.55
+              const translateX = offset * 340 // Increased spacing for flat layout
+              const translateY = 0
+              const scale = isFeatured ? 1 : 0.94
+              const opacity = isFeatured ? 1 : 0.7
               const zIndex = isFeatured ? 5 : 5 - absOffset
 
               return (
@@ -899,7 +876,7 @@ export default function BrandAccessoryShowcase() {
                     transform: `translateX(calc(-50% + ${translateX}px)) translateY(${translateY}px) scale(${scale})`,
                     opacity,
                     zIndex,
-                    filter: isFeatured ? 'none' : `saturate(0.85) brightness(${absOffset === 1 ? 0.95 : 0.85})`,
+                    filter: isFeatured ? 'none' : `saturate(0.5) brightness(${absOffset === 1 ? 0.95 : 0.85}) blur(1px)`,
                   }}
                 >
                   <article className="bas-product-card">
@@ -912,7 +889,7 @@ export default function BrandAccessoryShowcase() {
                       <h3 className="bas-product-name">{product.name}</h3>
                       {product.description && <p className="bas-product-desc">{product.description}</p>}
                       <div className="bas-product-footer">
-                        <span className="bas-price">TND {product.price.toFixed(2)}</span>
+                        <span className="bas-price">DTN {product.price.toFixed(2)}</span>
                         <button
                           className="bas-add-btn"
                           disabled={product.stock === 0}

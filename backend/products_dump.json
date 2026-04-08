@@ -1,0 +1,102 @@
+[
+  {
+    "id": "cmm1w9cpp002epr3s7rnrsa00",
+    "name": "Seagate Barracuda 4TB",
+    "categoryId": "cmm1v54tx0009pr3shd94o9gu"
+  },
+  {
+    "id": "cmm1w8u9f002cpr3s4oljcvzz",
+    "name": "Samsung 990 Pro 2TB",
+    "categoryId": "cmm1v54tx0009pr3shd94o9gu"
+  },
+  {
+    "id": "cmm1w58oa002apr3sat58wcrr",
+    "name": "AMD Ryzen 9 9950X",
+    "categoryId": "cmm1v4hlo0005pr3sgbrb98m0"
+  },
+  {
+    "id": "cmm1w2urw0026pr3snj5p7r4w",
+    "name": "Intel Core Ultra 9",
+    "categoryId": "cmm1v4hlo0005pr3sgbrb98m0"
+  },
+  {
+    "id": "cmm1w0uts0024pr3sib90zh7e",
+    "name": "EVGA SuperNOVA 750 G6",
+    "categoryId": "cmm1v5alm000apr3snqnff737"
+  },
+  {
+    "id": "cmm1vz2200022pr3srinxg6ao",
+    "name": "Corsair RM850x",
+    "categoryId": "cmm1v5alm000apr3snqnff737"
+  },
+  {
+    "id": "cmm1vyen60020pr3s506ely3s",
+    "name": "Cooler Master NR200",
+    "categoryId": "cmm1v5l0i000cpr3syvlove4t"
+  },
+  {
+    "id": "cmm1vxpgt001ypr3se9r67c93",
+    "name": "NZXT H7 Flow",
+    "categoryId": "cmm1v5l0i000cpr3syvlove4t"
+  },
+  {
+    "id": "cmm1vx7si001wpr3s0v1xln1p",
+    "name": "Lian Li PC-O11 Dynamic",
+    "categoryId": "cmm1v5l0i000cpr3syvlove4t"
+  },
+  {
+    "id": "cmm1vv5yi001upr3s53japeq9",
+    "name": "Gigabyte X670E AORUS Master",
+    "categoryId": "cmm1v4odz0006pr3svznkvkwg"
+  },
+  {
+    "id": "cmm1vuk1f001spr3sjqj05pnq",
+    "name": "MSI B650M Mortar WiFi",
+    "categoryId": "cmm1v4odz0006pr3svznkvkwg"
+  },
+  {
+    "id": "cmm1vu64n001qpr3sz5ahh11y",
+    "name": "ASUS ROG Strix Z790-E",
+    "categoryId": "cmm1v4odz0006pr3svznkvkwg"
+  },
+  {
+    "id": "cmm1vtp9l001opr3s373xkqz6",
+    "name": "ASUS TUF Gaming VG27AQ",
+    "categoryId": "cmm1v5py0000dpr3srct3v2ce"
+  },
+  {
+    "id": "cmm1vt4kw001mpr3s623uq236",
+    "name": "Samsung Odyssey G8 OLED",
+    "categoryId": "cmm1v5py0000dpr3srct3v2ce"
+  },
+  {
+    "id": "cmm1vs93j001kpr3spd2zh164",
+    "name": "LG UltraGear 27GN950",
+    "categoryId": "cmm1v5py0000dpr3srct3v2ce"
+  },
+  {
+    "id": "cmm1vrm12001ipr3si68r1cv8",
+    "name": "Corsair M65 RGB Ultra",
+    "categoryId": "cmm1v5zrt000fpr3s955iajjj"
+  },
+  {
+    "id": "cmm1vr06d001gpr3sxy4lw80h",
+    "name": "Razer Viper Ultimate",
+    "categoryId": "cmm1v5zrt000fpr3s955iajjj"
+  },
+  {
+    "id": "cmm1vq5n2001epr3shwicgzou",
+    "name": "Logitech G502 X",
+    "categoryId": "cmm1v5zrt000fpr3s955iajjj"
+  },
+  {
+    "id": "cmm1vpjnl001cpr3sf3187f65",
+    "name": "Kingston Fury Beast DDR4 16GB",
+    "categoryId": "cmm1v4u9i0007pr3szojyaamk"
+  },
+  {
+    "id": "cmm1vox8v001apr3snkqf52yt",
+    "name": "Corsair Vengeance DDR5 64GB",
+    "categoryId": "cmm1v4u9i0007pr3szojyaamk"
+  }
+]

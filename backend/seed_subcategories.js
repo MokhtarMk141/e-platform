@@ -106,7 +106,7 @@ const subcategories = [
   { id: 'sub-gaming-mouse', name: 'Gaming Mouse', description: 'High-precision gaming mice.', categoryId: 'cmm1v5l0i000cpr3syvlove4t' },
   { id: 'sub-gaming-headset', name: 'Gaming Headset', description: 'Gaming-focused headsets with immersive sound.', categoryId: 'cmm1v5l0i000cpr3syvlove4t' },
   { id: 'sub-gaming-chair', name: 'Gaming Chair', description: 'Ergonomic chairs designed for gaming setups.', categoryId: 'cmm1v5l0i000cpr3syvlove4t' },
-  { id: 'sub-rgb-lights', 'name': 'RGB Lights', description: 'Decorative RGB lighting for gaming setups.', categoryId: 'cmm1v5l0i000cpr3syvlove4t' },
+  { id: 'sub-rgb-lights', name: 'RGB Lights', description: 'Decorative RGB lighting for gaming setups.', categoryId: 'cmm1v5l0i000cpr3syvlove4t' },
   { id: 'sub-streaming-accessories', name: 'Streaming Accessories', description: 'Accessories for streaming and content creation.', categoryId: 'cmm1v5l0i000cpr3syvlove4t' },
 
   // Office Accessories
@@ -141,11 +141,36 @@ const subcategories = [
 async function main() {
   console.log('🌱 Seeding subcategories...');
   
+  const categoryNames = {
+    'cmlt9st2d0003qk1yrwdfgm8k': 'Computers',
+    'cmm0mbz600002pr51w0x0voa3': 'Laptops',
+    'cmm1v4hlo0005pr3sgbrb98m0': 'PC Components',
+    'cmm1v4odz0006pr3svznkvkwg': 'Monitors',
+    'cmm1v4u9i0007pr3szojyaamk': 'Peripherals',
+    'cmm1v4zpy0008pr3srmq3d7pa': 'Storage Devices',
+    'cmm1v54tx0009pr3shd94o9gu': 'Networking',
+    'cmm1v5alm000apr3snqnff737': 'Laptop Accessories',
+    'cmm1v5fd5000bpr3snungry1w': 'Cables and Adapters',
+    'cmm1v5l0i000cpr3syvlove4t': 'Gaming Accessories',
+    'cmm1v5py0000dpr3srct3v2ce': 'Office Accessories',
+    'cmm1v5upq000epr3sgq7zxxcw': 'Power Solutions',
+    'cmm1v5zrt000fpr3s955iajjj': 'Software',
+    'cmm1v64a4000gpr3sbhcbofiv': 'Accessories'
+  };
+
+  const nameCounts = {};
+  subcategories.forEach(s => { nameCounts[s.name] = (nameCounts[s.name] || 0) + 1; });
+
   for (const sub of subcategories) {
+    let finalName = sub.name;
+    if (nameCounts[sub.name] > 1) {
+      finalName = `${sub.name} (${categoryNames[sub.categoryId]})`;
+    }
+
     await prisma.subcategory.upsert({
       where: { id: sub.id },
-      update: sub,
-      create: sub,
+      update: { ...sub, name: finalName },
+      create: { ...sub, name: finalName },
     });
   }
 

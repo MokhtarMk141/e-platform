@@ -1,6 +1,7 @@
 import { ApiClient } from '@/lib/api-client';
 import {
   ApiProductListResponse,
+  GeneratedProductContentResponse,
   ProductListResponse,
   ProductResponse,
   ProductFilters,
@@ -61,6 +62,18 @@ export class ProductService {
 
   static update(id: string, data: Partial<Product> | FormData): Promise<ProductResponse> {
     return ApiClient.put<ProductResponse>(`/products/${id}`, data)
+  }
+
+  static generateContent(data: {
+    name: string
+    sku?: string
+    categoryName?: string
+    subcategoryName?: string
+    brandName?: string
+    price?: number
+    stock?: number
+  }): Promise<GeneratedProductContentResponse> {
+    return ApiClient.post<GeneratedProductContentResponse>('/products/generate-content', data)
   }
 
   static delete(id: string): Promise<void> {

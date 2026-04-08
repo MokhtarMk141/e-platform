@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
 import { useAuthStore } from '@/hooks/useAuth';
 import CartDrawer from '@/components/CartDrawer';
+import ChatBot from '@/components/ChatBotWidget';
 
 export default function ClientProviders({
     children,
@@ -58,6 +59,7 @@ export default function ClientProviders({
         <>
             {children}
             <CartDrawer />
+            <ChatBot />
         </>
     );
 }
