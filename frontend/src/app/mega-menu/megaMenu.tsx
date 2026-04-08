@@ -67,27 +67,27 @@ const menus = {
     },
   },
 
-  ACCESSOIRES: {
+  ACCESSORIES: {
     sections: [
       {
-        title: "ACCESSOIRES",
+        title: "ACCESSORIES",
         items: [
-          { icon: "mouse", label: "Souris Gamer", desc: "Precision gaming mice and wireless models" },
-          { icon: "keyboard", label: "Claviers Gamer", desc: "Mechanical keyboards for competitive play" },
-          { icon: "headset", label: "Casques Gamer", desc: "Immersive audio headsets and gaming sound" },
-          { icon: "mousepad", label: "Tapis Gamer", desc: "Desk mats and mouse pads for every setup" },
-          { icon: "controller", label: "Manettes - Volants", desc: "Controllers, wheels, and racing gear" },
+          { icon: "mouse", label: "Gaming Mouse", desc: "Precision gaming mice and wireless models" },
+          { icon: "keyboard", label: "Gaming Keyboards", desc: "Mechanical keyboards for competitive play" },
+          { icon: "headset", label: "Gaming Headsets", desc: "Immersive audio headsets and gaming sound" },
+          { icon: "mousepad", label: "Gaming Mousepads", desc: "Desk mats and mouse pads for every setup" },
+          { icon: "controller", label: "Controllers & Wheels", desc: "Controllers, wheels, and racing gear" },
           { icon: "webcam", label: "Webcams", desc: "Streaming and meeting webcams" },
-          { icon: "pack", label: "Packs Gaming", desc: "Accessory bundles for gamers" },
+          { icon: "pack", label: "Gaming Packs", desc: "Accessory bundles for gamers" },
           { icon: "microphone", label: "Microphones", desc: "Voice, streaming, and studio mics" },
-          { icon: "speaker", label: "Haut-parleur PC", desc: "Desktop speakers and compact audio" },
-          { icon: "backpack", label: "Sac a Dos", desc: "Travel bags for laptops and gear" },
-          { icon: "chair", label: "Chaise Gaming", desc: "Ergonomic chairs built for long sessions" },
+          { icon: "speaker", label: "PC Speakers", desc: "Desktop speakers and compact audio" },
+          { icon: "backpack", label: "Backpacks", desc: "Travel bags for laptops and gear" },
+          { icon: "chair", label: "Gaming Chairs", desc: "Ergonomic chairs built for long sessions" },
         ],
       },
     ],
     featured: {
-      badge: "Accessoires",
+      badge: "Accessories",
       title: "Complete your setup",
       desc: "Find the gaming accessories that match your desk, your style, and your play.",
       cta: "Open Product Page",
@@ -95,25 +95,25 @@ const menus = {
     },
   },
 
-  COMPOSANTS: {
+  COMPONENTS: {
     sections: [
       {
-        title: "COMPOSANTS",
+        title: "COMPONENTS",
         items: [
-          { icon: "cpu", label: "Processeur", desc: "Intel Core and AMD Ryzen processors" },
-          { icon: "motherboard", label: "Carte mere", desc: "ATX, mATX, and Mini-ITX motherboards" },
-          { icon: "gpu", label: "Cartes graphiques", desc: "Dedicated GPUs for gaming and creation" },
-          { icon: "ram", label: "Barrettes memoires", desc: "DDR4 and DDR5 memory kits" },
-          { icon: "storage", label: "Stockage HDD / SSD", desc: "Fast SSDs and high-capacity hard drives" },
-          { icon: "case", label: "Boitiers PC", desc: "Cases for airflow, style, and cable routing" },
-          { icon: "psu", label: "Alimentations", desc: "Reliable power supplies for every build" },
-          { icon: "cooling", label: "Refroidissement", desc: "Air cooling, AIOs, and system fans" },
-          { icon: "charger", label: "Chargeur PC Portable", desc: "Laptop chargers and power adapters" },
+          { icon: "cpu", label: "Processors", desc: "Intel Core and AMD Ryzen processors" },
+          { icon: "motherboard", label: "Motherboards", desc: "ATX, mATX, and Mini-ITX motherboards" },
+          { icon: "gpu", label: "Graphics Cards", desc: "Dedicated GPUs for gaming and creation" },
+          { icon: "ram", label: "Memory (RAM)", desc: "DDR4 and DDR5 memory kits" },
+          { icon: "storage", label: "Storage (HDD/SSD)", desc: "Fast SSDs and high-capacity hard drives" },
+          { icon: "case", label: "PC Cases", desc: "Cases for airflow, style, and cable routing" },
+          { icon: "psu", label: "Power Supplies", desc: "Reliable power supplies for every build" },
+          { icon: "cooling", label: "Cooling", desc: "Air cooling, AIOs, and system fans" },
+          { icon: "charger", label: "Laptop Chargers", desc: "Laptop chargers and power adapters" },
         ],
       },
     ],
     featured: {
-      badge: "Composants",
+      badge: "Components",
       title: "Build with the right parts",
       desc: "Explore essential components for upgrades, custom builds, and performance tuning.",
       cta: "Open Product Page",
@@ -140,9 +140,9 @@ const menus = {
   },
 };
 
-const navLinks = ["PC", "ACCESSOIRES", "COMPOSANTS", "Build Guide"];
+const navLinks = ["PC", "ACCESSORIES", "COMPONENTS", "Build Guide"];
 
-type MenuKey = "PC" | "ACCESSOIRES" | "COMPOSANTS" | "Build Guide";
+type MenuKey = "PC" | "ACCESSORIES" | "COMPONENTS" | "Build Guide";
 
 const toCategorySlug = (label: string) =>
   label
