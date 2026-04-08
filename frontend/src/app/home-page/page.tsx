@@ -40,9 +40,6 @@ const getCategoryImage = (n: string) => {
   return categoryImages.default
 }
 
-const getYouTubeEmbedUrl = (videoId: string) =>
-  `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&modestbranding=1&rel=0`
-
 function ProductCard({ product, delay }: { product: any; delay: number }) {
   const [hovered, setHovered] = useState(false)
   const { addItem } = useCart()
@@ -346,13 +343,15 @@ export default function HomePage() {
 
           {/* NVIDIA GeForce RTX — Large left card spanning 2 rows */}
           <div style={{ gridRow: '1/3', borderRadius: 20, position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)', border: '1px solid rgba(118,185,0,0.12)', background: '#0a0a0a' }} className="vit-promo-card" onClick={() => router.push('/product-page?category=gpu')}>
-            <iframe
-              src={getYouTubeEmbedUrl('SRiV0RgHWI0')}
-              title="NVIDIA showcase video"
-              aria-hidden="true"
-              tabIndex={-1}
-              allow="autoplay; encrypted-media; picture-in-picture"
-              style={{ position: 'absolute', inset: '-15%', width: '130%', height: '130%', border: 0, opacity: 0.42, pointerEvents: 'none' }}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: 'url(https://s.yimg.com/ny/api/res/1.2/qIHV9sk.mpiWTwLElXT.wQ--/YXBwaWQ9aGlnaGxhbmRlcjt3PTk2MDtoPTU0MA--/https://media.zenfs.com/en/toms_guide_826/9df500f356761951a2b69aab4b408fe6)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.42,
+              }}
             />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.75) 100%)' }} />
             <div style={{ position: 'absolute', top: -80, right: -60, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(118,185,0,0.2) 0%, transparent 50%)', filter: 'blur(60px)' }} />
@@ -387,13 +386,15 @@ export default function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {/* Intel CPU */}
             <div style={{ borderRadius: 16, position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)', border: '1px solid rgba(0,125,195,0.12)', background: '#0a0a0a' }} className="vit-promo-card" onClick={() => router.push('/product-page?category=cpu')}>
-              <iframe
-                src={getYouTubeEmbedUrl('M6SYADAyz4w')}
-                title="Intel showcase video"
-                aria-hidden="true"
-                tabIndex={-1}
-                allow="autoplay; encrypted-media; picture-in-picture"
-                style={{ position: 'absolute', inset: '-18%', width: '136%', height: '136%', border: 0, opacity: 0.36, pointerEvents: 'none' }}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundImage: 'url(https://static0.xdaimages.com/wordpress/wp-content/uploads/2023/08/intel-core.jpg?w=1200&h=675&fit=crop)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: 0.36,
+                }}
               />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
               <div style={{ position: 'absolute', top: -30, right: -20, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,125,195,0.25) 0%, transparent 50%)', filter: 'blur(30px)' }} />

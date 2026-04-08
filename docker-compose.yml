@@ -64,7 +64,7 @@ services:
         condition: service_healthy
     networks:
       - ecommerce-network
-    command: sh -c "npx prisma generate && npm run dev"
+    command: sh -c "npx prisma generate && npm run prisma:deploy && npm run dev"
 
   frontend:
     build:

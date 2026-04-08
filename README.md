@@ -39,6 +39,8 @@ npx prisma migrate dev
 cd ..
 ```
 
+The Docker backend now runs `prisma migrate deploy` automatically on startup, so existing committed migrations are applied when the container boots. Use `migrate dev` only when creating a new migration during development.
+
 ### 4. Access the application
 
 - Frontend: http://localhost:3000

@@ -19,5 +19,5 @@ COPY . .
 
 EXPOSE 5000
 
-# Generate again at runtime (in case schema changed) and start
-CMD sh -c "npx prisma generate && npm run dev"
+# Generate again, apply pending migrations, and start
+CMD sh -c "npx prisma generate && npm run prisma:deploy && npm run dev"
