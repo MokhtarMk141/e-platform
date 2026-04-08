@@ -100,9 +100,21 @@ export default function HomePage() {
   /* Hero slider for main banner */
   const [heroIdx, setHeroIdx] = useState(0)
   const heroSlides = [
-    { badge: '🔥 Seasonal Deals', title: 'Upgrade Your\nGaming Setup', sub: 'Discover the latest GPUs, processors & accessories at unbeatable prices.', cta: 'Shop Now', link: '/product-page', img: 'https://dlcdnwebimgs.asus.com/gain/9AC8BE01-2A3C-4E58-93E3-FD06B6B51FDF/w717/h525/q87/fwebp' },
-    { badge: '⚡ New Arrivals', title: 'Next-Gen\nComponents', sub: 'Be the first to get the latest CPUs, SSDs, and DDR5 memory kits.', cta: 'Explore', link: '/product-page', img: 'https://www.amd.com/content/dam/amd/en/images/products/processors/ryzen/2505603-ryzen-9-702702-702703.jpg' },
-    { badge: '🤖 AI Builder', title: 'Build Your\nDream PC', sub: 'Let our AI configure the perfect build. Just describe what you need.', cta: 'Build with AI', link: '/build-with-ai', img: 'https://cdn.deepcool.com/public/Global-images/products/Cases/2025/05/CH690_DIGITAL_1.jpg?fm=webp&q=60' },
+  {
+    badge: '🔥 Special Offers',
+    title: 'Best Deals Available',
+    sub: 'Save big on selected components and accessories — limited time only.',
+    cta: 'View Deals',
+    link: '/deals',
+    img: 'https://cdn.originpc.com/img/home/slides/2026/rts-promo-4500x.jpg'} ,
+  {
+    badge: '🎮 Gaming Accessories',
+    title: 'Complete Your Setup',
+    sub: 'Mechanical keyboards, gaming mice, headsets, and monitors for the ultimate experience.',
+    cta: 'Browse Accessories',
+    link: '/accessories',
+    img: 'https://cdn.mos.cms.futurecdn.net/fPt7Rkzp4sXDSLFE3abKxd-1200-80.jpg'
+  },    { badge: '🤖 AI Builder', title: 'Build Your\nDream PC', sub: 'Let our AI configure the perfect build. Just describe what you need.', cta: 'Build with AI', link: '/build-with-ai', img: 'https://dlcdnwebimgs.asus.com/files/media/99466c62-bd9d-4e9b-81d9-e8f2598e49a3/1920_740_2_without%20logo_FR.jpg' },
   ]
   useEffect(() => { const t = setInterval(() => setHeroIdx(p => (p + 1) % heroSlides.length), 5500); return () => clearInterval(t) }, [])
 
@@ -268,26 +280,26 @@ export default function HomePage() {
           <div className="vit-brands-track">{[...logos, ...logos, ...logos, ...logos].map((l, i) => <img key={i} src={l.src} alt={l.alt} className="vit-brand-logo" />)}</div>
         </div>
       </div>
-      {/* ═══════════ FEATURES BAR ═══════════ */}
-      <div className="vit-features">
-        {[
-          { icon: 'M5 12h14M12 5l7 7', title: 'Free Shipping', desc: 'On orders over 500 DTN' },
-          { icon: 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm-1-14v4l3 3', title: '24/7 Support', desc: 'Always here to help' },
-          { icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', title: 'Secure Payment', desc: 'SSL encrypted checkout' },
-          { icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15', title: 'Easy Returns', desc: '30-day return policy' },
-        ].map((f, i) => (
-          <div key={i} className="vit-feat">
-            <div className="vit-feat-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={f.icon} /></svg>
-            </div>
-            <div>
-              <p className="vit-feat-title">{f.title}</p>
-              <p className="vit-feat-desc">{f.desc}</p>
-            </div>
+            {/* ═══════════ CATEGORIES ═══════════ */}
+      <div className="vit-section">
+        <div className="vit-section-header">
+          <div>
+            <div className="vit-section-badge"><span className="vit-section-badge-line" />Shop by Category</div>
+            <h2 className="vit-section-title">Browse Categories</h2>
           </div>
-        ))}
+          <Link href="/product-page" className="vit-view-all">View All <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></Link>
+        </div>
+        <div className="vit-cat-grid">
+          {storefrontCategories.map((cat, i) => (
+            <Link key={cat.id} href={`/product-page?category=${encodeURIComponent(cat.name.toLowerCase().replace(/\s+/g, '-'))}`} className="vit-cat-card" style={{ animation: `fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 60}ms both` }}>
+              <div className="vit-cat-wrap"><div className="vit-cat-inner"><img src={getCategoryImage(cat.name)} alt={cat.name} className="vit-cat-img" /></div></div>
+              <div><div className="vit-cat-name">{cat.name}</div><div className="vit-cat-count">Discover {cat.productCount} Products</div></div>
+            </Link>
+          ))}
+        </div>
       </div>
 
+      <div className="vit-divider"><div className="vit-divider-line" /></div>
       {/* ═══════════ FLASH SALE ═══════════ */}
       <div className="vit-flash">
         <div className="vit-flash-header">
@@ -310,26 +322,7 @@ export default function HomePage() {
       {/* ═══════════ BRAND ACCESSORY SHOWCASE ═══════════ */}
       <BrandAccessoryShowcase />
 
-      {/* ═══════════ CATEGORIES ═══════════ */}
-      <div className="vit-section">
-        <div className="vit-section-header">
-          <div>
-            <div className="vit-section-badge"><span className="vit-section-badge-line" />Shop by Category</div>
-            <h2 className="vit-section-title">Browse Categories</h2>
-          </div>
-          <Link href="/product-page" className="vit-view-all">View All <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></Link>
-        </div>
-        <div className="vit-cat-grid">
-          {storefrontCategories.map((cat, i) => (
-            <Link key={cat.id} href={`/product-page?category=${encodeURIComponent(cat.name.toLowerCase().replace(/\s+/g, '-'))}`} className="vit-cat-card" style={{ animation: `fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 60}ms both` }}>
-              <div className="vit-cat-wrap"><div className="vit-cat-inner"><img src={getCategoryImage(cat.name)} alt={cat.name} className="vit-cat-img" /></div></div>
-              <div><div className="vit-cat-name">{cat.name}</div><div className="vit-cat-count">Discover {cat.productCount} Products</div></div>
-            </Link>
-          ))}
-        </div>
-      </div>
 
-      <div className="vit-divider"><div className="vit-divider-line" /></div>
 
       {/* ═══════════ BRAND SHOWCASE BENTO GRID ═══════════ */}
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '56px 40px 0' }}>
