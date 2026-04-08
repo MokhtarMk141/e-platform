@@ -40,6 +40,9 @@ const getCategoryImage = (n: string) => {
   return categoryImages.default
 }
 
+const getYouTubeEmbedUrl = (videoId: string) =>
+  `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&modestbranding=1&rel=0`
+
 function ProductCard({ product, delay }: { product: any; delay: number }) {
   const [hovered, setHovered] = useState(false)
   const { addItem } = useCart()
@@ -92,7 +95,10 @@ export default function HomePage() {
   const { categories } = useCategories()
   const { products: newestProducts } = useProducts({ sortBy: 'newest', limit: 8 })
   const { products: popularProducts } = useProducts({ sortBy: 'featured', limit: 8 })
-  const storefrontCategories = useMemo(() => categories.filter(c => (c.productCount ?? 0) > 0), [categories])
+  const storefrontCategories = useMemo(
+    () => categories.filter(c => (c.productCount ?? 0) > 0),
+    [categories]
+  )
 
   /* Hero slider for main banner */
   const [heroIdx, setHeroIdx] = useState(0)
@@ -256,6 +262,15 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ═══════════ BRANDS TICKER ═══════════ */}
+      <div className="vit-brands">
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-dim)', margin: 0 }}>Trusted by top brands</p>
+        </div>
+        <div style={{ display: 'flex', overflow: 'hidden' }}>
+          <div className="vit-brands-track">{[...logos, ...logos, ...logos, ...logos].map((l, i) => <img key={i} src={l.src} alt={l.alt} className="vit-brand-logo" />)}</div>
+        </div>
+      </div>
       {/* ═══════════ FEATURES BAR ═══════════ */}
       <div className="vit-features">
         {[
@@ -294,15 +309,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ═══════════ BRANDS TICKER ═══════════ */}
-      <div className="vit-brands">
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-dim)', margin: 0 }}>Trusted by top brands</p>
-        </div>
-        <div style={{ display: 'flex', overflow: 'hidden' }}>
-          <div className="vit-brands-track">{[...logos, ...logos, ...logos, ...logos].map((l, i) => <img key={i} src={l.src} alt={l.alt} className="vit-brand-logo" />)}</div>
-        </div>
-      </div>
 
       {/* ═══════════ BRAND ACCESSORY SHOWCASE ═══════════ */}
       <BrandAccessoryShowcase />
@@ -340,9 +346,16 @@ export default function HomePage() {
 
           {/* NVIDIA GeForce RTX — Large left card spanning 2 rows */}
           <div style={{ gridRow: '1/3', borderRadius: 20, position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)', border: '1px solid rgba(118,185,0,0.12)', background: '#0a0a0a' }} className="vit-promo-card" onClick={() => router.push('/product-page?category=gpu')}>
-            <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1591488320449-011701bb6704?w=900&q=80&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
+            <iframe
+              src={getYouTubeEmbedUrl('SRiV0RgHWI0')}
+              title="NVIDIA showcase video"
+              aria-hidden="true"
+              tabIndex={-1}
+              allow="autoplay; encrypted-media; picture-in-picture"
+              style={{ position: 'absolute', inset: '-15%', width: '130%', height: '130%', border: 0, opacity: 0.42, pointerEvents: 'none' }}
+            />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.75) 100%)' }} />
-            <div style={{ position: 'absolute', top: -80, right: -60, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(118,185,0,0.2) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+            <div style={{ position: 'absolute', top: -80, right: -60, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(118,185,0,0.2) 0%, transparent 50%)', filter: 'blur(60px)' }} />
             <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '50%', background: 'linear-gradient(135deg, transparent 0%, rgba(118,185,0,0.03) 50%, rgba(118,185,0,0.06) 100%)', clipPath: 'polygon(40% 0, 100% 0, 100% 100%, 0% 100%)' }} />
             <div style={{ position: 'relative', zIndex: 3, padding: '40px 36px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
               <span style={{ display: 'inline-flex', fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '5px 14px', borderRadius: 6, marginBottom: 16, background: 'rgba(118,185,0,0.15)', color: '#76b900', border: '1px solid rgba(118,185,0,0.25)', width: 'fit-content' }}>Le Jeu Ultime</span>
@@ -359,7 +372,7 @@ export default function HomePage() {
           <div style={{ borderRadius: 16, position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)', border: '1px solid rgba(237,28,36,0.12)', background: '#0a0a0a' }} className="vit-promo-card" onClick={() => router.push('/product-page?category=gpu')}>
             <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&q=80&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.25 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.7) 100%)' }} />
-            <div style={{ position: 'absolute', top: -40, right: -30, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(237,28,36,0.2) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+            <div style={{ position: 'absolute', top: -40, right: -30, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(237,28,36,0.2) 0%, transparent 50%)', filter: 'blur(40px)' }} />
             <div style={{ position: 'relative', zIndex: 3, padding: '28px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
               <span style={{ display: 'inline-flex', fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 5, marginBottom: 12, background: 'rgba(237,28,36,0.15)', color: '#ed1c24', border: '1px solid rgba(237,28,36,0.25)', width: 'fit-content' }}>Performance Ultime</span>
               <h3 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px', lineHeight: 1.1, color: '#fff', textTransform: 'uppercase' }}>AMD Radeon RX</h3>
@@ -374,9 +387,16 @@ export default function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {/* Intel CPU */}
             <div style={{ borderRadius: 16, position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)', border: '1px solid rgba(0,125,195,0.12)', background: '#0a0a0a' }} className="vit-promo-card" onClick={() => router.push('/product-page?category=cpu')}>
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1555617981-dac3880eac6e?w=400&q=80&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.2 }} />
+              <iframe
+                src={getYouTubeEmbedUrl('M6SYADAyz4w')}
+                title="Intel showcase video"
+                aria-hidden="true"
+                tabIndex={-1}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                style={{ position: 'absolute', inset: '-18%', width: '136%', height: '136%', border: 0, opacity: 0.36, pointerEvents: 'none' }}
+              />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
-              <div style={{ position: 'absolute', top: -30, right: -20, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,125,195,0.25) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+              <div style={{ position: 'absolute', top: -30, right: -20, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,125,195,0.25) 0%, transparent 50%)', filter: 'blur(30px)' }} />
               <div style={{ position: 'relative', zIndex: 3, padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
                 <span style={{ display: 'inline-flex', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 5, marginBottom: 10, background: 'rgba(0,125,195,0.15)', color: '#0071c5', border: '1px solid rgba(0,125,195,0.25)', width: 'fit-content' }}>Intel Inside</span>
                 <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 4px', lineHeight: 1.12, color: '#fff' }}>Intel Core</h3>
@@ -391,7 +411,7 @@ export default function HomePage() {
             <div style={{ borderRadius: 16, position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)', border: '1px solid rgba(237,28,36,0.12)', background: '#0a0a0a' }} className="vit-promo-card" onClick={() => router.push('/product-page?category=cpu')}>
               <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://media.materiel.net/nbo/matnet/buying-guide-page/processeur/processeur-15.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.2 }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
-              <div style={{ position: 'absolute', top: -30, right: -20, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,100,0,0.2) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+              <div style={{ position: 'absolute', top: -30, right: -20, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,100,0,0.2) 0%, transparent 50%)', filter: 'blur(30px)' }} />
               <div style={{ position: 'relative', zIndex: 3, padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
                 <span style={{ display: 'inline-flex', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 5, marginBottom: 10, background: 'rgba(255,100,0,0.12)', color: '#ff6400', border: '1px solid rgba(255,100,0,0.2)', width: 'fit-content' }}>Puissance Au Cœur</span>
                 <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 4px', lineHeight: 1.12, color: '#fff' }}>AMD Ryzen</h3>
@@ -423,8 +443,8 @@ export default function HomePage() {
       {/* ═══════════ AI CTA BANNER ═══════════ */}
       <div className="vit-ai-cta">
         <div className="vit-ai-inner">
-          <div className="vit-ai-orb" style={{ width: 400, height: 400, top: -100, right: -80, background: 'radial-gradient(circle, rgba(255,40,0,0.12) 0%, transparent 70%)', animation: 'pulseGlow 6s ease-in-out infinite' }} />
-          <div className="vit-ai-orb" style={{ width: 300, height: 300, bottom: -60, left: -40, background: 'radial-gradient(circle, rgba(255,120,0,0.08) 0%, transparent 70%)', animation: 'pulseGlow 8s ease-in-out infinite 2s' }} />
+          <div className="vit-ai-orb" style={{ width: 400, height: 400, top: -100, right: -80, background: 'radial-gradient(circle, rgba(255,40,0,0.12) 0%, transparent 50%)', animation: 'pulseGlow 6s ease-in-out infinite' }} />
+          <div className="vit-ai-orb" style={{ width: 300, height: 300, bottom: -60, left: -40, background: 'radial-gradient(circle, rgba(255,120,0,0.08) 0%, transparent 50%)', animation: 'pulseGlow 8s ease-in-out infinite 2s' }} />
           <div style={{ flex: 1, position: 'relative', zIndex: 2 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700, marginBottom: 20, border: '1px solid rgba(255,40,0,0.2)', background: 'rgba(255,40,0,0.08)', color: 'var(--brand-red)' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-red)', animation: 'pulseGlow 2s ease-in-out infinite' }} />AI-Powered

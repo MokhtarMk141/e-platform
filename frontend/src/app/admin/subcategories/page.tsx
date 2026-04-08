@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCategories } from "@/hooks/useCategories";
-import { CategoryService } from "@/services/category.service";
+import { useSubcategories } from "@/hooks/useSubcategories";
+import { SubcategoryService } from "@/services/subcategory.service";
 
 const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
   <svg
@@ -28,52 +28,57 @@ const icons = {
   chevronLeft: "M15 18l-6-6 6-6",
   chevronRight: "M9 18l6-6-6-6",
   sort: "M3 6h18M7 12h10M11 18h2",
-  tag: "M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82zM7 7h.01",
+  layers: "M12 2l9 5-9 5-9-5 9-5zm9 10-9 5-9-5m18 5-9 5-9-5",
 };
 
 const PAGE_SIZE = 8;
 
-export default function CategoriesPage() {
+export default function SubcategoriesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState<"name" | "productCount">("name");
+  const [sortBy, setSortBy] = useState<"name" | "productCount" | "category">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const { categories, loading, refetch } = useCategories();
+  const { subcategories, loading, refetch } = useSubcategories();
 
   const filtered = useMemo(
     () =>
-      [...categories]
-        .filter((category) => category.name.toLowerCase().includes(search.toLowerCase()))
+      [...subcategories]
+        .filter((subcategory) =>
+          [subcategory.name, subcategory.category?.name ?? ""].some((value) =>
+            value.toLowerCase().includes(search.toLowerCase())
+          )
+        )
         .sort((a, b) => {
           const dir = sortDir === "asc" ? 1 : -1;
           if (sortBy === "name") return dir * a.name.localeCompare(b.name);
+          if (sortBy === "category") return dir * (a.category?.name ?? "").localeCompare(b.category?.name ?? "");
           return dir * ((a.productCount || 0) - (b.productCount || 0));
         }),
-    [categories, search, sortBy, sortDir]
+    [search, sortBy, sortDir, subcategories]
   );
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete category "${name}"? This may affect products in this category.`)) {
-      try {
-        await CategoryService.delete(id);
-        refetch();
-      } catch (error) {
-        alert("Failed to delete category");
-        console.error(error);
-      }
-    }
-  };
 
   const handleSort = (col: typeof sortBy) => {
     if (sortBy === col) setSortDir((current) => (current === "asc" ? "desc" : "asc"));
     else {
       setSortBy(col);
       setSortDir("asc");
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete subcategory "${name}"?`)) {
+      try {
+        await SubcategoryService.delete(id);
+        refetch();
+      } catch (error) {
+        alert("Failed to delete subcategory");
+        console.error(error);
+      }
     }
   };
 
@@ -90,87 +95,55 @@ export default function CategoriesPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
-        .gap-page { font-family: 'Plus Jakarta Sans', sans-serif; padding: 32px; flex: 1; min-height: 100vh;}
-        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; flex: 1; transition: border-color 0.2s, box-shadow 0.2s; }
-        .stat-card:hover { border-color: var(--border-strong); box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .gap-page { font-family: 'Plus Jakarta Sans', sans-serif; padding: 32px; flex: 1; min-height: 100vh; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; flex: 1; }
         .stat-label { font-size: 12px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
         .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: var(--foreground); }
         .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 28px 0 20px; }
         .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 400px; }
         .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; }
-        .search-input {
-          width: 100%; padding: 9px 14px 9px 38px;
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: 10px; font-size: 13.5px; color: var(--foreground);
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          transition: border-color 0.2s, box-shadow 0.2s; outline: none; box-sizing: border-box;
-        }
-        .search-input::placeholder { color: var(--text-dim); }
-        .search-input:focus { border-color: var(--brand-red); box-shadow: 0 0 0 3px rgba(255,40,0,0.08); }
-        .btn-add {
-          display: flex; align-items: center; gap: 7px;
-          padding: 9px 18px; background: var(--brand-red); color: #fff;
-          border: none; border-radius: 10px; font-size: 13.5px; font-weight: 700;
-          font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
-          white-space: nowrap; transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-          box-shadow: 0 4px 14px rgba(255,40,0,0.25); letter-spacing: -0.01em;
-        }
-        .btn-add:hover { background: var(--brand-red-hover); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,40,0,0.32); }
+        .search-input { width: 100%; padding: 9px 14px 9px 38px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: 13.5px; color: var(--foreground); outline: none; box-sizing: border-box; }
+        .btn-add { display: flex; align-items: center; gap: 7px; padding: 9px 18px; background: var(--brand-red); color: #fff; border: none; border-radius: 10px; font-size: 13.5px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(255,40,0,0.25); }
         .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
         thead { background: var(--background); border-bottom: 1px solid var(--border); }
-        th {
-          padding: 12px 16px; text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em;
-          text-transform: uppercase; color: var(--text-dim); white-space: nowrap; cursor: pointer; user-select: none;
-        }
-        th:hover { color: var(--foreground); }
+        th { padding: 12px 16px; text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); white-space: nowrap; cursor: pointer; user-select: none; }
         td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
-        tbody tr { transition: background 0.15s; }
-        tbody tr:hover { background: var(--surface-hover); }
         .cat-name { font-weight: 700; color: var(--foreground); font-size: 14px; letter-spacing: -0.01em; }
-        .cat-desc { font-size: 12px; color: var(--text-dim); font-weight: 500; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .action-btn {
-          display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); color: var(--text-muted); cursor: pointer; transition: all 0.2s;
-        }
+        .cat-desc { font-size: 12px; color: var(--text-dim); font-weight: 500; margin-top: 2px; }
+        .action-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
         .action-btn:hover.edit { border-color: var(--brand-red); color: var(--brand-red); background: rgba(255,40,0,0.06); }
         .action-btn:hover.del { border-color: #dc2626; color: #dc2626; background: rgba(220,38,38,0.06); }
         .pagination { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
         .pg-info { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-        .pg-btn {
-          display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); color: var(--text-muted); cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 600;
-        }
-        .pg-btn:hover:not(:disabled) { border-color: var(--brand-red); color: var(--brand-red); }
-        .pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .pg-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); color: var(--text-muted); cursor: pointer; font-size: 13px; font-weight: 600; }
         .pg-btn.active { background: var(--brand-red); border-color: var(--brand-red); color: #fff; }
         .empty { text-align: center; padding: 64px 32px; color: var(--text-muted); }
-        .empty-title { font-size: 16px; font-weight: 700; color: var(--foreground); margin-top: 12px; }
-        .empty-sub { font-size: 13.5px; color: var(--text-muted); margin-top: 6px; }
       `}</style>
 
       <div className="gap-page">
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", margin: 0, color: "var(--foreground)" }}>
-              Categories
+              Subcategories
             </h1>
             <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4, fontWeight: 500 }}>
-              Manage your product categories
+              Manage all subcategories and their mother categories
             </p>
           </div>
-          <button className="btn-add" onClick={() => router.push("/admin/categories/add")}>
+          <button className="btn-add" onClick={() => router.push("/admin/subcategories/add")}>
             <Icon d={icons.plus} size={15} />
-            Add Category
+            Add Subcategory
           </button>
         </div>
 
         <div style={{ display: "flex", gap: 14, marginTop: 24, flexWrap: "wrap" }}>
           <div className="stat-card">
-            <p className="stat-label">Total Categories</p>
-            <p className="stat-value">{categories.length}</p>
-            <p className="stat-sub">Active in store</p>
+            <p className="stat-label">Total Subcategories</p>
+            <p className="stat-value">{subcategories.length}</p>
+            <p className="stat-sub">Across all mother categories</p>
           </div>
         </div>
 
@@ -179,7 +152,7 @@ export default function CategoriesPage() {
             <Icon d={icons.search} size={15} />
             <input
               className="search-input"
-              placeholder="Search categories..."
+              placeholder="Search subcategories or mother category..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -197,14 +170,11 @@ export default function CategoriesPage() {
 
         <div className="table-wrap">
           {loading ? (
-            <div className="empty">
-              <p className="empty-sub">Loading...</p>
-            </div>
+            <div className="empty"><p>Loading...</p></div>
           ) : paginated.length === 0 ? (
             <div className="empty">
-              <Icon d={icons.tag} size={40} />
-              <p className="empty-title">No categories found</p>
-              <p className="empty-sub">Try adjusting your search or add a new one.</p>
+              <Icon d={icons.layers} size={40} />
+              <p>No subcategories found</p>
             </div>
           ) : (
             <>
@@ -212,45 +182,31 @@ export default function CategoriesPage() {
                 <thead>
                   <tr>
                     <th style={{ width: 56 }}>#</th>
-                    <th onClick={() => handleSort("name")}>Name <SortArrow col="name" /></th>
+                    <th onClick={() => handleSort("name")}>Subcategory <SortArrow col="name" /></th>
+                    <th onClick={() => handleSort("category")}>Mother Category <SortArrow col="category" /></th>
                     <th>Description</th>
-                    <th onClick={() => handleSort("productCount")} style={{ textAlign: "right", width: "150px" }}>
-                      Products <SortArrow col="productCount" />
-                    </th>
-                    <th style={{ textAlign: "center", width: "120px" }}>Actions</th>
+                    <th onClick={() => handleSort("productCount")} style={{ textAlign: "right", width: 150 }}>Products <SortArrow col="productCount" /></th>
+                    <th style={{ textAlign: "center", width: 120 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginated.map((cat, idx) => (
-                    <tr key={cat.id}>
+                  {paginated.map((subcategory, idx) => (
+                    <tr key={subcategory.id}>
                       <td style={{ color: "var(--text-dim)", fontWeight: 600, fontSize: 12 }}>
                         {(page - 1) * PAGE_SIZE + idx + 1}
                       </td>
-                      <td>
-                        <div className="cat-name">{cat.name}</div>
-                      </td>
-                      <td>
-                        <div className="cat-desc">{cat.description || "—"}</div>
-                      </td>
+                      <td><div className="cat-name">{subcategory.name}</div></td>
+                      <td><div className="cat-desc">{subcategory.category?.name || "Unassigned"}</div></td>
+                      <td><div className="cat-desc">{subcategory.description || "—"}</div></td>
                       <td style={{ textAlign: "right" }}>
-                        <span style={{ fontWeight: 600, color: "var(--foreground)" }}>
-                          {cat.productCount || 0}
-                        </span>
+                        <span style={{ fontWeight: 600, color: "var(--foreground)" }}>{subcategory.productCount || 0}</span>
                       </td>
                       <td>
                         <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                          <button
-                            className="action-btn edit"
-                            title="Edit"
-                            onClick={() => router.push(`/admin/categories/edit/${cat.id}`)}
-                          >
+                          <button className="action-btn edit" title="Edit" onClick={() => router.push(`/admin/subcategories/edit/${subcategory.id}`)}>
                             <Icon d={icons.edit} size={14} />
                           </button>
-                          <button
-                            className="action-btn del"
-                            title="Delete"
-                            onClick={() => handleDelete(cat.id, cat.name)}
-                          >
+                          <button className="action-btn del" title="Delete" onClick={() => handleDelete(subcategory.id, subcategory.name)}>
                             <Icon d={icons.trash} size={14} />
                           </button>
                         </div>
@@ -259,21 +215,16 @@ export default function CategoriesPage() {
                   ))}
                 </tbody>
               </table>
-
               <div className="pagination">
                 <span className="pg-info">
-                  Showing {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)}-{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} categories
+                  Showing {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)}-{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} subcategories
                 </span>
                 <div style={{ display: "flex", gap: 6 }}>
                   <button className="pg-btn" disabled={page === 1} onClick={() => setPage((current) => current - 1)}>
                     <Icon d={icons.chevronLeft} size={15} />
                   </button>
                   {Array.from({ length: totalPages }, (_, index) => index + 1).map((p) => (
-                    <button
-                      key={p}
-                      className={`pg-btn${p === page ? " active" : ""}`}
-                      onClick={() => setPage(p)}
-                    >
+                    <button key={p} className={`pg-btn${p === page ? " active" : ""}`} onClick={() => setPage(p)}>
                       {p}
                     </button>
                   ))}

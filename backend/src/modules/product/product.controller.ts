@@ -40,6 +40,7 @@ export class ProductController {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
     const categoryId = req.query.categoryId as string | undefined;
+    const subcategoryId = req.query.subcategoryId as string | undefined;
     const minPrice = this.parseNumberArray(req.query.minPrice);
     const maxPrice = this.parseNumberArray(req.query.maxPrice);
     const search = typeof req.query.search === "string" ? req.query.search : undefined;
@@ -49,6 +50,7 @@ export class ProductController {
       page,
       limit,
       categoryId,
+      subcategoryId,
       minPrice,
       maxPrice,
       search,

@@ -1,8 +1,23 @@
 
+export interface CategorySummary {
+  id: string
+  name: string
+}
+
 export interface Category {
   id: string
   name: string
   description: string | null
+  directProductCount?: number
+  productCount?: number
+}
+
+export interface Subcategory {
+  id: string
+  name: string
+  description: string | null
+  categoryId: string
+  category: CategorySummary | null
   productCount?: number
 }
 
@@ -23,8 +38,10 @@ export interface Product {
   stock: number
   imageUrl: string | null
   categoryId: string | null
+  subcategoryId: string | null
   brandId: string | null
   category: Category | null
+  subcategory: Subcategory | null
   brand: Brand | null
   createdAt: string
   updatedAt: string
@@ -64,6 +81,12 @@ export interface CategoryListResponse {
   data: Category[]
 }
 
+export interface SubcategoryListResponse {
+  success: boolean
+  message: string
+  data: Subcategory[]
+}
+
 export interface BrandListResponse {
   success: boolean
   message: string
@@ -74,6 +97,7 @@ export interface ProductFilters {
   page?: number
   limit?: number
   categoryId?: string
+  subcategoryId?: string
   minPrice?: number | Array<number | null>
   maxPrice?: number | Array<number | null>
   search?: string

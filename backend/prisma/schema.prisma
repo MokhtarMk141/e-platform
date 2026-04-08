@@ -44,11 +44,23 @@ model PasswordResetToken {
 
 
 model Category {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  description   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  products      Product[]
+  subcategories Subcategory[]
+}
+
+model Subcategory {
   id          String    @id @default(cuid())
   name        String    @unique
   description String?
+  categoryId  String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products    Product[]
 }
 
@@ -73,11 +85,13 @@ model Product {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   categoryId            String?
+  subcategoryId         String?
   brandId               String?
   aiproductDescriptions AIProductDescription[]
   cartItems             CartItem[]
   orderItems            OrderItem[]
   category              Category?              @relation(fields: [categoryId], references: [id])
+  subcategory           Subcategory?           @relation(fields: [subcategoryId], references: [id])
   brand                 Brand?                 @relation(fields: [brandId], references: [id])
   recommendations       Recommendation[]
   discounts             Discount[]

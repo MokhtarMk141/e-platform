@@ -17,7 +17,6 @@ const iconPaths = {
   products: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
   orders: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
   users: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2m22-4a4 4 0 100-8 4 4 0 000 8zm-8 0a4 4 0 100-8 4 4 0 000 8z",
-  analytics: "M18 20V10M12 20V4M6 20v-6",
   insights: "M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z",
   updates: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 12a3 3 0 100-6 3 3 0 000 6z",
   settings: "M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z",
@@ -50,12 +49,12 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { icon: "dashboard", label: "Dashboard", href: "/admin/dashboard" },
-  { icon: "analytics", label: "Analytics", href: "/admin/analytics" },
   { icon: "orders", label: "orders", href: "/admin/orders" },
   { icon: "customers", label: "Customers", href: "/admin/customers" },
   { icon: "store", label: "Store", href: "/admin/products/getall" },
   { icon: "addProduct", label: "Add Product", href: "/admin/products/add" },
   { icon: "categories", label: "Categories", href: "/admin/categories" },
+  { icon: "categories", label: "Subcategories", href: "/admin/subcategories" },
   { icon: "brands", label: "Brands", href: "/admin/brands" },
   { icon: "discounts", label: "Discounts", href: "/admin/coupons" },
   { icon: "settings", label: "Settings", href: "/admin/settings" },

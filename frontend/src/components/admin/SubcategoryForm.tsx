@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CategoryService } from "@/services/category.service";
-import { Category } from "@/types/product.types";
+import { SubcategoryService } from "@/services/subcategory.service";
+import { Category, Subcategory } from "@/types/product.types";
 
 const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
   <svg
@@ -25,29 +26,51 @@ const icons = {
   save: "M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z M17 21v-8H7v8 M7 3v5h8V3",
 };
 
-interface CategoryFormProps {
-  initialData?: Category;
+interface SubcategoryFormProps {
+  initialData?: Subcategory;
   isEdit?: boolean;
+  defaultCategoryId?: string;
   backHref?: string;
   backLabel?: string;
   listingHref?: string;
 }
 
-export default function CategoryForm({
+export default function SubcategoryForm({
   initialData,
   isEdit = false,
-  backHref = "/admin/categories",
-  backLabel = "Back to categories",
-  listingHref = "/admin/categories",
-}: CategoryFormProps) {
+  defaultCategoryId,
+  backHref = "/admin/subcategories",
+  backLabel = "Back to subcategories",
+  listingHref = "/admin/subcategories",
+}: SubcategoryFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     description: initialData?.description || "",
+    categoryId: initialData?.categoryId || defaultCategoryId || "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await CategoryService.getAll();
+        setCategories(response.data);
+      } catch (error) {
+        console.error("Failed to load categories", error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  const selectedCategory = categories.find((category) => category.id === formData.categoryId);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((current) => ({ ...current, [e.target.name]: e.target.value }));
   };
 
@@ -57,17 +80,17 @@ export default function CategoryForm({
 
     try {
       if (isEdit && initialData) {
-        await CategoryService.update(initialData.id, formData);
-        alert("Category updated successfully!");
+        await SubcategoryService.update(initialData.id, formData);
+        alert("Subcategory updated successfully!");
       } else {
-        await CategoryService.create(formData);
-        alert("Category created successfully!");
+        await SubcategoryService.create(formData);
+        alert("Subcategory created successfully!");
       }
 
       router.push(listingHref);
       router.refresh();
     } catch (error) {
-      alert("Failed to save category");
+      alert("Failed to save subcategory");
       console.error(error);
     } finally {
       setLoading(false);
@@ -137,25 +160,49 @@ export default function CategoryForm({
         <form onSubmit={handleSubmit}>
           <div className="page-header">
             <div>
-              <h1 className="page-title">{isEdit ? "Edit Category" : "Add New Category"}</h1>
+              <h1 className="page-title">{isEdit ? "Edit Subcategory" : "Add New Subcategory"}</h1>
               <p className="page-sub">
-                {isEdit ? `Update details for ${initialData?.name}` : "Create a new product category"}
+                {isEdit
+                  ? `Update details for ${initialData?.name}`
+                  : selectedCategory
+                    ? `Create a subcategory under ${selectedCategory.name}`
+                    : "Create a new subcategory and assign it to a category"}
               </p>
             </div>
             <button className="btn-save" type="submit" disabled={loading}>
-              <Icon d={icons.save} size={15} /> {loading ? "Saving..." : isEdit ? "Update Category" : "Save Category"}
+              <Icon d={icons.save} size={15} /> {loading ? "Saving..." : isEdit ? "Update Subcategory" : "Save Subcategory"}
             </button>
           </div>
 
           <div className="form-grid">
             <div className="form-card">
-              <h2 className="card-title">Category Information</h2>
+              <h2 className="card-title">Subcategory Information</h2>
 
               <div className="form-group">
-                <label className="form-label">Category Name</label>
+                <label className="form-label">Mother Category</label>
+                <select
+                  className="form-input"
+                  name="categoryId"
+                  value={formData.categoryId}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="" disabled>
+                    {loadingCategories ? "Loading categories..." : "Select category"}
+                  </option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Subcategory Name</label>
                 <input
                   className="form-input"
-                  placeholder="e.g. Sneakers"
+                  placeholder="e.g. Gaming Laptops"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
@@ -167,7 +214,7 @@ export default function CategoryForm({
                 <label className="form-label">Description</label>
                 <textarea
                   className="form-textarea"
-                  placeholder="Details about this category..."
+                  placeholder="Details about this subcategory..."
                   name="description"
                   value={formData.description}
                   onChange={handleChange}

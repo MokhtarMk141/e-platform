@@ -27,6 +27,7 @@ export class CategoryService {
     if (existing) {
       throw new AppError(`Category '${dto.name}' already exists`, 409);
     }
+
     const category = await this.categoryRepository.create(dto);
     return new CategoryResponseDto(category);
   }
@@ -53,6 +54,7 @@ export class CategoryService {
     if (!category) {
       throw new AppError("Category not found", 404);
     }
+
     await this.categoryRepository.delete(id);
   }
 }
