@@ -1,11 +1,20 @@
 import { AppError } from "../../exceptions/app-error";
+import { ProductContextService } from "./product-context.service";
 
 const OLLAMA_URL = process.env.OLLAMA_URL || "https://ai.dev2.sofflex.com";
 const SOFFLEX_API_KEY =
   process.env.SOFFLEX_API_KEY ||
   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-const DEFAULT_SYSTEM_PROMPT =
-  "You are Oggy, the Sofflex AI Assistant. You help customers with PC building, product recommendations, order tracking, and general tech questions. Keep responses concise, friendly, and helpful. Use emojis occasionally to be more engaging.";
+const BASE_SYSTEM_PROMPT = `You are Oggy, the Sofflex AI Assistant for our e-commerce PC and tech store.
+
+RULES:
+- When product data is provided below, ONLY recommend products from the "Available Products" list.
+- Never invent product names, prices, or specifications.
+- Always mention the price in DT (Tunisian Dinar).
+- If no products match the user's request, say so clearly and suggest adjusting their criteria.
+- For general questions (greetings, tech advice, etc.) without product data, answer normally.
+- Keep responses concise, friendly, and helpful.
+- Use emojis occasionally to be more engaging. 🎮`;
 const REQUEST_TIMEOUT_MS = 20_000;
 const FALLBACK_MODEL = "oggy-local-assistant";
 
@@ -28,7 +37,9 @@ interface GenerateResponse {
 }
 
 export class ChatbotService {
-  private buildFallbackResponse(prompt: string): string {
+  private productContextService = new ProductContextService();
+
+  private async buildFallbackResponse(prompt: string): Promise<string> {
     const normalizedPrompt = prompt.trim().toLowerCase();
 
     if (
@@ -37,6 +48,16 @@ export class ChatbotService {
       normalizedPrompt.includes("shipping")
     ) {
       return "I can help with order tracking. Please share your order number or the email used at checkout, and I can guide you on the next step while the live AI service is unavailable.";
+    }
+
+    try {
+      const { products } = await this.productContextService.searchProducts(prompt);
+
+      if (products.length > 0) {
+        const productList = this.productContextService.formatProductContext(products);
+        return `The live AI is currently unavailable, but I found these products from our store that might match your request:\n\n${productList}\n\nFor more details, browse our store or try again later when the AI is back online! 😊`;
+      }
+    } catch {
     }
 
     if (
@@ -65,6 +86,10 @@ export class ChatbotService {
     }
 
     return "The live AI service is temporarily unavailable, but I can still help. Tell me your budget, what you want to do with the PC, and any brand preferences, and I will guide you with a practical recommendation.";
+  }
+
+  private buildEnrichedSystemPrompt(productContext: string): string {
+    return `${BASE_SYSTEM_PROMPT}\n\nAvailable Products from our store:\n${productContext}\n\nIf no products are listed above, inform the user that you could not find matching products and suggest they browse the store directly or adjust their criteria.`;
   }
 
   private getFallbackModels(): {
@@ -209,9 +234,19 @@ export class ChatbotService {
       throw new AppError("Prompt is required", 400);
     }
 
+    let productContext = "";
+    try {
+      const { products } = await this.productContextService.searchProducts(
+        params.prompt
+      );
+      productContext = this.productContextService.formatProductContext(products);
+    } catch {
+      productContext = "";
+    }
+
     if (params.model?.trim() === FALLBACK_MODEL) {
       return {
-        response: this.buildFallbackResponse(params.prompt),
+        response: await this.buildFallbackResponse(params.prompt),
         model: FALLBACK_MODEL,
       };
     }
@@ -221,10 +256,16 @@ export class ChatbotService {
 
       if (model === FALLBACK_MODEL) {
         return {
-          response: this.buildFallbackResponse(params.prompt),
+          response: await this.buildFallbackResponse(params.prompt),
           model,
         };
       }
+
+      const systemPrompt = params.system?.trim()
+        ? params.system.trim()
+        : productContext
+          ? this.buildEnrichedSystemPrompt(productContext)
+          : BASE_SYSTEM_PROMPT;
 
       const { response, data } = await this.requestJson<GenerateResponse>(
         `${OLLAMA_URL}/api/generate`,
@@ -233,7 +274,7 @@ export class ChatbotService {
           headers: this.buildHeaders("application/json"),
           body: JSON.stringify({
             model,
-            system: params.system?.trim() || DEFAULT_SYSTEM_PROMPT,
+            system: systemPrompt,
             prompt: params.prompt.trim(),
             stream: false,
           }),
@@ -263,13 +304,13 @@ export class ChatbotService {
     } catch (error) {
       if (error instanceof AppError) {
         return {
-          response: this.buildFallbackResponse(params.prompt),
+          response: await this.buildFallbackResponse(params.prompt),
           model: FALLBACK_MODEL,
         };
       }
 
       return {
-        response: this.buildFallbackResponse(params.prompt),
+        response: await this.buildFallbackResponse(params.prompt),
         model: FALLBACK_MODEL,
       };
     }
