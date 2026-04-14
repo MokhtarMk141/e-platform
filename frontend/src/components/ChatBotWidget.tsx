@@ -1,18 +1,30 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { ChatbotService } from '@/services/chatbot.service'
+import Link from 'next/link'
+import { ChatbotProductCard, ChatbotService } from '@/services/chatbot.service'
 import './ChatBot.css'
 
 const MAX_PROMPT_LENGTH = 2000
 const BOT_AVATAR = 'AI'
 const USER_AVATAR = 'You'
+const SESSION_STORAGE_KEY = 'oggy-chat-session-id'
+const MESSAGES_STORAGE_KEY = 'oggy-chat-messages'
+const OPEN_STORAGE_KEY = 'oggy-chat-open'
 
 interface Message {
   id: string
   role: 'user' | 'bot'
   content: string
   timestamp: Date
+  products?: ChatbotProductCard[]
+  filterSummary?: string[]
+  matchType?: 'exact' | 'alternative' | 'none'
+  usedFallback?: boolean
+}
+
+interface StoredMessage extends Omit<Message, 'timestamp'> {
+  timestamp: string
 }
 
 const suggestions = [
@@ -46,6 +58,77 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
+function createSessionId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function getStoredSessionId(): string {
+  if (typeof window === 'undefined') {
+    return createSessionId()
+  }
+
+  const existing = window.localStorage.getItem(SESSION_STORAGE_KEY)
+  if (existing) {
+    return existing
+  }
+
+  const nextSessionId = createSessionId()
+  window.localStorage.setItem(SESSION_STORAGE_KEY, nextSessionId)
+  return nextSessionId
+}
+
+function loadStoredMessages(): Message[] {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  try {
+    const raw = window.localStorage.getItem(MESSAGES_STORAGE_KEY)
+    if (!raw) {
+      return []
+    }
+
+    const parsed = JSON.parse(raw) as StoredMessage[]
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed
+      .filter((item) => item && typeof item.content === 'string' && (item.role === 'user' || item.role === 'bot'))
+      .map((item) => ({
+        ...item,
+        timestamp: new Date(item.timestamp),
+      }))
+  } catch {
+    return []
+  }
+}
+
+function storeMessages(messages: Message[]): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const payload: StoredMessage[] = messages.map((message) => ({
+    ...message,
+    timestamp: message.timestamp.toISOString(),
+  }))
+
+  window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(payload))
+}
+
+function loadStoredOpenState(): boolean {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return window.localStorage.getItem(OPEN_STORAGE_KEY) === 'true'
+}
+
 export default function ChatBotWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -56,6 +139,7 @@ export default function ChatBotWidget() {
   const [models, setModels] = useState<string[]>([])
   const [currentModel, setCurrentModel] = useState('')
   const [modelStatus, setModelStatus] = useState<'connected' | 'disconnected' | 'loading'>('loading')
+  const [sessionId, setSessionId] = useState('')
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -116,6 +200,22 @@ export default function ChatBotWidget() {
   }, [fetchModels])
 
   useEffect(() => {
+    setSessionId(getStoredSessionId())
+    setMessages(loadStoredMessages())
+    setIsOpen(loadStoredOpenState())
+  }, [])
+
+  useEffect(() => {
+    storeMessages(messages)
+  }, [messages])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(OPEN_STORAGE_KEY, String(isOpen))
+    }
+  }, [isOpen])
+
+  useEffect(() => {
     if (isOpen && modelStatus === 'disconnected') {
       void fetchModels()
     }
@@ -147,12 +247,17 @@ export default function ChatBotWidget() {
     }
   }
 
-  const addMessage = useCallback((role: 'user' | 'bot', content: string): Message => {
+  const addMessage = useCallback((
+    role: 'user' | 'bot',
+    content: string,
+    options?: Pick<Message, 'products' | 'filterSummary' | 'matchType' | 'usedFallback'>
+  ): Message => {
     const message: Message = {
       id: Date.now().toString() + Math.random().toString(36).slice(2),
       role,
       content,
       timestamp: new Date(),
+      ...options,
     }
 
     setMessages((previousMessages) => [...previousMessages, message])
@@ -185,9 +290,23 @@ export default function ChatBotWidget() {
       const result = await ChatbotService.sendMessage({
         model: currentModel || undefined,
         prompt: message,
+        sessionId: sessionId || undefined,
       })
 
-      addMessage('bot', result.response)
+      if (result.sessionId) {
+        setSessionId(result.sessionId)
+
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(SESSION_STORAGE_KEY, result.sessionId)
+        }
+      }
+
+      addMessage('bot', result.response, {
+        products: result.products,
+        filterSummary: result.appliedFilterSummary,
+        matchType: result.matchType,
+        usedFallback: result.usedFallback,
+      })
       setModelStatus('connected')
 
       if (result.model) {
@@ -207,7 +326,7 @@ export default function ChatBotWidget() {
     } finally {
       setIsTyping(false)
     }
-  }, [addMessage, currentModel, input, isTyping, models.length, showError])
+  }, [addMessage, currentModel, input, isTyping, models.length, sessionId, showError])
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -233,6 +352,14 @@ export default function ChatBotWidget() {
   const clearChat = () => {
     setMessages([])
     setError('')
+
+    const nextSessionId = createSessionId()
+    setSessionId(nextSessionId)
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(MESSAGES_STORAGE_KEY)
+      window.localStorage.setItem(SESSION_STORAGE_KEY, nextSessionId)
+    }
   }
 
   const formatTime = (date: Date) => {
@@ -339,6 +466,62 @@ export default function ChatBotWidget() {
                     </div>
                     <div className="oggy-msg-content">
                       <div className="oggy-msg-bubble">{message.content}</div>
+                      {message.role === 'bot' && (message.filterSummary?.length || message.usedFallback) ? (
+                        <div className="oggy-msg-meta">
+                          {message.matchType && message.matchType !== 'none' && (
+                            <span className={`oggy-result-badge ${message.matchType}`}>
+                              {message.matchType === 'exact' ? 'Exact match' : 'Closest alternatives'}
+                            </span>
+                          )}
+                          {message.filterSummary?.map((item) => (
+                            <span key={`${message.id}-${item}`} className="oggy-filter-chip">
+                              {item}
+                            </span>
+                          ))}
+                          {message.usedFallback && (
+                            <span className="oggy-fallback-chip">Backend fallback</span>
+                          )}
+                        </div>
+                      ) : null}
+                      {message.role === 'bot' && message.products && message.products.length > 0 ? (
+                        <div className="oggy-product-list">
+                          {message.products.map((product) => (
+                            <Link key={product.id} className="oggy-product-card" href={product.url}>
+                              <div className="oggy-product-media">
+                                {product.imageUrl ? (
+                                  <img src={product.imageUrl} alt={product.name} className="oggy-product-image" />
+                                ) : (
+                                  <div className="oggy-product-placeholder">{BOT_AVATAR}</div>
+                                )}
+                              </div>
+                              <div className="oggy-product-body">
+                                <div className="oggy-product-top">
+                                  <p className="oggy-product-name">{product.name}</p>
+                                  <span className="oggy-product-price">{product.price} DT</span>
+                                </div>
+                                <p className="oggy-product-sub">
+                                  {[product.brand, product.category].filter(Boolean).join(' | ') || 'Catalog item'}
+                                </p>
+                                <div className="oggy-product-bottom">
+                                  <span className={`oggy-stock ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
+                                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                                  </span>
+                                  <span className="oggy-score">Score {product.score}</span>
+                                </div>
+                                {product.matchReasons.length > 0 && (
+                                  <div className="oggy-reason-list">
+                                    {product.matchReasons.map((reason) => (
+                                      <span key={`${product.id}-${reason}`} className="oggy-reason-chip">
+                                        {reason}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : null}
                       <span className="oggy-msg-time">{formatTime(message.timestamp)}</span>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
-import { prisma } from "../../config/database";
 import { Prisma } from "@prisma/client";
+import { prisma } from "../../config/database";
 
 const MAX_PRODUCTS_IN_CONTEXT = 10;
 

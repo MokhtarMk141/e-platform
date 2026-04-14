@@ -19,7 +19,79 @@ interface ChatbotMessageResponse {
   data: {
     response: string;
     model: string;
+    sessionId: string;
+    products: Array<{
+      id: string;
+      name: string;
+      price: number;
+      imageUrl: string | null;
+      stock: number;
+      url: string;
+      brand: string | null;
+      category: string | null;
+      subcategory: string | null;
+      description: string | null;
+      score: number;
+      matchReasons: string[];
+      usageTags: string[];
+      performanceTier: 'entry' | 'mid' | 'high';
+      formFactor: 'laptop' | 'desktop' | 'component' | 'accessory' | 'monitor' | null;
+      popularity: number;
+    }>;
+    appliedFilters: {
+      maxPrice: number | null;
+      minPrice: number | null;
+      category: string | null;
+      brandKeywords: string[];
+      usageTags: string[];
+      attributeFilters: {
+        ram: string | null;
+        storage: string | null;
+        gpu: string | null;
+        cpuBrand: string | null;
+      };
+      sortPreference: 'price_asc' | 'price_desc' | 'value' | 'popular' | 'relevance' | null;
+      performanceTier: 'entry' | 'mid' | 'high' | null;
+      formFactor: 'laptop' | 'desktop' | 'component' | 'accessory' | 'monitor' | null;
+    };
+    appliedFilterSummary: string[];
+    matchType: 'exact' | 'alternative' | 'none';
+    usedFallback: boolean;
+    usedSessionMemory: boolean;
+    usedAiIntent: boolean;
   };
+}
+
+export interface ChatbotProductCard {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl: string | null;
+  stock: number;
+  url: string;
+  brand: string | null;
+  category: string | null;
+  subcategory: string | null;
+  description: string | null;
+  score: number;
+  matchReasons: string[];
+  usageTags: string[];
+  performanceTier: 'entry' | 'mid' | 'high';
+  formFactor: 'laptop' | 'desktop' | 'component' | 'accessory' | 'monitor' | null;
+  popularity: number;
+}
+
+export interface ChatbotReply {
+  response: string;
+  model: string;
+  sessionId: string;
+  products: ChatbotProductCard[];
+  appliedFilters: ChatbotMessageResponse['data']['appliedFilters'];
+  appliedFilterSummary: string[];
+  matchType: 'exact' | 'alternative' | 'none';
+  usedFallback: boolean;
+  usedSessionMemory: boolean;
+  usedAiIntent: boolean;
 }
 
 export class ChatbotService {
@@ -41,7 +113,8 @@ export class ChatbotService {
   static async sendMessage(payload: {
     prompt: string;
     model?: string;
-  }): Promise<{ response: string; model: string }> {
+    sessionId?: string;
+  }): Promise<ChatbotReply> {
     const response = await ApiClient.post<ChatbotMessageResponse>(
       '/chatbot/chat',
       payload

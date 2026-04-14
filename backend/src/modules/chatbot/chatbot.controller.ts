@@ -21,10 +21,11 @@ export class ChatbotController {
   });
 
   sendMessage = asyncHandler(async (req: Request, res: Response) => {
-    const { model, prompt, system } = req.body as {
+    const { model, prompt, system, sessionId } = req.body as {
       model?: unknown;
       prompt?: unknown;
       system?: unknown;
+      sessionId?: unknown;
     };
 
     if (model !== undefined && (typeof model !== "string" || !model.trim())) {
@@ -39,11 +40,21 @@ export class ChatbotController {
     if (system !== undefined && typeof system !== "string") {
       throw new AppError("system must be a string when provided", 400);
     }
+    if (
+      sessionId !== undefined &&
+      (typeof sessionId !== "string" || !sessionId.trim() || sessionId.length > 120)
+    ) {
+      throw new AppError(
+        "sessionId must be a non-empty string up to 120 characters when provided",
+        400
+      );
+    }
 
     const result = await this.chatbotService.sendMessage({
       model: typeof model === "string" ? model.trim() : undefined,
       prompt: prompt.trim(),
       system: typeof system === "string" ? system.trim() : undefined,
+      sessionId: typeof sessionId === "string" ? sessionId.trim() : undefined,
     });
 
     return sendSuccess(res, {
