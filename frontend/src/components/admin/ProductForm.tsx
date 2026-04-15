@@ -4,9 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProductService } from "@/services/product.service";
 import { CategoryService } from "@/services/category.service";
-import { SubcategoryService } from "@/services/subcategory.service";
 import { BrandService } from "@/services/brand.service";
-import { Product, Category, Brand, Subcategory } from "@/types/product.types";
+import { Product, Category, Brand } from "@/types/product.types";
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -41,12 +40,10 @@ interface ProductFormProps {
 export default function ProductForm({ initialData, isEdit = false }: ProductFormProps) {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [fetchingCategories, setFetchingCategories] = useState(true);
-  const [fetchingSubcategories, setFetchingSubcategories] = useState(true);
   const [fetchingBrands, setFetchingBrands] = useState(true);
   const [generatingContent, setGeneratingContent] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -56,7 +53,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     name: initialData?.name || "",
     sku: initialData?.sku || "",
     categoryId: initialData?.categoryId || "",
-    subcategoryId: initialData?.subcategoryId || "",
     brandId: initialData?.brandId || "",
     price: initialData?.price?.toString() || "",
     stock: initialData?.stock?.toString() || "",
@@ -94,21 +90,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
   }, []);
 
   useEffect(() => {
-    const loadSubcategories = async () => {
-      try {
-        const res = await SubcategoryService.getAll();
-        setSubcategories(res.data);
-      } catch (err) {
-        console.error("Failed to load subcategories", err);
-      } finally {
-        setFetchingSubcategories(false);
-      }
-    };
-
-    loadSubcategories();
-  }, []);
-
-  useEffect(() => {
     const loadBrands = async () => {
       try {
         const res = await BrandService.getAll();
@@ -123,27 +104,9 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     loadBrands();
   }, []);
 
-  const filteredSubcategories = useMemo(
-    () => subcategories.filter((subcategory) => subcategory.categoryId === formData.categoryId),
-    [subcategories, formData.categoryId]
-  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-
-    if (name === "categoryId") {
-      setFormData((current) => ({
-        ...current,
-        categoryId: value,
-        subcategoryId: current.subcategoryId && subcategories.some(
-          (subcategory) => subcategory.id === current.subcategoryId && subcategory.categoryId === value
-        )
-          ? current.subcategoryId
-          : "",
-      }));
-      return;
-    }
-
     setFormData((current) => ({ ...current, [name]: value }));
   };
 
@@ -185,7 +148,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         name: formData.name.trim(),
         sku: formData.sku.trim(),
         categoryId: formData.categoryId || undefined,
-        subcategoryId: formData.subcategoryId || undefined,
         brandId: formData.brandId || undefined,
         price: parsedPrice,
         stock: parsedStock,
@@ -222,15 +184,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     setGeneratingContent(true);
 
     try {
-      const selectedCategory = categories.find((category) => category.id === formData.categoryId);
-      const selectedSubcategory = subcategories.find((subcategory) => subcategory.id === formData.subcategoryId);
-      const selectedBrand = brands.find((brand) => brand.id === formData.brandId);
-
       const response = await ProductService.generateContent({
         name: formData.name.trim(),
         sku: formData.sku.trim() || undefined,
         categoryName: selectedCategory?.name,
-        subcategoryName: selectedSubcategory?.name,
         brandName: selectedBrand?.name,
         price: formData.price ? Number.parseFloat(formData.price) : undefined,
         stock: formData.stock ? Number.parseInt(formData.stock, 10) : undefined,
@@ -439,30 +396,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Subcategory</label>
-                  <select
-                    className="form-select"
-                    name="subcategoryId"
-                    value={formData.subcategoryId}
-                    onChange={handleChange}
-                    disabled={!formData.categoryId}
-                  >
-                    <option value="">
-                      {!formData.categoryId
-                        ? "Select category first"
-                        : fetchingSubcategories
-                          ? "Loading subcategories..."
-                          : "Optional subcategory"}
-                    </option>
-                    {filteredSubcategories.map((subcategory) => (
-                      <option key={subcategory.id} value={subcategory.id}>
-                        {subcategory.name}
                       </option>
                     ))}
                   </select>

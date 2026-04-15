@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CategoryService } from "@/services/category.service";
 import { Category } from "@/types/product.types";
@@ -42,12 +42,30 @@ export default function CategoryForm({
 }: CategoryFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     description: initialData?.description || "",
+    parentId: initialData?.parentId || "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await CategoryService.getAll();
+        // Filter out the current category to prevent self-referencing
+        const filtered = isEdit && initialData 
+          ? response.data.filter(c => c.id !== initialData.id)
+          : response.data;
+        setCategories(filtered);
+      } catch (error) {
+        console.error("Failed to fetch categories", error);
+      }
+    };
+    fetchCategories();
+  }, [isEdit, initialData]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((current) => ({ ...current, [e.target.name]: e.target.value }));
   };
 
@@ -55,12 +73,18 @@ export default function CategoryForm({
     e.preventDefault();
     setLoading(true);
 
+    // Convert empty string back to null for parentId
+    const dataToSubmit = {
+      ...formData,
+      parentId: formData.parentId === "" ? null : formData.parentId,
+    };
+
     try {
       if (isEdit && initialData) {
-        await CategoryService.update(initialData.id, formData);
+        await CategoryService.update(initialData.id, dataToSubmit);
         alert("Category updated successfully!");
       } else {
-        await CategoryService.create(formData);
+        await CategoryService.create(dataToSubmit);
         alert("Category created successfully!");
       }
 
@@ -161,6 +185,26 @@ export default function CategoryForm({
                   onChange={handleChange}
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Parent Category</label>
+                <select
+                  className="form-input"
+                  name="parentId"
+                  value={formData.parentId}
+                  onChange={handleChange}
+                >
+                  <option value="">None (Root Category)</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="page-sub" style={{ marginTop: 8 }}>
+                  Optional: Select a parent category to create a nested hierarchy.
+                </p>
               </div>
 
               <div className="form-group">

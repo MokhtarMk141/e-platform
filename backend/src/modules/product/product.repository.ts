@@ -5,12 +5,9 @@ import { UpdateProductDto } from "./dto/update-product.dto";
 
 export type ProductWithCategory = Prisma.ProductGetPayload<{
   include: {
-    category: true;
-    subcategory: {
+    category: {
       include: {
-        category: {
-          select: { id: true; name: true };
-        };
+        parent: true;
       };
     };
     brand: true;
@@ -23,7 +20,6 @@ export interface ProductQueryParams {
   skip?: number;
   take?: number;
   categoryId?: string;
-  subcategoryId?: string;
   minPrice?: Array<number | undefined>;
   maxPrice?: Array<number | undefined>;
   search?: string;
@@ -32,15 +28,13 @@ export interface ProductQueryParams {
 
 export class ProductRepository {
   private buildWhere(params?: ProductQueryParams): Prisma.ProductWhereInput | undefined {
-    const { categoryId, subcategoryId, minPrice = [], maxPrice = [], search } = params ?? {};
+    const { categoryId, minPrice = [], maxPrice = [], search } = params ?? {};
     const andConditions: Prisma.ProductWhereInput[] = [];
 
     if (categoryId) {
+      // In a real hierarchical system, searching by categoryId often implies searching for all its descendants too.
+      // For now, we'll stick to direct match or we could implement a recursive search if needed.
       andConditions.push({ categoryId });
-    }
-
-    if (subcategoryId) {
-      andConditions.push({ subcategoryId });
     }
 
     const priceRangeCount = Math.max(minPrice.length, maxPrice.length);
@@ -83,7 +77,6 @@ export class ProductRepository {
           { description: { contains: term, mode: "insensitive" } },
           { sku: { contains: term, mode: "insensitive" } },
           { category: { is: { name: { contains: term, mode: "insensitive" } } } },
-          { subcategory: { is: { name: { contains: term, mode: "insensitive" } } } },
           { brand: { name: { contains: term, mode: "insensitive" } } },
         ]),
       });
@@ -115,8 +108,7 @@ export class ProductRepository {
       take,
       where,
       include: {
-        category: true,
-        subcategory: { include: { category: { select: { id: true, name: true } } } },
+        category: { include: { parent: true } },
         brand: true,
       },
       orderBy: this.buildOrderBy(sortBy),
@@ -127,8 +119,7 @@ export class ProductRepository {
     return prisma.product.findUnique({
       where: { id },
       include: {
-        category: true,
-        subcategory: { include: { category: { select: { id: true, name: true } } } },
+        category: { include: { parent: true } },
         brand: true,
       },
     });
@@ -142,8 +133,7 @@ export class ProductRepository {
     return prisma.product.create({
       data,
       include: {
-        category: true,
-        subcategory: { include: { category: { select: { id: true, name: true } } } },
+        category: { include: { parent: true } },
         brand: true,
       },
     });
@@ -154,8 +144,7 @@ export class ProductRepository {
       where: { id },
       data,
       include: {
-        category: true,
-        subcategory: { include: { category: { select: { id: true, name: true } } } },
+        category: { include: { parent: true } },
         brand: true,
       },
     });

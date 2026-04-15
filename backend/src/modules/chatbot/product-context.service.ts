@@ -17,7 +17,6 @@ interface ProductContextItem {
   price: number;
   brand: string | null;
   category: string | null;
-  subcategory: string | null;
   description: string | null;
   stock: number;
   imageUrl: string | null;
@@ -296,11 +295,6 @@ export class ProductContextService {
               name: { contains: term, mode: "insensitive" as const },
             },
           },
-          {
-            subcategory: {
-              name: { contains: term, mode: "insensitive" as const },
-            },
-          },
         ]
       );
 
@@ -318,7 +312,6 @@ export class ProductContextService {
           whereConditions.length > 0 ? { AND: whereConditions } : undefined,
         include: {
           category: true,
-          subcategory: true,
           brand: true,
         },
         orderBy,
@@ -329,8 +322,7 @@ export class ProductContextService {
         name: product.name,
         price: product.price,
         brand: product.brand?.name ?? null,
-        category: product.category?.name ?? null,
-        subcategory: product.subcategory?.name ?? null,
+        category: (product.category as any)?.name ?? null,
         description: product.description,
         stock: product.stock,
         imageUrl: product.imageUrl,
@@ -359,10 +351,6 @@ export class ProductContextService {
 
       if (product.category) {
         parts.push(`Category: ${product.category}`);
-      }
-
-      if (product.subcategory) {
-        parts.push(`Subcategory: ${product.subcategory}`);
       }
 
       if (product.description) {

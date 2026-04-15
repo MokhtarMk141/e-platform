@@ -228,6 +228,17 @@ export default function CategoriesPage() {
                       </td>
                       <td>
                         <div className="cat-name">{cat.name}</div>
+                        {cat.parentId && (
+                          <div style={{ 
+                            fontSize: 10, 
+                            color: "var(--brand-red)", 
+                            fontWeight: 700, 
+                            marginTop: 2,
+                            textTransform: "uppercase" 
+                          }}>
+                            Child Category
+                          </div>
+                        )}
                       </td>
                       <td>
                         <div className="cat-desc">{cat.description || "—"}</div>

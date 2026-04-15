@@ -6,6 +6,12 @@ import { UpdateCategoryDto } from "./dto/update-category.dto";
 export type CategoryWithProductsCount = Prisma.CategoryGetPayload<{
   include: {
     _count: { select: { products: true } };
+    parent: true;
+    children: {
+      include: {
+        _count: { select: { products: true } };
+      };
+    };
   };
 }>;
 
@@ -15,6 +21,33 @@ export class CategoryRepository {
       orderBy: { name: "asc" },
       include: {
         _count: { select: { products: true } },
+        parent: true,
+        children: {
+          include: {
+            _count: { select: { products: true } },
+          },
+        },
+      },
+    });
+  }
+
+  async findTree(): Promise<CategoryWithProductsCount[]> {
+    return prisma.category.findMany({
+      where: { parentId: null },
+      orderBy: { name: "asc" },
+      include: {
+        _count: { select: { products: true } },
+        parent: true,
+        children: {
+          include: {
+            _count: { select: { products: true } },
+            children: {
+              include: {
+                _count: { select: { products: true } },
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -24,12 +57,27 @@ export class CategoryRepository {
       where: { id },
       include: {
         _count: { select: { products: true } },
+        parent: true,
+        children: {
+          include: {
+            _count: { select: { products: true } },
+          },
+        },
       },
     });
   }
 
-  async findByName(name: string) {
-    return prisma.category.findUnique({ where: { name } });
+  async findByNameAndParent(name: string, parentId: string | null) {
+    return prisma.category.findFirst({ 
+      where: { 
+        name: { equals: name, mode: 'insensitive' }, // Robustness
+        parentId 
+      } 
+    });
+  }
+
+  async findBySlug(slug: string) {
+    return prisma.category.findUnique({ where: { slug } });
   }
 
   async create(data: CreateCategoryDto): Promise<CategoryWithProductsCount> {
@@ -37,8 +85,14 @@ export class CategoryRepository {
       data,
       include: {
         _count: { select: { products: true } },
+        parent: true,
+        children: {
+          include: {
+            _count: { select: { products: true } },
+          },
+        },
       },
-    });
+    }) as any;
   }
 
   async update(
@@ -50,8 +104,14 @@ export class CategoryRepository {
       data,
       include: {
         _count: { select: { products: true } },
+        parent: true,
+        children: {
+          include: {
+            _count: { select: { products: true } },
+          },
+        },
       },
-    });
+    }) as any;
   }
 
   async delete(id: string) {

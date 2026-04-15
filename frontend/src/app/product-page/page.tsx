@@ -525,11 +525,17 @@ function ProductsPageInner() {
     () => categories.filter((category) => (category.productCount ?? 0) > 0),
     [categories]
   )
-  const requestedCategorySlug = searchParams.get('category')?.toLowerCase() ?? undefined
+  const requestedCategoryId = searchParams.get('category') ?? undefined
+  const requestedCategorySlug = searchParams.get('categorySlug')?.toLowerCase() ?? undefined
   const requestedCategoryKey = searchParams.get('categoryKey')?.toLowerCase() ?? undefined
   const requestedKeywords = requestedCategoryKey ? CATEGORY_KEYWORDS[requestedCategoryKey] ?? [] : []
   const requestedSlugTokens = requestedCategorySlug ? toTokens(requestedCategorySlug) : []
+  
   const categoryFromQuery = storefrontCategories.find(category => {
+    // 1. Try matching by ID first (preferred)
+    if (requestedCategoryId && category.id === requestedCategoryId) return true
+
+    // 2. Fallback to legacy slug/keyword matching
     const categorySlug = toCategorySlug(category.name)
     const categoryTokens = toTokens(category.name)
 

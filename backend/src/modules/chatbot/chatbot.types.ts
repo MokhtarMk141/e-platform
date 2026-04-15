@@ -54,7 +54,6 @@ export interface RankedChatProduct {
   url: string;
   brand: string | null;
   category: string | null;
-  subcategory: string | null;
   description: string | null;
   score: number;
   matchReasons: string[];

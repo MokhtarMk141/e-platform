@@ -54,7 +54,6 @@ const navItems: NavItem[] = [
   { icon: "store", label: "Store", href: "/admin/products/getall" },
   { icon: "addProduct", label: "Add Product", href: "/admin/products/add" },
   { icon: "categories", label: "Categories", href: "/admin/categories" },
-  { icon: "categories", label: "Subcategories", href: "/admin/subcategories" },
   { icon: "brands", label: "Brands", href: "/admin/brands" },
   { icon: "discounts", label: "Discounts", href: "/admin/coupons" },
   { icon: "settings", label: "Settings", href: "/admin/settings" },

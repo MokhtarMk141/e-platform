@@ -33,7 +33,6 @@ export class ProductService {
     if (filters.page)       params.append('page',       String(filters.page))
     if (filters.limit)      params.append('limit',      String(filters.limit))
     if (filters.categoryId) params.append('categoryId', filters.categoryId)
-    if (filters.subcategoryId) params.append('subcategoryId', filters.subcategoryId)
     minPrices.forEach(value => params.append('minPrice', value == null ? '' : String(value)))
     maxPrices.forEach(value => params.append('maxPrice', value == null ? '' : String(value)))
     if (filters.search)     params.append('search',     filters.search)
@@ -68,7 +67,6 @@ export class ProductService {
     name: string
     sku?: string
     categoryName?: string
-    subcategoryName?: string
     brandName?: string
     price?: number
     stock?: number

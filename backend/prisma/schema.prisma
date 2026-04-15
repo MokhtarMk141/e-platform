@@ -8,19 +8,19 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  name         String
-  email        String        @unique
-  password     String
-  phone        String?
-  role         UserRole      @default(CUSTOMER)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  cart         Cart?
-  chatMessages ChatMessage[]
-  orders       Order[]
-  refreshTokens      RefreshToken[]
+  id                  String               @id @default(cuid())
+  name                String
+  email               String               @unique
+  password            String
+  role                UserRole             @default(CUSTOMER)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  phone               String?
+  cart                Cart?
+  chatMessages        ChatMessage[]
+  orders              Order[]
   passwordResetTokens PasswordResetToken[]
+  refreshTokens       RefreshToken[]
 }
 
 model RefreshToken {
@@ -42,27 +42,21 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id])
 }
 
-
 model Category {
   id            String        @id @default(cuid())
-  name          String        @unique
+  name          String
+  slug          String        @unique
   description   String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  parentId      String?
+  parent        Category?     @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children      Category[]    @relation("CategoryToCategory")
   products      Product[]
-  subcategories Subcategory[]
+
+  @@unique([name, parentId])
 }
 
-model Subcategory {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  description String?
-  categoryId  String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  products    Product[]
-}
 
 model Brand {
   id          String    @id @default(cuid())
@@ -85,16 +79,14 @@ model Product {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   categoryId            String?
-  subcategoryId         String?
   brandId               String?
   aiproductDescriptions AIProductDescription[]
   cartItems             CartItem[]
-  orderItems            OrderItem[]
-  category              Category?              @relation(fields: [categoryId], references: [id])
-  subcategory           Subcategory?           @relation(fields: [subcategoryId], references: [id])
-  brand                 Brand?                 @relation(fields: [brandId], references: [id])
-  recommendations       Recommendation[]
   discounts             Discount[]
+  orderItems            OrderItem[]
+  brand                 Brand?                 @relation(fields: [brandId], references: [id])
+  category              Category?              @relation(fields: [categoryId], references: [id])
+  recommendations       Recommendation[]
 }
 
 model Cart {
@@ -117,26 +109,26 @@ model CartItem {
 }
 
 model Order {
-  id        String      @id @default(cuid())
-  userId    String
-  status    OrderStatus @default(PENDING)
-  total     Float
-  customerName String?
-  customerEmail String?
-  customerPhone String?
+  id                   String      @id @default(cuid())
+  userId               String
+  status               OrderStatus @default(PENDING)
+  total                Float
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  customerName         String?
+  customerEmail        String?
+  customerPhone        String?
   shippingAddressLine1 String?
   shippingAddressLine2 String?
-  shippingCity String?
-  shippingState String?
-  shippingPostalCode String?
-  shippingCountry String?
-  deliveryMode String @default("STANDARD")
-  paymentMethod String @default("CASH_ON_DELIVERY")
-  orderNotes String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  user      User        @relation(fields: [userId], references: [id])
-  items     OrderItem[]
+  shippingCity         String?
+  shippingState        String?
+  shippingPostalCode   String?
+  shippingCountry      String?
+  deliveryMode         String      @default("STANDARD")
+  paymentMethod        String      @default("CASH_ON_DELIVERY")
+  orderNotes           String?
+  user                 User        @relation(fields: [userId], references: [id])
+  items                OrderItem[]
 }
 
 model OrderItem {
@@ -176,6 +168,21 @@ model Recommendation {
   product              Product  @relation(fields: [productId], references: [id])
 }
 
+model Discount {
+  id         String         @id @default(cuid())
+  code       String?        @unique
+  discount   Float
+  type       DiscountType
+  expiryDate DateTime
+  status     DiscountStatus @default(ACTIVE)
+  usageCount Int            @default(0)
+  maxUses    Int?
+  productId  String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  product    Product?       @relation(fields: [productId], references: [id])
+}
+
 enum UserRole {
   CUSTOMER
   ADMIN
@@ -187,21 +194,6 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
-}
-
-model Discount {
-  id         String     @id @default(cuid())
-  code       String?    @unique
-  discount   Float
-  type       DiscountType
-  expiryDate DateTime
-  status     DiscountStatus @default(ACTIVE)
-  usageCount Int        @default(0)
-  maxUses    Int?
-  productId  String?
-  product    Product?   @relation(fields: [productId], references: [id])
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
 }
 
 enum DiscountType {

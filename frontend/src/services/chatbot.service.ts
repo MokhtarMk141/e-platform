@@ -29,7 +29,6 @@ interface ChatbotMessageResponse {
       url: string;
       brand: string | null;
       category: string | null;
-      subcategory: string | null;
       description: string | null;
       score: number;
       matchReasons: string[];
@@ -71,7 +70,6 @@ export interface ChatbotProductCard {
   url: string;
   brand: string | null;
   category: string | null;
-  subcategory: string | null;
   description: string | null;
   score: number;
   matchReasons: string[];

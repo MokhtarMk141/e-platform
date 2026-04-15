@@ -7,6 +7,7 @@ const router = Router();
 const controller = new CategoryController();
 
 router.get("/", controller.getAll);
+router.get("/tree", controller.getTree);
 router.get("/:id", controller.getById);
 
 // Write operations restricted to ADMIN

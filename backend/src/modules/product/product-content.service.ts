@@ -5,9 +5,9 @@ export class ProductContentService {
     const titleParts = [input.brandName, input.name].filter(Boolean);
     const title = titleParts.length > 0 ? titleParts.join(" ") : input.name;
 
-    const categoryLine = [input.subcategoryName, input.categoryName]
+    const categoryLine = [input.categoryName]
       .filter(Boolean)
-      .join(" / ");
+      .join(" > ");
 
     const useCase = this.getUseCase(input);
     const availability =
@@ -29,7 +29,6 @@ export class ProductContentService {
       `- Product name: ${input.name}`,
       ...(input.brandName ? [`- Brand: ${input.brandName}`] : []),
       ...(input.categoryName ? [`- Category: ${input.categoryName}`] : []),
-      ...(input.subcategoryName ? [`- Subcategory: ${input.subcategoryName}`] : []),
       ...(input.sku ? [`- SKU: ${input.sku}`] : []),
       ...(input.price != null ? [`- Price: ${this.formatPrice(input.price)}`] : []),
       `- Stock status: ${availability}`,
@@ -47,7 +46,6 @@ export class ProductContentService {
 
   private getProductTypeLabel(input: GenerateProductContentDto): string {
     return (
-      input.subcategoryName?.toLowerCase() ||
       input.categoryName?.toLowerCase() ||
       "product"
     );
@@ -57,7 +55,6 @@ export class ProductContentService {
     const haystack = [
       input.name,
       input.categoryName,
-      input.subcategoryName,
     ]
       .filter(Boolean)
       .join(" ")
@@ -95,7 +92,6 @@ export class ProductContentService {
     const haystack = [
       input.name,
       input.categoryName,
-      input.subcategoryName,
     ]
       .filter(Boolean)
       .join(" ")
@@ -131,11 +127,7 @@ export class ProductContentService {
   }
 
   private getCatalogLabel(input: GenerateProductContentDto): string {
-    return input.subcategoryName
-      ? `Customers browsing the ${input.subcategoryName} section of the catalog`
-      : input.categoryName
-      ? `Customers browsing the ${input.categoryName} section of the catalog`
-      : "Customers browsing the store catalog";
+    return `Customers browsing the catalog`;
   }
 
   private formatPrice(price: number): string {

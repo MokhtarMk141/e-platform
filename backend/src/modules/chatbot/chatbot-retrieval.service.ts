@@ -322,7 +322,6 @@ const CATEGORY_MATCH_TERMS: Record<string, string[]> = {
 type CatalogProduct = Prisma.ProductGetPayload<{
   include: {
     category: true;
-    subcategory: true;
     brand: true;
   };
 }>;
@@ -1046,7 +1045,6 @@ export class ChatbotRetrievalService {
         where: this.buildWhere(intent, mode),
         include: {
           category: true,
-          subcategory: true,
           brand: true,
         },
         orderBy: this.buildOrderBy(intent),
@@ -1109,7 +1107,6 @@ export class ChatbotRetrievalService {
           { description: { contains: term, mode: "insensitive" } },
           { brand: { name: { contains: term, mode: "insensitive" } } },
           { category: { name: { contains: term, mode: "insensitive" } } },
-          { subcategory: { name: { contains: term, mode: "insensitive" } } },
         ]),
       });
     }
@@ -1129,7 +1126,6 @@ export class ChatbotRetrievalService {
     return categoryTerms.flatMap((term) => [
       { name: { contains: term, mode: "insensitive" } },
       { category: { name: { contains: term, mode: "insensitive" } } },
-      { subcategory: { name: { contains: term, mode: "insensitive" } } },
     ]);
   }
 
@@ -1279,15 +1275,14 @@ export class ChatbotRetrievalService {
     const { product, intent, popularity, maxPopularity, priceBenchmarks, queryTerms } =
       params;
     const categoryText = normalizeText(
-      [product.category?.name, product.subcategory?.name].join(" ")
+      (product.category as any)?.name
     );
     const searchableText = normalizeText(
       [
         product.name,
         product.description,
-        product.brand?.name,
-        product.category?.name,
-        product.subcategory?.name,
+        (product.brand as any)?.name,
+        (product.category as any)?.name,
       ].join(" ")
     );
     const usageTags = this.inferUsageTags(searchableText);
@@ -1377,8 +1372,7 @@ export class ChatbotRetrievalService {
       stock: product.stock,
       url: `/product-page/${product.id}`,
       brand: product.brand?.name ?? null,
-      category: product.category?.name ?? null,
-      subcategory: product.subcategory?.name ?? null,
+      category: (product.category as any)?.name ?? null,
       description: product.description,
       score: Math.round(score * 10) / 10,
       matchReasons: reasons.slice(0, 4),
@@ -1409,7 +1403,7 @@ export class ChatbotRetrievalService {
     if (
       searchableText.includes("desktop") ||
       searchableText.includes("tower") ||
-      normalizeText(product.category?.name).includes("desktop")
+      normalizeText((product.category as any)?.name).includes("desktop")
     ) {
       return "desktop";
     }
@@ -1737,7 +1731,7 @@ export class ChatbotRetrievalService {
     }
 
     const categoryText = normalizeText(
-      [product.category, product.subcategory].join(" ")
+      [product.category].filter(Boolean).join(" ")
     );
     const matchTerms = this.getCategoryMatchTerms(intent.category);
 

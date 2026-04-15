@@ -13,6 +13,10 @@ export class CategoryService {
     return ApiClient.get<CategoryListResponse>('/categories')
   }
 
+  static getAllTree(): Promise<CategoryListResponse> {
+    return ApiClient.get<CategoryListResponse>('/categories/tree')
+  }
+
   static getById(id: string): Promise<CategoryResponse> {
     return ApiClient.get<CategoryResponse>(`/categories/${id}`)
   }

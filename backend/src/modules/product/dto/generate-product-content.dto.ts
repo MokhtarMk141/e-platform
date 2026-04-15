@@ -13,7 +13,6 @@ export const generateProductContentSchema = z.object({
   name: z.string().min(1, "Product name is required").max(255),
   sku: optionalTrimmedString,
   categoryName: optionalTrimmedString,
-  subcategoryName: optionalTrimmedString,
   brandName: optionalTrimmedString,
   price: z.number().positive("Price must be positive").optional(),
   stock: z.number().int().min(0, "Stock cannot be negative").optional(),

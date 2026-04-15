@@ -4,19 +4,16 @@ import { UpdateProductDto } from "./dto/update-product.dto";
 import { ProductResponseDto } from "./dto/product-response.dto";
 import { AppError } from "../../exceptions/app-error";
 import { Prisma } from "@prisma/client";
-import { SubcategoryRepository } from "../subcategory/subcategory.repository";
 
 export class ProductService {
   constructor(
-    private productRepository: ProductRepository = new ProductRepository(),
-    private subcategoryRepository: SubcategoryRepository = new SubcategoryRepository()
+    private productRepository: ProductRepository = new ProductRepository()
   ) {}
 
   async getAllProducts(params?: {
     page?: number;
     limit?: number;
     categoryId?: string;
-    subcategoryId?: string;
     minPrice?: Array<number | undefined>;
     maxPrice?: Array<number | undefined>;
     search?: string;
@@ -31,7 +28,6 @@ export class ProductService {
         skip,
         take: limit,
         categoryId: params?.categoryId,
-        subcategoryId: params?.subcategoryId,
         minPrice: params?.minPrice,
         maxPrice: params?.maxPrice,
         search: params?.search,
@@ -39,7 +35,6 @@ export class ProductService {
       }),
       this.productRepository.count({
         categoryId: params?.categoryId,
-        subcategoryId: params?.subcategoryId,
         minPrice: params?.minPrice,
         maxPrice: params?.maxPrice,
         search: params?.search,
@@ -69,9 +64,7 @@ export class ProductService {
       throw new AppError(`SKU '${dto.sku}' is already in use`, 409);
     }
 
-    const normalizedDto = await this.normalizeCategoryFields(dto);
-
-    const product = await this.productRepository.create(normalizedDto);
+    const product = await this.productRepository.create(dto);
     return new ProductResponseDto(product);
   }
 
@@ -88,8 +81,7 @@ export class ProductService {
       }
     }
 
-    const normalizedDto = await this.normalizeCategoryFields(dto);
-    const updated = await this.productRepository.update(id, normalizedDto);
+    const updated = await this.productRepository.update(id, dto);
     return new ProductResponseDto(updated);
   }
 
@@ -122,21 +114,5 @@ export class ProductService {
 
       throw error;
     }
-  }
-
-  private async normalizeCategoryFields<T extends CreateProductDto | UpdateProductDto>(dto: T): Promise<T> {
-    if (!dto.subcategoryId) {
-      return dto;
-    }
-
-    const subcategory = await this.subcategoryRepository.findById(dto.subcategoryId);
-    if (!subcategory) {
-      throw new AppError("Subcategory not found", 404);
-    }
-
-    return {
-      ...dto,
-      categoryId: subcategory.categoryId,
-    };
   }
 }

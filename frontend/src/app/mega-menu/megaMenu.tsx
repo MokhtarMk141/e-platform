@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import logoimg from "../../../public/website_logo.png";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useCart } from "@/hooks/useCart";
 import { useAuthStore } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { CategoryService } from "@/services/category.service";
+import { Category } from "@/types/product.types";
 
 const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
@@ -51,10 +53,10 @@ const menus = {
       {
         title: "PC",
         items: [
-          { icon: "pc", label: "GAMING PC", desc: "Desktop gaming setups ready to play" },
-          { icon: "pack", label: "GAMING PACK", desc: "Complete gaming bundles and starter packs" },
-          { icon: "build", label: "UPGRADED PC", desc: "Enhanced builds for stronger gaming performance" },
-          { icon: "star", label: "SUPERIOR PC", desc: "Premium configurations for high-end play" },
+          { icon: "pc", label: "GAMING PC", slug: "gaming-pc", desc: "Desktop gaming setups ready to play" },
+          { icon: "pack", label: "GAMING PACK", slug: "gaming-pack", desc: "Complete gaming bundles and starter packs" },
+          { icon: "build", label: "UPGRADED PC", slug: "upgraded-pc", desc: "Enhanced builds for stronger gaming performance" },
+          { icon: "star", label: "SUPERIOR PC", slug: "superior-pc", desc: "Premium configurations for high-end play" },
         ],
       },
     ],
@@ -72,17 +74,17 @@ const menus = {
       {
         title: "ACCESSORIES",
         items: [
-          { icon: "mouse", label: "Gaming Mouse", desc: "Precision gaming mice and wireless models" },
-          { icon: "keyboard", label: "Gaming Keyboards", desc: "Mechanical keyboards for competitive play" },
-          { icon: "headset", label: "Gaming Headsets", desc: "Immersive audio headsets and gaming sound" },
-          { icon: "mousepad", label: "Gaming Mousepads", desc: "Desk mats and mouse pads for every setup" },
-          { icon: "controller", label: "Controllers & Wheels", desc: "Controllers, wheels, and racing gear" },
-          { icon: "webcam", label: "Webcams", desc: "Streaming and meeting webcams" },
-          { icon: "pack", label: "Gaming Packs", desc: "Accessory bundles for gamers" },
-          { icon: "microphone", label: "Microphones", desc: "Voice, streaming, and studio mics" },
-          { icon: "speaker", label: "PC Speakers", desc: "Desktop speakers and compact audio" },
-          { icon: "backpack", label: "Backpacks", desc: "Travel bags for laptops and gear" },
-          { icon: "chair", label: "Gaming Chairs", desc: "Ergonomic chairs built for long sessions" },
+          { icon: "mouse", label: "Gaming Mouse", slug: "mice", desc: "Precision gaming mice and wireless models" },
+          { icon: "keyboard", label: "Gaming Keyboards", slug: "keyboards", desc: "Mechanical keyboards for competitive play" },
+          { icon: "headset", label: "Gaming Headsets", slug: "headsets", desc: "Immersive audio headsets and gaming sound" },
+          { icon: "mousepad", label: "Gaming Mousepads", slug: "gaming-mousepads", desc: "Desk mats and mouse pads for every setup" },
+          { icon: "controller", label: "Controllers & Wheels", slug: "controllers-wheels", desc: "Controllers, wheels, and racing gear" },
+          { icon: "webcam", label: "Webcams", slug: "webcams", desc: "Streaming and meeting webcams" },
+          { icon: "pack", label: "Gaming Packs", slug: "gaming-packs", desc: "Accessory bundles for gamers" },
+          { icon: "microphone", label: "Microphones", slug: "microphones", desc: "Voice, streaming, and studio mics" },
+          { icon: "speaker", label: "PC Speakers", slug: "pc-speakers", desc: "Desktop speakers and compact audio" },
+          { icon: "backpack", label: "Backpacks", slug: "backpacks", desc: "Travel bags for laptops and gear" },
+          { icon: "chair", label: "Gaming Chairs", slug: "gaming-chairs", desc: "Ergonomic chairs built for long sessions" },
         ],
       },
     ],
@@ -100,15 +102,15 @@ const menus = {
       {
         title: "COMPONENTS",
         items: [
-          { icon: "cpu", label: "Processors", desc: "Intel Core and AMD Ryzen processors" },
-          { icon: "motherboard", label: "Motherboards", desc: "ATX, mATX, and Mini-ITX motherboards" },
-          { icon: "gpu", label: "Graphics Cards", desc: "Dedicated GPUs for gaming and creation" },
-          { icon: "ram", label: "Memory (RAM)", desc: "DDR4 and DDR5 memory kits" },
-          { icon: "storage", label: "Storage (HDD/SSD)", desc: "Fast SSDs and high-capacity hard drives" },
-          { icon: "case", label: "PC Cases", desc: "Cases for airflow, style, and cable routing" },
-          { icon: "psu", label: "Power Supplies", desc: "Reliable power supplies for every build" },
-          { icon: "cooling", label: "Cooling", desc: "Air cooling, AIOs, and system fans" },
-          { icon: "charger", label: "Laptop Chargers", desc: "Laptop chargers and power adapters" },
+          { icon: "cpu", label: "Processors", slug: "processors", desc: "Intel Core and AMD Ryzen processors" },
+          { icon: "motherboard", label: "Motherboards", slug: "motherboards", desc: "ATX, mATX, and Mini-ITX motherboards" },
+          { icon: "gpu", label: "Graphics Cards", slug: "graphics-cards", desc: "Dedicated GPUs for gaming and creation" },
+          { icon: "ram", label: "Memory (RAM)", slug: "memory", desc: "DDR4 and DDR5 memory kits" },
+          { icon: "storage", label: "Storage (HDD/SSD)", slug: "storage", desc: "Fast SSDs and high-capacity hard drives" },
+          { icon: "case", label: "PC Cases", slug: "pc-cases", desc: "Cases for airflow, style, and cable routing" },
+          { icon: "psu", label: "Power Supplies", slug: "power-supplies", desc: "Reliable power supplies for every build" },
+          { icon: "cooling", label: "Cooling", slug: "cpu-cooling", desc: "Air cooling, AIOs, and system fans" },
+          { icon: "charger", label: "Laptop Chargers", slug: "laptop-chargers", desc: "Laptop chargers and power adapters" },
         ],
       },
     ],
@@ -157,12 +159,31 @@ export default function MegaMenu() {
   const router = useRouter();
   const [active, setActive] = useState<MenuKey | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [categoryTree, setCategoryTree] = useState<Category[]>([]);
   const { cart, toggleCart, resetCart } = useCart();
   const { isAuthenticated, user, logout } = useAuthStore();
 
   useEffect(() => {
     setMounted(true);
+    const fetchTree = async () => {
+      try {
+        const res = await CategoryService.getAllTree();
+        setCategoryTree(res.data);
+      } catch (err) {
+        console.error("Failed to fetch category tree", err);
+      }
+    };
+    fetchTree();
   }, []);
+
+  const findCategoryId = (slug: string) => {
+    const categories = categoryTree.flatMap(c => [c, ...(c.children || [])]);
+    return categories.find(c => c.slug === slug)?.id;
+  };
+   const getHref = (slug: string) => {
+    const id = findCategoryId(slug);
+    return id ? `/product-page?category=${id}` : "/product-page";
+  };
 
   return (
     <div style={{ background: "var(--background)", fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", borderBottom: "1px solid var(--border)" }}>
@@ -503,28 +524,25 @@ export default function MegaMenu() {
           {/* Nav links */}
           <div style={{ display: "flex", alignItems: "stretch", height: "100%" }}>
             {navLinks.map((link) => {
-              const has = !!(menus as any)[link];
               const isOpen = active === link;
               return (
                 <button
                   key={link}
-                  className={`nav-btn${isOpen ? " open" : ""}`}
-                  onMouseEnter={() => setActive(link as MenuKey)}
+                   className={`nav-btn${isOpen ? " open" : ""}`}
+                  onMouseEnter={() => setActive(link)}
                 >
                   {link}
-                  {has && (
-                    <svg
-                      className={`caret${isOpen ? " open" : ""}`}
-                      width="11" height="11"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    >
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  )}
+                  <svg
+                    className={`caret${isOpen ? " open" : ""}`}
+                    width="11" height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
                 </button>
               );
             })}
@@ -585,10 +603,8 @@ export default function MegaMenu() {
             )}
 
           </div>
-        </div>
-
-        {/* ── Dropdown ── */}
-        {active && (menus as any)[active] && (
+        </div>        {/* ── Dropdown ── */}
+        {active && menus[active as MenuKey] && (
           <div
             className="dropdown"
             style={{
@@ -607,18 +623,23 @@ export default function MegaMenu() {
 
                 {/* Sections */}
                 <div style={{ display: "flex", gap: 24, flex: 1 }}>
-                  {(menus as any)[active].sections.map((section: any) => (
-                    <div key={section.title} style={{ flex: 1, minWidth: 0 }}>
-                      <p className="section-title">{section.title}</p>
-                      <div style={{ display: "grid", gridTemplateColumns: section.items.length > 4 ? "1fr 1fr" : "1fr", gap: "4px" }}>
-                        {section.items.map((item: any) => (
+                  {menus[active as MenuKey].sections.map((sec, sidx) => (
+                    <div key={sidx} style={{ flex: 1, minWidth: 0 }}>
+                      <p className="section-title">{sec.title}</p>
+                      <div style={{ 
+                        display: "grid", 
+                        gridTemplateColumns: sec.items.length > 4 ? "1fr 1fr" : "1fr", 
+                        gap: "4px" 
+                      }}>
+                        {sec.items.map((item, iidx) => (
                           <Link
-                            key={item.label}
-                            href={`/product-page?category=${encodeURIComponent(toCategorySlug(item.label))}&categoryKey=${encodeURIComponent(item.icon)}`}
+                            key={iidx}
+                            href={getHref(item.slug)}
                             className="menu-item"
+                            onClick={() => setActive(null)}
                           >
                             <div className="item-icon">
-                              <Icon d={(icons as any)[item.icon]} size={14} />
+                              <Icon d={icons[item.icon as keyof typeof icons]} size={14} />
                             </div>
                             <div style={{ minWidth: 0 }}>
                               <p className="item-label">{item.label}</p>
@@ -632,109 +653,93 @@ export default function MegaMenu() {
                 </div>
 
                 {/* Featured card */}
-                <div style={{ width: 260, flexShrink: 0 }}>
-                  <div style={{
-                    borderRadius: 16,
-                    overflow: "hidden",
-                    border: "1px solid var(--border)",
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    background: "var(--background)",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
-                  }}>
-                    {/* Card body */}
+                {menus[active as MenuKey].featured && (
+                  <div style={{ width: 260, flexShrink: 0 }}>
                     <div style={{
-                      flex: 1,
-                      background: "linear-gradient(140deg, var(--background) 0%, var(--surface) 100%)",
-                      padding: "24px 20px",
-                      position: "relative",
+                      borderRadius: 16,
                       overflow: "hidden",
+                      border: "1px solid var(--border)",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      background: "var(--background)",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
                     }}>
-                      {/* Soft radial glow */}
+                      {/* Card body */}
                       <div style={{
-                        position: "absolute", right: -40, top: -40,
-                        width: 200, height: 200,
-                        borderRadius: "50%",
-                        background: "radial-gradient(circle, rgba(255,40,0,0.1) 0%, transparent 70%)",
-                        pointerEvents: "none",
-                      }} />
-
-                      <span style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 5,
-                        background: "rgba(255,40,0,0.1)",
-                        border: "1px solid rgba(255,40,0,0.2)",
-                        color: "var(--brand-red)",
-                        fontSize: 10,
-                        fontWeight: 800,
-                        letterSpacing: "0.05em",
-                        padding: "4px 10px",
-                        borderRadius: 20,
-                        marginBottom: 16,
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                        textTransform: "uppercase",
+                        flex: 1,
+                        background: "linear-gradient(140deg, var(--background) 0%, var(--surface) 100%)",
+                        padding: "24px 20px",
+                        position: "relative",
+                        overflow: "hidden",
                       }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--brand-red)", display: "inline-block" }} />
-                        {(menus as any)[active].featured.badge}
-                      </span>
+                        {/* Soft radial glow */}
+                        <div style={{
+                          position: "absolute", right: -40, top: -40,
+                          width: 200, height: 200,
+                          borderRadius: "50%",
+                          background: "radial-gradient(circle, rgba(255,40,0,0.1) 0%, transparent 70%)",
+                          pointerEvents: "none",
+                        }} />
 
-                      <h3 style={{
-                        color: "var(--foreground)",
-                        fontWeight: 800,
-                        fontSize: 20,
-                        lineHeight: 1.25,
-                        margin: "0 0 12px",
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                        letterSpacing: "-0.03em",
-                      }}>
-                        {(menus as any)[active].featured.title}
-                      </h3>
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          background: "rgba(255,40,0,0.1)",
+                          border: "1px solid rgba(255,40,0,0.2)",
+                          color: "var(--brand-red)",
+                          fontSize: 10,
+                          fontWeight: 800,
+                          letterSpacing: "0.05em",
+                          padding: "4px 10px",
+                          borderRadius: 20,
+                          marginBottom: 16,
+                          fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          textTransform: "uppercase",
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--brand-red)", display: "inline-block" }} />
+                          {menus[active as MenuKey].featured?.badge || "FEATURED"}
+                        </span>
 
-                      <p style={{
-                        color: "var(--text-muted)",
-                        fontSize: 13,
-                        lineHeight: 1.6,
-                        margin: 0,
-                        fontFamily: "'DM Sans', sans-serif",
-                      }}>
-                        {(menus as any)[active].featured.desc}
-                      </p>
-                    </div>
+                        <h3 style={{
+                          color: "var(--foreground)",
+                          fontWeight: 800,
+                          fontSize: 20,
+                          lineHeight: 1.25,
+                          margin: "0 0 12px",
+                          fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          letterSpacing: "-0.03em",
+                        }}>
+                          {menus[active as MenuKey].featured?.title}
+                        </h3>
 
-                    <div style={{ padding: "0 20px 24px", background: "var(--background)" }}>
-                      <a href={(menus as any)[active].featured.href} className="featured-cta">
-                        {(menus as any)[active].featured.cta}
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                          <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                      </a>
+                        <p style={{
+                          color: "var(--text-muted)",
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                          margin: 0,
+                          fontFamily: "'DM Sans', sans-serif",
+                        }}>
+                          {menus[active as MenuKey].featured?.desc}
+                        </p>
+                      </div>
+
+                      <div style={{ padding: "0 20px 24px", background: "var(--background)" }}>
+                        <Link 
+                          href={menus[active as MenuKey].featured?.href || "/product-page"} 
+                          className="featured-cta"
+                          onClick={() => setActive(null)}
+                        >
+                          {menus[active as MenuKey].featured?.cta}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Bottom bar */}
-              <div style={{
-                marginTop: 24,
-                paddingTop: 20,
-                borderTop: "1px solid var(--border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}>
-                <a href="/product-page" className="see-all">
-                  See all products
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </a>
-                <div style={{ display: "flex", gap: 28 }}>
-                  {["PC Builder", "Compatibility", "Benchmarks", "Expert Reviews"].map((l) => (
-                    <a key={l} href="#" className="bottom-link">{l}</a>
-                  ))}
-                </div>
+                )}
               </div>
             </div>
           </div>

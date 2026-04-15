@@ -21,6 +21,15 @@ export class CategoryController {
     });
   });
 
+  getTree = asyncHandler(async (req: Request, res: Response) => {
+    const categories = await this.categoryService.getCategoryTree();
+
+    return sendSuccess(res, {
+      message: "Category tree fetched successfully",
+      data: categories,
+    });
+  });
+
   getById = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const category = await this.categoryService.getCategoryById(id);
