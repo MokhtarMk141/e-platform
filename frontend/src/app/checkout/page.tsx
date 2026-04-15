@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { OrderService } from "@/services/order.service";
-import { DiscountService } from "@/services/discount.service";
+import { PromotionService } from "@/services/promotion.service";
 import { CheckoutRequest, DeliveryMode } from "@/types/order.types";
 import MegaMenu from "../mega-menu/megaMenu";
 
@@ -275,11 +275,11 @@ export default function CheckoutPage() {
         price: item.price,
       }));
 
-      const res = await DiscountService.validateCode(couponCode, cartItems);
+      const res = await PromotionService.validateCoupon(couponCode, cartItems);
       setAppliedDiscount({
         code: res.code,
         amount: res.discountAmount,
-        type: res.type,
+        type: res.discountType,
       });
     } catch (err: any) {
       setError(err?.message || "Invalid coupon code");

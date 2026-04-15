@@ -162,7 +162,11 @@ export class ProductRepository {
         where: { productId: id },
       });
 
-      await tx.discount.deleteMany({
+      await tx.productDiscount.deleteMany({
+        where: { productId: id },
+      });
+
+      await tx.flashSaleProduct.deleteMany({
         where: { productId: id },
       });
 

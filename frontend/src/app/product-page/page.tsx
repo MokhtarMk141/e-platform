@@ -8,6 +8,7 @@ import { useCategories } from '@/hooks/useCategories'
 import { useCart } from '@/hooks/useCart'
 import { useAuthStore } from '@/hooks/useAuth'
 import type { Product } from '@/types/product.types'
+import { getProductFinalPrice, productHasDiscount } from '@/lib/product-pricing'
 import MegaMenu from '../mega-menu/megaMenu';
 
 const FONTS = `
@@ -213,6 +214,8 @@ function GridCard({ product, wished, onWish, delay }: {
 }) {
   const [hovered, setHovered] = useState(false)
   const { addItem } = useCart()
+  const finalPrice = getProductFinalPrice(product)
+  const hasDiscount = productHasDiscount(product)
 
   return (
     <Link
@@ -339,12 +342,25 @@ function GridCard({ product, wished, onWish, delay }: {
           )}
 
           <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10 }}>
-            <span style={{
-              fontSize: 20, fontWeight: 800, color: 'var(--foreground)',
-              fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
-            }}>
-              TND {product.price ? product.price.toFixed(2) : "0.00"}
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {hasDiscount && (
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'var(--text-dim)',
+                  textDecoration: 'line-through',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}>
+                  TND {product.price ? product.price.toFixed(2) : "0.00"}
+                </span>
+              )}
+              <span style={{
+                fontSize: 20, fontWeight: 800, color: 'var(--foreground)',
+                fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
+              }}>
+                TND {finalPrice.toFixed(2)}
+              </span>
+            </div>
             <button
               disabled={product.stock === 0}
               onClick={(e) => {
@@ -353,7 +369,13 @@ function GridCard({ product, wished, onWish, delay }: {
                 addItem(product.id, 1, {
                   productId: product.id,
                   name: product.name,
-                  price: product.price ?? 0,
+                  price: finalPrice,
+                  originalPrice: product.price,
+                  discountPercentage: product.discountPercentage,
+                  discountAmount: product.discountAmount,
+                  discountLabel: product.discountLabel,
+                  hasDiscount,
+                  activePromotion: product.activePromotion,
                   imageUrl: product.imageUrl ?? null,
                   sku: product.sku,
                 });
@@ -393,6 +415,8 @@ function ListCard({ product, wished, onWish, delay }: {
 }) {
   const [hovered, setHovered] = useState(false)
   const { addItem } = useCart()
+  const finalPrice = getProductFinalPrice(product)
+  const hasDiscount = productHasDiscount(product)
 
   return (
     <Link
@@ -448,12 +472,25 @@ function ListCard({ product, wished, onWish, delay }: {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 16, flexShrink: 0 }}>
-            <span style={{
-              fontSize: 24, fontWeight: 900, color: 'var(--brand-red)',
-              fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
-            }}>
-              TND {product.price ? product.price.toFixed(2) : "0.00"}
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+              {hasDiscount && (
+                <span style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'var(--text-dim)',
+                  textDecoration: 'line-through',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}>
+                  TND {product.price ? product.price.toFixed(2) : "0.00"}
+                </span>
+              )}
+              <span style={{
+                fontSize: 24, fontWeight: 900, color: 'var(--brand-red)',
+                fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.04em',
+              }}>
+                TND {finalPrice.toFixed(2)}
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={onWish}
@@ -479,7 +516,13 @@ function ListCard({ product, wished, onWish, delay }: {
                   addItem(product.id, 1, {
                     productId: product.id,
                     name: product.name,
-                    price: product.price ?? 0,
+                    price: finalPrice,
+                    originalPrice: product.price,
+                    discountPercentage: product.discountPercentage,
+                    discountAmount: product.discountAmount,
+                    discountLabel: product.discountLabel,
+                    hasDiscount,
+                    activePromotion: product.activePromotion,
                     imageUrl: product.imageUrl ?? null,
                     sku: product.sku,
                   });

@@ -4,6 +4,7 @@ import { UpdateProductDto } from "./dto/update-product.dto";
 import { ProductResponseDto } from "./dto/product-response.dto";
 import { AppError } from "../../exceptions/app-error";
 import { Prisma } from "@prisma/client";
+import { PromotionService } from "../promotion/promotion.service";
 
 export class ProductService {
   constructor(
@@ -42,8 +43,25 @@ export class ProductService {
       }),
     ]);
 
+    const pricingByProductId = await PromotionService.resolvePricingForProducts(products);
+
     return {
-      data: products.map((p) => new ProductResponseDto(p)),
+      data: products.map(
+        (product) =>
+          new ProductResponseDto(
+            product,
+            pricingByProductId.get(product.id) ??
+              {
+                originalPrice: product.price,
+                finalPrice: product.price,
+                discountAmount: 0,
+                discountPercentage: 0,
+                discountLabel: null,
+                hasDiscount: false,
+                activePromotion: null,
+              }
+          )
+      ),
       total,
       page,
       limit,
@@ -55,7 +73,8 @@ export class ProductService {
     if (!product) {
       throw new AppError("Product not found", 404);
     }
-    return new ProductResponseDto(product);
+    const pricing = await PromotionService.resolvePricingForProduct(product);
+    return new ProductResponseDto(product, pricing);
   }
 
   async createProduct(dto: CreateProductDto): Promise<ProductResponseDto> {
@@ -65,7 +84,8 @@ export class ProductService {
     }
 
     const product = await this.productRepository.create(dto);
-    return new ProductResponseDto(product);
+    const pricing = await PromotionService.resolvePricingForProduct(product);
+    return new ProductResponseDto(product, pricing);
   }
 
   async updateProduct(id: string, dto: UpdateProductDto): Promise<ProductResponseDto> {
@@ -82,7 +102,8 @@ export class ProductService {
     }
 
     const updated = await this.productRepository.update(id, dto);
-    return new ProductResponseDto(updated);
+    const pricing = await PromotionService.resolvePricingForProduct(updated);
+    return new ProductResponseDto(updated, pricing);
   }
 
   async deleteProduct(id: string): Promise<void> {

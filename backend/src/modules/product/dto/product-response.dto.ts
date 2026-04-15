@@ -1,10 +1,17 @@
 import { ProductWithCategory } from "../product.repository";
+import { ResolvedPricing } from "../../promotion/promotion-pricing";
 
 export class ProductResponseDto {
   id: string;
   name: string;
   description: string | null;
   price: number;
+  discountPercentage: number;
+  discountAmount: number;
+  discountLabel: string | null;
+  finalPrice: number;
+  hasDiscount: boolean;
+  activePromotion: ResolvedPricing["activePromotion"];
   sku: string;
   stock: number;
   imageUrl: string | null;
@@ -20,11 +27,17 @@ export class ProductResponseDto {
   createdAt: Date;
   updatedAt: Date;
 
-  constructor(product: ProductWithCategory) {
+  constructor(product: ProductWithCategory, pricing: ResolvedPricing) {
     this.id = product.id;
     this.name = product.name;
     this.description = product.description;
     this.price = product.price;
+    this.discountPercentage = pricing.discountPercentage;
+    this.discountAmount = pricing.discountAmount;
+    this.discountLabel = pricing.discountLabel;
+    this.finalPrice = pricing.finalPrice;
+    this.hasDiscount = pricing.hasDiscount;
+    this.activePromotion = pricing.activePromotion;
     this.sku = product.sku;
     this.stock = product.stock;
     this.imageUrl = product.imageUrl;

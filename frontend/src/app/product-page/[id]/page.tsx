@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ProductService } from '@/services/product.service'
 import { Product } from '@/types/product.types'
 import { useCart } from '@/hooks/useCart'
+import { getProductDiscountLabel, getProductFinalPrice, productHasDiscount } from '@/lib/product-pricing'
 import MegaMenu from '../../mega-menu/megaMenu'
 //hello worlddddd
 const FONTS = `
@@ -110,6 +111,9 @@ export default function ProductDetailPage() {
     }
 
     const inStock = product.stock > 0
+    const finalPrice = getProductFinalPrice(product)
+    const hasDiscount = productHasDiscount(product)
+    const discountLabel = getProductDiscountLabel(product, '$')
 
     return (
         <div style={{
@@ -312,13 +316,40 @@ export default function ProductDetailPage() {
                     <div style={{
                         display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 28,
                     }}>
-                        <span style={{
-                            fontSize: 40, fontWeight: 900, color: 'var(--brand-red)',
-                            fontFamily: "'Plus Jakarta Sans', sans-serif",
-                            letterSpacing: '-0.04em',
-                        }}>
-                            ${product.price ? product.price.toFixed(2) : '0.00'}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {hasDiscount && (
+                                <span style={{
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    color: 'var(--text-dim)',
+                                    textDecoration: 'line-through',
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                }}>
+                                    ${product.price ? product.price.toFixed(2) : '0.00'}
+                                </span>
+                            )}
+                            <span style={{
+                                fontSize: 40, fontWeight: 900, color: 'var(--brand-red)',
+                                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                letterSpacing: '-0.04em',
+                            }}>
+                                ${finalPrice.toFixed(2)}
+                            </span>
+                        </div>
+                        {hasDiscount && discountLabel && (
+                            <span style={{
+                                fontSize: 12,
+                                fontWeight: 800,
+                                color: 'var(--brand-red)',
+                                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                background: 'rgba(255,40,0,0.08)',
+                                padding: '4px 10px',
+                                borderRadius: 999,
+                                border: '1px solid rgba(255,40,0,0.14)',
+                            }}>
+                                {discountLabel}
+                            </span>
+                        )}
                         {inStock && (
                             <span style={{
                                 fontSize: 12, fontWeight: 700, color: '#22c55e',
@@ -384,7 +415,13 @@ export default function ProductDetailPage() {
                                 { label: 'Product Name', value: product.name },
                                 { label: 'SKU', value: product.sku },
                                 { label: 'Category', value: product.category?.name ?? '—' },
-                                { label: 'Price', value: `$${product.price?.toFixed(2) ?? '0.00'}` },
+                                ...(hasDiscount
+                                    ? [
+                                        { label: 'Original Price', value: `$${product.price?.toFixed(2) ?? '0.00'}` },
+                                        { label: 'Promotion', value: product.discountLabel ?? 'Active promotion' },
+                                      ]
+                                    : []),
+                                { label: hasDiscount ? 'New Price' : 'Price', value: `$${finalPrice.toFixed(2)}` },
                                 { label: 'Stock', value: inStock ? `${product.stock} units` : 'Out of Stock' },
                                 { label: 'Added', value: new Date(product.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
                                 { label: 'Last Updated', value: new Date(product.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
@@ -480,7 +517,13 @@ export default function ProductDetailPage() {
                                 addItem(product.id, quantity, {
                                     productId: product.id,
                                     name: product.name,
-                                    price: product.price ?? 0,
+                                    price: finalPrice,
+                                    originalPrice: product.price,
+                                    discountPercentage: product.discountPercentage,
+                                    discountAmount: product.discountAmount,
+                                    discountLabel: product.discountLabel,
+                                    hasDiscount,
+                                    activePromotion: product.activePromotion,
                                     imageUrl: product.imageUrl ?? null,
                                     sku: product.sku,
                                 })

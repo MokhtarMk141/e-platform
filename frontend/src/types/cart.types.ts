@@ -1,8 +1,16 @@
+import { ActivePromotionSummary } from "./promotion.types";
+
 export interface CartItem {
     id: string;
     productId: string;
     name: string;
     price: number;
+    originalPrice?: number;
+    discountPercentage?: number;
+    discountAmount?: number;
+    discountLabel?: string | null;
+    hasDiscount?: boolean;
+    activePromotion?: ActivePromotionSummary | null;
     imageUrl: string | null;
     sku: string;
     quantity: number;

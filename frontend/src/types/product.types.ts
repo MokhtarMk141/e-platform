@@ -1,4 +1,6 @@
 
+import { ActivePromotionSummary } from "./promotion.types"
+
 export interface CategorySummary {
   id: string
   name: string
@@ -29,6 +31,12 @@ export interface Product {
   name: string
   description: string | null
   price: number
+  discountPercentage: number
+  discountAmount: number
+  discountLabel: string | null
+  finalPrice: number
+  hasDiscount: boolean
+  activePromotion: ActivePromotionSummary | null
   sku: string
   stock: number
   imageUrl: string | null

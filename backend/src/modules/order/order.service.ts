@@ -5,7 +5,7 @@ import { OrderResponseDto } from "./dto/order-response.dto";
 import { OrderRepository } from "./order.repository";
 import { CheckoutOrderDto } from "./dto/checkout-order.dto";
 import { OrderEmailService } from "./order.email";
-import { DiscountService } from "../discount/discount.service";
+import { PromotionService } from "../promotion/promotion.service";
 
 export class OrderService {
   constructor(private orderRepository: OrderRepository = new OrderRepository()) {}
@@ -30,29 +30,34 @@ export class OrderService {
         }
       }
 
-      let total = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-      let discountAmount = 0;
+      const pricingByProductId = await PromotionService.resolvePricingForProducts(
+        cart.items.map((item) => item.product)
+      );
+
+      let total = cart.items.reduce(
+        (sum, item) =>
+          sum + (pricingByProductId.get(item.productId)?.finalPrice ?? item.product.price) * item.quantity,
+        0
+      );
+      let couponDiscountAmount = 0;
 
       if (checkoutData.discountCode) {
         const cartForValidation = cart.items.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
-          price: item.product.price,
+          price: pricingByProductId.get(item.productId)?.finalPrice ?? item.product.price,
         }));
 
-        const validation = await DiscountService.validateDiscountCode(
+        const validation = await PromotionService.validateCouponCode(
           checkoutData.discountCode,
-          cartForValidation
+          cartForValidation,
+          tx
         );
 
-        discountAmount = validation.discountAmount;
-        total -= discountAmount;
+        couponDiscountAmount = validation.discountAmount;
+        total -= couponDiscountAmount;
 
-        // Increment usage count
-        await tx.discount.update({
-          where: { id: validation.discountId },
-          data: { usageCount: { increment: 1 } },
-        });
+        await PromotionService.incrementCouponUsage(validation.couponId, tx);
       }
 
       // Restore stock decrement logic
@@ -88,7 +93,7 @@ export class OrderService {
             create: cart.items.map((item) => ({
               productId: item.productId,
               quantity: item.quantity,
-              price: item.product.price,
+              price: pricingByProductId.get(item.productId)?.finalPrice ?? item.product.price,
             })),
           },
         },

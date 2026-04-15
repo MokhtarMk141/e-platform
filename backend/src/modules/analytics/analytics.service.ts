@@ -112,8 +112,54 @@ export class AnalyticsService {
       prisma.user.count({ where: { role: "ADMIN" } }),
       prisma.product.count(),
       prisma.category.count(),
-      prisma.discount.count(),
-      prisma.discount.count({ where: { status: "ACTIVE" } }),
+      Promise.all([
+        prisma.productDiscount.count(),
+        prisma.categoryDiscount.count(),
+        prisma.flashSale.count(),
+        prisma.coupon.count(),
+      ]).then(([productDiscounts, categoryDiscounts, flashSales, coupons]) =>
+        productDiscounts + categoryDiscounts + flashSales + coupons
+      ),
+      Promise.all([
+        prisma.productDiscount.count({
+          where: {
+            isActive: true,
+            AND: [
+              { OR: [{ startDate: null }, { startDate: { lte: new Date() } }] },
+              { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+            ],
+          },
+        }),
+        prisma.categoryDiscount.count({
+          where: {
+            isActive: true,
+            AND: [
+              { OR: [{ startDate: null }, { startDate: { lte: new Date() } }] },
+              { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+            ],
+          },
+        }),
+        prisma.flashSale.count({
+          where: {
+            isActive: true,
+            AND: [
+              { OR: [{ startDate: null }, { startDate: { lte: new Date() } }] },
+              { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+            ],
+          },
+        }),
+        prisma.coupon.count({
+          where: {
+            isActive: true,
+            AND: [
+              { OR: [{ startDate: null }, { startDate: { lte: new Date() } }] },
+              { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+            ],
+          },
+        }),
+      ]).then(([productDiscounts, categoryDiscounts, flashSales, coupons]) =>
+        productDiscounts + categoryDiscounts + flashSales + coupons
+      ),
       prisma.cart.count(),
       prisma.cart.count({ where: { items: { some: {} } } }),
       prisma.order.count(),

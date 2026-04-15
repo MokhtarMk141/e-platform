@@ -5,6 +5,7 @@ import Drawer from './Drawer';
 import { useCart } from '@/hooks/useCart';
 import { useAuthStore } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { getProductDiscountLabel } from '@/lib/product-pricing';
 
 export default function CartDrawer() {
     const { cart, isOpen, setOpen, loading, fetchCart, removeItem, updateQuantity } = useCart();
@@ -93,7 +94,26 @@ export default function CartDrawer() {
                                         </button>
                                     </div>
 
-                                    <p style={{ margin: 0, fontSize: 12, color: 'var(--text-dim)', fontWeight: 600 }}>{item.sku}</p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                        <p style={{ margin: 0, fontSize: 12, color: 'var(--text-dim)', fontWeight: 600 }}>{item.sku}</p>
+                                        {item.hasDiscount && getProductDiscountLabel(item) && (
+                                            <span
+                                                style={{
+                                                    fontSize: 11,
+                                                    fontWeight: 800,
+                                                    color: 'var(--brand-red)',
+                                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                                    background: 'rgba(255,40,0,0.08)',
+                                                    padding: '4px 10px',
+                                                    borderRadius: 999,
+                                                    border: '1px solid rgba(255,40,0,0.14)',
+                                                    letterSpacing: '0.01em',
+                                                }}
+                                            >
+                                                Promo {getProductDiscountLabel(item)}
+                                            </span>
+                                        )}
+                                    </div>
 
                                     <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{
@@ -117,9 +137,16 @@ export default function CartDrawer() {
                                                 +
                                             </button>
                                         </div>
-                                        <span style={{ fontWeight: 900, fontSize: 16, color: 'var(--brand-red)' }}>
-                                            TND {(item.price * item.quantity).toFixed(2)}
-                                        </span>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+                                            {item.hasDiscount && typeof item.originalPrice === 'number' && (
+                                                <span style={{ fontSize: 12, color: 'var(--text-dim)', textDecoration: 'line-through', fontWeight: 700 }}>
+                                                    TND {(item.originalPrice * item.quantity).toFixed(2)}
+                                                </span>
+                                            )}
+                                            <span style={{ fontWeight: 900, fontSize: 16, color: 'var(--brand-red)' }}>
+                                                TND {(item.price * item.quantity).toFixed(2)}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

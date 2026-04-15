@@ -24,7 +24,10 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const hasActiveAuth = () => Boolean(AuthService.getToken() && AuthService.getUser());
 
-type GuestProductSnapshot = Pick<CartItem, 'productId' | 'name' | 'price' | 'imageUrl' | 'sku'>;
+type GuestProductSnapshot = Pick<
+  CartItem,
+  'productId' | 'name' | 'price' | 'originalPrice' | 'discountPercentage' | 'discountAmount' | 'discountLabel' | 'hasDiscount' | 'activePromotion' | 'imageUrl' | 'sku'
+>;
 
 const buildCartFromItems = (items: CartItem[]): Cart | null => {
   if (items.length === 0) {

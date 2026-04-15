@@ -32,6 +32,7 @@ const iconPaths = {
   integration: "M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5",
   feedback: "M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z",
   helpDesk: "M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z",
+  homepage: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
   chevronDown: "M6 9l6 6 6-6",
   chevronRight: "M9 18l6-6-6-6",
   collapse: "M11 19l-7-7 7-7M18 19l-7-7 7-7",
@@ -55,7 +56,18 @@ const navItems: NavItem[] = [
   { icon: "addProduct", label: "Add Product", href: "/admin/products/add" },
   { icon: "categories", label: "Categories", href: "/admin/categories" },
   { icon: "brands", label: "Brands", href: "/admin/brands" },
-  { icon: "discounts", label: "Discounts", href: "/admin/coupons" },
+  {
+    icon: "discounts",
+    label: "Promotions",
+    href: "/admin/promotions",
+    children: [
+      { icon: "discounts", label: "Product Discounts", href: "/admin/promotions/product-discounts" },
+      { icon: "categories", label: "Category Discounts", href: "/admin/promotions/category-discounts" },
+      { icon: "coupons", label: "Flash Sales", href: "/admin/promotions/flash-sales" },
+      { icon: "coupons", label: "Coupons", href: "/admin/promotions/coupons" },
+    ],
+  },
+  { icon: "homepage", label: "Homepage Hero", href: "/admin/homepage" },
   { icon: "settings", label: "Settings", href: "/admin/settings" },
 ];
 
@@ -303,6 +315,35 @@ export default function Sidebar() {
           line-height: 1.6;
           letter-spacing: 0.02em;
         }
+
+        .sb-children {
+          display: grid;
+          gap: 6px;
+          margin: 8px 0 0 48px;
+        }
+
+        .sb-child {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 10px;
+          border-radius: 10px;
+          text-decoration: none;
+          color: var(--text-muted);
+          font-size: 12.5px;
+          font-weight: 700;
+          transition: all 0.2s;
+        }
+
+        .sb-child:hover {
+          background: var(--surface-hover);
+          color: var(--foreground);
+        }
+
+        .sb-child.active {
+          background: rgba(255,40,0,0.08);
+          color: var(--brand-red);
+        }
       `}</style>
  
       <div style={{
@@ -332,6 +373,7 @@ export default function Sidebar() {
         <div style={{ marginBottom: 16 }}>
           {navItems.map((item, idx) => {
             const active = item.href ? isActive(item.href) : false;
+            const hasActiveChild = item.children?.some((child) => isActive(child.href)) ?? false;
 
              const isSecondBlock = item.label === "Store";
 
@@ -340,7 +382,7 @@ export default function Sidebar() {
                 {isSecondBlock && <div style={{ height: 24 }} />}
                 <Link
                   href={item.href!}
-                  className={`sb-item${active ? " active" : ""}`}
+                  className={`sb-item${active || hasActiveChild ? " active" : ""}`}
                   title={collapsed ? item.label : undefined}
                 >
                   <div className="sb-icon">
@@ -349,6 +391,16 @@ export default function Sidebar() {
                   {!collapsed && <span className="sb-label">{item.label}</span>}
                   {!collapsed && item.badge && <span className="sb-badge">{item.badge}</span>}
                 </Link>
+                {!collapsed && item.children && (
+                  <div className="sb-children">
+                    {item.children.map((child) => (
+                      <Link key={child.href} href={child.href} className={`sb-child${isActive(child.href) ? " active" : ""}`}>
+                        <Icon d={iconPaths[child.icon]} size={14} />
+                        <span>{child.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

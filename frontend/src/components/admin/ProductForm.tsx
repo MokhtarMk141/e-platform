@@ -60,6 +60,16 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     imageUrl: initialData?.imageUrl || "",
   });
 
+  const selectedCategory = useMemo(
+    () => categories.find((category) => category.id === formData.categoryId),
+    [categories, formData.categoryId]
+  );
+
+  const selectedBrand = useMemo(
+    () => brands.find((brand) => brand.id === formData.brandId),
+    [brands, formData.brandId]
+  );
+
   useEffect(() => {
     if (!selectedImage) {
       setImagePreview(initialData?.imageUrl || formData.imageUrl || "");
@@ -355,8 +365,9 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     />
                   </div>
                 </div>
+              </div>
 
-                <div className="form-group">
+              <div className="form-group">
                   <label className="form-label">Stock</label>
                   <input
                     type="number"
@@ -368,7 +379,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     required
                   />
                 </div>
-              </div>
 
               <div className="form-group">
                 <label className="form-label">SKU</label>

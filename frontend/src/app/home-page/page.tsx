@@ -8,6 +8,7 @@ import { useCategories } from '@/hooks/useCategories'
 import { useCart } from '@/hooks/useCart'
 import MegaMenu from '../mega-menu/megaMenu'
 import BrandAccessoryShowcase from '@/components/BrandAccessoryShowcase'
+import { HomepageConfigService, HeroSlide } from '@/services/homepage-config.service'
 
 const logos = [
   { src: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg', alt: 'Intel' },
@@ -97,26 +98,20 @@ export default function HomePage() {
     [categories]
   )
 
-  /* Hero slider for main banner */
-  const [heroIdx, setHeroIdx] = useState(0)
-  const heroSlides = [
-  {
-    badge: '🔥 Special Offers',
-    title: 'Best Deals Available',
-    sub: 'Save big on selected components and accessories — limited time only.',
-    cta: 'View Deals',
-    link: '/deals',
-    img: 'https://cdn.originpc.com/img/home/slides/2026/rts-promo-4500x.jpg'} ,
-  {
-    badge: '🎮 Gaming Accessories',
-    title: 'Complete Your Setup',
-    sub: 'Mechanical keyboards, gaming mice, headsets, and monitors for the ultimate experience.',
-    cta: 'Browse Accessories',
-    link: '/accessories',
-    img: 'https://cdn.mos.cms.futurecdn.net/fPt7Rkzp4sXDSLFE3abKxd-1200-80.jpg'
-  },    { badge: '🤖 AI Builder', title: 'Build Your\nDream PC', sub: 'Let our AI configure the perfect build. Just describe what you need.', cta: 'Build with AI', link: '/build-with-ai', img: 'https://dlcdnwebimgs.asus.com/files/media/99466c62-bd9d-4e9b-81d9-e8f2598e49a3/1920_740_2_without%20logo_FR.jpg' },
+  /* Hero slider for main banner — fetched from API */
+  const DEFAULT_HERO_SLIDES: HeroSlide[] = [
+    { title: 'Upgrade Your\nGaming Setup', subtitle: 'Discover the latest GPUs, processors, and accessories at unbeatable prices.', buttonText: 'Shop Now', buttonLink: '/product-page', imageUrl: 'https://dlcdnwebimgs.asus.com/gain/9AC8BE01-2A3C-4E58-93E3-FD06B6B51FDF/w717/h525/q87/fwebp' },
+    { title: 'Next-Gen\nComponents', subtitle: 'Be the first to get the latest CPUs, SSDs, and DDR5 memory kits.', buttonText: 'Explore', buttonLink: '/product-page', imageUrl: 'https://www.amd.com/content/dam/amd/en/images/products/processors/ryzen/2505603-ryzen-9-702702-702703.jpg' },
+    { title: 'Build Your\nDream PC', subtitle: 'Let our AI assistant help you discover parts that fit your setup and budget.', buttonText: 'Build with AI', buttonLink: '/build-with-ai', imageUrl: 'https://cdn.deepcool.com/public/Global-images/products/Cases/2025/05/CH690_DIGITAL_1.jpg?fm=webp&q=60' },
   ]
-  useEffect(() => { const t = setInterval(() => setHeroIdx(p => (p + 1) % heroSlides.length), 5500); return () => clearInterval(t) }, [])
+  const [heroIdx, setHeroIdx] = useState(0)
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(DEFAULT_HERO_SLIDES)
+  useEffect(() => {
+    HomepageConfigService.get()
+      .then(config => { if (config.heroSlides?.length) setHeroSlides(config.heroSlides) })
+      .catch(() => { /* keep defaults */ })
+  }, [])
+  useEffect(() => { const t = setInterval(() => setHeroIdx(p => (p + 1) % heroSlides.length), 5500); return () => clearInterval(t) }, [heroSlides.length])
 
   /* Countdown */
   const [cd, setCd] = useState({ d: 2, h: 13, m: 44, s: 57 })
@@ -249,16 +244,15 @@ export default function HomePage() {
       <MegaMenu />
 
       {/* ═══════════ FULL-WIDTH HERO SLIDER ═══════════ */}
-      <section className="hero-full" onClick={() => router.push(hs.link)} style={{ cursor: 'pointer' }}>
-        <div className="hero-main-bg" key={heroIdx} style={{ backgroundImage: `url(${hs.img})` }} />
+      <section className="hero-full" onClick={() => router.push(hs.buttonLink)} style={{ cursor: 'pointer' }}>
+        <div className="hero-main-bg" key={heroIdx} style={{ backgroundImage: `url(${hs.imageUrl})` }} />
         <div className="hero-main-overlay" />
         <div className="hero-full-content">
-          <div className="hero-badge-pill">{hs.badge}</div>
           <h1 className="hero-main-title">{hs.title}</h1>
-          <p className="hero-main-sub">{hs.sub}</p>
+          <p className="hero-main-sub">{hs.subtitle}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <Link href={hs.link} className="hero-main-cta" onClick={e => e.stopPropagation()}>
-              {hs.cta}
+            <Link href={hs.buttonLink} className="hero-main-cta" onClick={e => e.stopPropagation()}>
+              {hs.buttonText}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </Link>
             <Link href="/product-page" className="hero-cta-sec" onClick={e => e.stopPropagation()}>

@@ -52,6 +52,7 @@ model Category {
   parentId      String?
   parent        Category?     @relation("CategoryToCategory", fields: [parentId], references: [id])
   children      Category[]    @relation("CategoryToCategory")
+  categoryDiscounts CategoryDiscount[]
   products      Product[]
 
   @@unique([name, parentId])
@@ -82,7 +83,8 @@ model Product {
   brandId               String?
   aiproductDescriptions AIProductDescription[]
   cartItems             CartItem[]
-  discounts             Discount[]
+  flashSaleLinks        FlashSaleProduct[]
+  productDiscounts      ProductDiscount[]
   orderItems            OrderItem[]
   brand                 Brand?                 @relation(fields: [brandId], references: [id])
   category              Category?              @relation(fields: [categoryId], references: [id])
@@ -168,19 +170,75 @@ model Recommendation {
   product              Product  @relation(fields: [productId], references: [id])
 }
 
-model Discount {
-  id         String         @id @default(cuid())
-  code       String?        @unique
-  discount   Float
-  type       DiscountType
-  expiryDate DateTime
-  status     DiscountStatus @default(ACTIVE)
-  usageCount Int            @default(0)
-  maxUses    Int?
-  productId  String?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-  product    Product?       @relation(fields: [productId], references: [id])
+model ProductDiscount {
+  id            String                @id @default(cuid())
+  productId     String
+  discountType  PromotionDiscountType
+  discountValue Float
+  startDate     DateTime?
+  endDate       DateTime?
+  isActive      Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  product       Product               @relation(fields: [productId], references: [id])
+}
+
+model CategoryDiscount {
+  id            String                @id @default(cuid())
+  categoryId     String
+  discountType  PromotionDiscountType
+  discountValue Float
+  startDate     DateTime?
+  endDate       DateTime?
+  isActive      Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  category      Category              @relation(fields: [categoryId], references: [id])
+}
+
+model FlashSale {
+  id            String                @id @default(cuid())
+  name          String
+  discountType  PromotionDiscountType
+  discountValue Float
+  startDate     DateTime?
+  endDate       DateTime?
+  isActive      Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  products      FlashSaleProduct[]
+}
+
+model FlashSaleProduct {
+  id          String    @id @default(cuid())
+  flashSaleId String
+  productId   String
+  flashSale   FlashSale @relation(fields: [flashSaleId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id])
+
+  @@unique([flashSaleId, productId])
+}
+
+model Coupon {
+  id            String                @id @default(cuid())
+  code          String                @unique
+  discountType  PromotionDiscountType
+  discountValue Float
+  startDate     DateTime?
+  endDate       DateTime?
+  usageLimit    Int?
+  usageCount    Int                   @default(0)
+  isActive      Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+}
+
+model HomepageConfig {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  heroSlides Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum UserRole {
@@ -196,13 +254,7 @@ enum OrderStatus {
   CANCELLED
 }
 
-enum DiscountType {
+enum PromotionDiscountType {
   PERCENTAGE
   FIXED
-}
-
-enum DiscountStatus {
-  ACTIVE
-  PAUSED
-  EXPIRED
 }

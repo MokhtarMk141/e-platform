@@ -15,7 +15,7 @@ export class CartService {
         if (!cart) {
             cart = await this.cartRepository.create(userId);
         }
-        return new CartResponseDto(cart);
+        return CartResponseDto.create(cart);
     }
 
     async addItem(userId: string, dto: AddItemDto): Promise<CartResponseDto> {

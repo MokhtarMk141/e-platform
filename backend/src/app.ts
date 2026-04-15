@@ -13,10 +13,11 @@ import productRoutes from "./modules/product/product.routes";
 import categoryRoutes from "./modules/category/category.routes";
 import brandRoutes from "./modules/brand/brand.routes";
 import cartRoutes from "./modules/cart/cart.routes";
-import discountRoutes from "./modules/discount/discount.routes";
+import promotionRoutes from "./modules/promotion/promotion.routes";
 import analyticsRoutes from "./modules/analytics/analytics.routes";
 import orderRoutes from "./modules/order/order.routes";
 import chatbotRoutes from "./modules/chatbot/chatbot.routes";
+import homepageConfigRoutes from "./modules/homepage-config/homepage-config.routes";
 
 const app = express();
 
@@ -48,9 +49,10 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/discounts", discountRoutes);
+app.use("/api/promotions", promotionRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/homepage-config", homepageConfigRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
