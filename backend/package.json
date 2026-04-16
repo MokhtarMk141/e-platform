@@ -11,7 +11,9 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:backup": "node prisma/backup-database.js backup",
+    "prisma:restore": "node prisma/backup-database.js restore"
   },
   "keywords": [
     "ecommerce",
