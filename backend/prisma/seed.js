@@ -3,6 +3,14 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 async function main() {
   console.log('🌱 Seeding database...\n');
 
@@ -24,7 +32,22 @@ async function main() {
     { id: 'cmm1v54tx0009pr3shd94o9gu', name: 'Storage', description: 'NVMe SSDs, HDDs, and SATA drives for fast and reliable storage.', createdAt: new Date('2026-02-25T09:59:55.318Z'), updatedAt: new Date('2026-02-25T09:59:55.318Z') },
   ];
 
-  for (const cat of categories) {
+  const usedSlugs = new Set();
+  const categoriesWithSlugs = categories.map((cat) => {
+    const baseSlug = slugify(cat.name) || cat.id;
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (usedSlugs.has(slug)) {
+      slug = `${baseSlug}-${counter}`;
+      counter += 1;
+    }
+
+    usedSlugs.add(slug);
+    return { ...cat, slug };
+  });
+
+  for (const cat of categoriesWithSlugs) {
     await prisma.category.upsert({ where: { id: cat.id }, update: {}, create: cat });
   }
   console.log(`✅ ${categories.length} categories inserted`);
@@ -137,7 +160,35 @@ async function main() {
   ];
 
   for (const disc of discounts) {
-    await prisma.discount.upsert({ where: { id: disc.id }, update: {}, create: disc });
+    if (disc.productId) {
+      await prisma.productDiscount.upsert({
+        where: { id: disc.id },
+        update: {},
+        create: {
+          id: disc.id,
+          productId: disc.productId,
+          discountType: disc.type,
+          discountValue: disc.discount,
+          endDate: disc.expiryDate,
+          isActive: disc.status === 'ACTIVE',
+        },
+      });
+    } else {
+      await prisma.coupon.upsert({
+        where: { id: disc.id },
+        update: {},
+        create: {
+          id: disc.id,
+          code: disc.code,
+          discountType: disc.type,
+          discountValue: disc.discount,
+          endDate: disc.expiryDate,
+          usageCount: disc.usageCount,
+          usageLimit: disc.maxUses,
+          isActive: disc.status === 'ACTIVE',
+        },
+      });
+    }
   }
   console.log(`✅ ${discounts.length} discounts inserted`);
 
