@@ -31,6 +31,8 @@ export class OrderResponseDto {
   userId: string;
   status: OrderStatus;
   total: number;
+  stripeSessionId: string | null;
+  paidAt: Date | null;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
@@ -53,6 +55,8 @@ export class OrderResponseDto {
     this.userId = order.userId;
     this.status = order.status;
     this.total = order.total;
+    this.stripeSessionId = order.stripeSessionId;
+    this.paidAt = order.paidAt;
     this.customerName = order.customerName;
     this.customerEmail = order.customerEmail;
     this.customerPhone = order.customerPhone;

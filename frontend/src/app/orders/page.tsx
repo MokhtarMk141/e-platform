@@ -14,6 +14,7 @@ const currency = (value: number) =>
 const statusTone = (status: string) => {
   if (status === "DELIVERED") return { bg: "rgba(34,197,94,0.08)", fg: "#22c55e", border: "rgba(34,197,94,0.2)" };
   if (status === "SHIPPED") return { bg: "rgba(37,99,235,0.08)", fg: "#2563eb", border: "rgba(37,99,235,0.2)" };
+  if (status === "PAID") return { bg: "rgba(16,185,129,0.08)", fg: "#10b981", border: "rgba(16,185,129,0.2)" };
   if (status === "PROCESSING") return { bg: "rgba(234,179,8,0.08)", fg: "#eab308", border: "rgba(234,179,8,0.2)" };
   if (status === "CANCELLED") return { bg: "rgba(239,68,68,0.08)", fg: "#ef4444", border: "rgba(239,68,68,0.2)" };
   return { bg: "rgba(107,114,128,0.08)", fg: "#6b7280", border: "rgba(107,114,128,0.15)" };

@@ -18,6 +18,7 @@ import analyticsRoutes from "./modules/analytics/analytics.routes";
 import orderRoutes from "./modules/order/order.routes";
 import chatbotRoutes from "./modules/chatbot/chatbot.routes";
 import homepageConfigRoutes from "./modules/homepage-config/homepage-config.routes";
+import paymentRoutes from "./modules/payments/payments.routes";
 
 const app = express();
 
@@ -34,6 +35,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.use("/api/payments", paymentRoutes);
 
 // Increased limits to allow for image uploads
 app.use(express.json({ limit: "10mb" }));

@@ -9,6 +9,12 @@ import { OrderService } from "./order.service";
 import { updateOrderStatusSchema } from "./dto/update-order-status.dto";
 import { checkoutOrderSchema } from "./dto/checkout-order.dto";
 
+const codCheckoutSchema = checkoutOrderSchema.extend({
+  paymentMethod: checkoutOrderSchema.shape.paymentMethod.refine((value) => value === "CASH_ON_DELIVERY", {
+    message: "Cash on delivery is required for this endpoint",
+  }),
+});
+
 export class OrderController {
   private orderService: OrderService;
 
@@ -18,7 +24,7 @@ export class OrderController {
 
   checkout = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = getAuthenticatedUserId(req);
-    const checkoutData = checkoutOrderSchema.parse(req.body);
+    const checkoutData = codCheckoutSchema.parse(req.body);
 
     // Enforce user's profile email
     const user = await prisma.user.findUnique({ where: { id: userId } });

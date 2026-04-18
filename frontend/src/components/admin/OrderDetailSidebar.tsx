@@ -14,11 +14,12 @@ interface OrderDetailSidebarProps {
   onStatusChange?: (orderId: string, status: OrderStatus) => Promise<void>;
 }
 
-const STATUS_OPTIONS: OrderStatus[] = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
+const STATUS_OPTIONS: OrderStatus[] = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
 
 const statusColor = (status: string) => {
   if (status === "DELIVERED") return { bg: "rgba(34,197,94,0.15)", fg: "#22c55e" };
   if (status === "SHIPPED") return { bg: "rgba(59,130,246,0.15)", fg: "#3b82f6" };
+  if (status === "PAID") return { bg: "rgba(16,185,129,0.15)", fg: "#10b981" };
   if (status === "PROCESSING") return { bg: "rgba(234,179,8,0.15)", fg: "#eab308" };
   if (status === "CANCELLED") return { bg: "rgba(239,68,68,0.15)", fg: "#ef4444" };
   return { bg: "rgba(107,114,128,0.15)", fg: "#9ca3af" };

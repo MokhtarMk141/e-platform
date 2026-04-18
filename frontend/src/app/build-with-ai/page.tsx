@@ -76,7 +76,7 @@ export default function BuildWithAIPage() {
   const [selectedPurpose, setSelectedPurpose] = useState('')
   const [selectedBudget, setSelectedBudget] = useState('')
   const [promptText, setPromptText] = useState(
-    'I need a PC for gaming with a budget around 1000 DTN. I want to play modern AAA games at 1080p with high settings. I also need good cooling and a clean aesthetic.'
+    'I need a PC for gaming with a budget around 1000 DT  N. I want to play modern AAA games at 1080p with high settings. I also need good cooling and a clean aesthetic.'
   )
 
   const handleGenerate = () => {
