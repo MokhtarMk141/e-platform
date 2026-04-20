@@ -2,7 +2,7 @@
   
 # 🛍️ Smart E-Commerce Platform
 
-A production-ready e-commerce platform built with Next.js and Express.js. It features an integrated AI chatbot for sophisticated product discovery, secure Stripe payments, and a fully Dockerized development environment engineered for scale.
+Navigating complex online catalogs often leaves customers frustrated and leads to abandoned carts. The Smart E-Commerce Platform solves this by introducing an AI-powered shopping assistant that helps users discover exact products naturally through conversation. It is a production-ready solution built with Next.js and Express.js, featuring secure Stripe payments and a fully Dockerized ecosystem engineered for scale.
 
 </div>
 
@@ -24,7 +24,7 @@ Rather than implementing a simple keyword-search tool, the platform integrates a
 The Express API separates concerns into isolated modules (`auth`, `cart`, `payments`, `product`). 
 - **Validation:** Strict runtime type checking using `Zod` ensures malformed payloads fail early (e.g., catching missing checkout fields immediately).
 - **Relational Integrity:** The `Prisma` schema handles complex interconnectivity: Products link to Brands, Categories (hierarchical slugs), Flash Sales, and promotional Discounts.
-- **Security:** Secrets are strictly injected via `.env` interpolation at runtime, keeping configuration clean and bypassing repository secret scanners.
+- **Security:** Secrets are strictly injected via `.env` interpolation at runtime, keeping configuration clean and keeping credentials out of source control.
 
 ---
 
