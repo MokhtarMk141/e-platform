@@ -1,6 +1,6 @@
-export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "PAID" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 export type DeliveryMode = "STANDARD" | "EXPRESS" | "PICKUP";
-export type PaymentMethod = "CASH_ON_DELIVERY";
+export type PaymentMethod = "CASH_ON_DELIVERY" | "STRIPE";
 
 export interface OrderItem {
   id: string;
@@ -18,6 +18,8 @@ export interface Order {
   userId: string;
   status: OrderStatus;
   total: number;
+  stripeSessionId: string | null;
+  paidAt: string | null;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
@@ -62,4 +64,14 @@ export interface OrderResponse {
   success: boolean;
   message: string;
   data: Order;
+}
+
+export interface CheckoutSessionResponse {
+  success: boolean;
+  message: string;
+  data: {
+    orderId: string;
+    sessionId: string;
+    checkoutUrl: string | null;
+  };
 }

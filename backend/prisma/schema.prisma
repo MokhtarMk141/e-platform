@@ -115,6 +115,8 @@ model Order {
   userId               String
   status               OrderStatus @default(PENDING)
   total                Float
+  stripeSessionId      String?     @unique
+  paidAt               DateTime?
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
   customerName         String?
@@ -248,6 +250,7 @@ enum UserRole {
 
 enum OrderStatus {
   PENDING
+  PAID
   PROCESSING
   SHIPPED
   DELIVERED

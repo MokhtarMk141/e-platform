@@ -6,7 +6,7 @@ import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
-import { OrderService } from "@/services/order.service";
+import { PaymentService } from "@/services/payment.service";
 import { PromotionService } from "@/services/promotion.service";
 import { CheckoutRequest, DeliveryMode } from "@/types/order.types";
 import MegaMenu from "../mega-menu/megaMenu";
@@ -219,7 +219,7 @@ export default function CheckoutPage() {
     shippingPostalCode: "",
     shippingCountry: "",
     deliveryMode: "STANDARD",
-    paymentMethod: "CASH_ON_DELIVERY",
+    paymentMethod: "STRIPE",
     orderNotes: "",
   });
 
@@ -300,7 +300,7 @@ export default function CheckoutPage() {
 
     try {
       setSubmitting(true);
-      await OrderService.checkout({
+      const response = await PaymentService.createCheckoutSession({
         ...form,
         discountCode: appliedDiscount?.code,
         shippingAddressLine2: form.shippingAddressLine2 || undefined,
@@ -308,13 +308,17 @@ export default function CheckoutPage() {
         shippingPostalCode: form.shippingPostalCode || undefined,
         orderNotes: form.orderNotes || undefined,
       });
-      await fetchCart();
-      router.push("/orders");
+
+      if (!response.data.checkoutUrl) {
+        throw new Error("Stripe Checkout URL was not returned by the server.");
+      }
+
+      window.location.assign(response.data.checkoutUrl);
     } catch (err: unknown) {
       const message =
         err && typeof err === "object" && "message" in err && typeof (err as { message?: unknown }).message === "string"
           ? (err as { message: string }).message
-          : "Failed to place order";
+          : "Failed to start Stripe Checkout";
       setError(message);
     } finally {
       setSubmitting(false);
@@ -464,7 +468,7 @@ export default function CheckoutPage() {
             Checkout
           </h1>
           <p style={{ margin: "16px 0 0", color: "var(--text-muted)", fontSize: 16, maxWidth: 600, lineHeight: 1.6 }}>
-            Almost there! Complete your order details below. We currently only offer Cash on Delivery for maximum convenience.
+            Almost there! Complete your order details below, then we&apos;ll send you to Stripe&apos;s secure test checkout to finish payment.
           </p>
         </div>
 
@@ -569,8 +573,8 @@ export default function CheckoutPage() {
                     </svg>
                   </div>
                   <div>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: 'var(--foreground)' }}>Cash on Delivery</p>
-                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif" }}>Pay when your order arrives at your door.</p>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: 'var(--foreground)' }}>Credit or debit card via Stripe</p>
+                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif" }}>You&apos;ll be redirected to Stripe test mode to complete payment securely.</p>
                   </div>
                 </div>
               </div>
@@ -749,7 +753,7 @@ export default function CheckoutPage() {
                     <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                     <span>Processing...</span>
                   </div>
-                ) : "Confirm & Place Order"}
+                ) : "Continue to Stripe"}
               </button>
               <p style={{ margin: "16px 0 0", color: "var(--text-dim)", fontSize: 12, lineHeight: 1.6, textAlign: 'center', fontWeight: 500 }}>
                 By placing this order, you agree to our terms of service and delivery policies.

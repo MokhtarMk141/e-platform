@@ -10,9 +10,22 @@ function requireEnv(key: string): string {
   return value;
 }
 
+function getStripeWebhookSecrets() {
+  const rawSecrets = process.env.STRIPE_WEBHOOK_SECRETS || requireEnv("STRIPE_WEBHOOK_SECRET");
+
+  return rawSecrets
+    .split(/[\r\n,]+/)
+    .map((secret) => secret.trim())
+    .filter(Boolean);
+}
+
 export const env = {
   JWT_SECRET: requireEnv("JWT_SECRET"),
   DATABASE_URL: requireEnv("DATABASE_URL"),
+  STRIPE_SECRET_KEY: requireEnv("STRIPE_SECRET_KEY"),
+  STRIPE_WEBHOOK_SECRET: requireEnv("STRIPE_WEBHOOK_SECRET"),
+  STRIPE_WEBHOOK_SECRETS: getStripeWebhookSecrets(),
+  STRIPE_CURRENCY: (process.env.STRIPE_CURRENCY || "usd").toLowerCase(),
   NODE_ENV: process.env.NODE_ENV || "development",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
   PORT: parseInt(process.env.PORT || "3001", 10),
