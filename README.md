@@ -14,14 +14,21 @@ The Smart E-Commerce Platform solves this by introducing an **AI-powered shoppin
 
 ## 📸 Screenshots
 
-*(Replace these placeholders with actual screenshots of your application. You can drag and drop images directly into GitHub's web editor to auto-generate the markdown links!)*
-
 <div align="center">
-  <img src="https://via.placeholder.com/800x450.png?text=Storefront+Home+Page" alt="Storefront Home Page" width="48%">
-  <img src="https://via.placeholder.com/800x450.png?text=AI+Chatbot+in+Action" alt="AI Chatbot Interaction" width="48%">
+  <img src="docs/screenshots/homepage.png" alt="Homepage - Hero section with brand carousel" width="90%">
+  <br><em>Homepage — Hero banner with mega menu navigation and trusted brand logos</em>
   <br><br>
-  <img src="https://via.placeholder.com/800x450.png?text=Checkout+and+Payment" alt="Stripe Checkout Flow" width="48%">
-  <img src="https://via.placeholder.com/800x450.png?text=Admin+Dashboard" alt="Admin Dashboard" width="48%">
+  <img src="docs/screenshots/product-listing.png" alt="Product listing with filters and categories" width="90%">
+  <br><em>Product Listing — Category tabs, brand filters, and sortable product grid</em>
+  <br><br>
+  <img src="docs/screenshots/product-detail.png" alt="Product detail page" width="90%">
+  <br><em>Product Detail — SKU info, pricing with discounts, stock availability, and specs table</em>
+  <br><br>
+  <img src="docs/screenshots/chatbot.png" alt="AI Chatbot assistant" width="90%">
+  <br><em>AI Chatbot — "Oggy" assistant powered by DeepSeek for product recommendations</em>
+  <br><br>
+  <img src="docs/screenshots/login.png" alt="Login page" width="90%">
+  <br><em>Authentication — Login page with PC build imagery and brand ticker</em>
 </div>
 
 ---
