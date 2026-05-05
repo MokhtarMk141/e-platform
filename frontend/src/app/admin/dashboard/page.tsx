@@ -1,302 +1,994 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import type { CSSProperties } from "react";
+import {
+  AreaChart,
+  Badge,
+  BarList,
+  Button,
+  Card,
+  Col,
+  DonutChart,
+  Grid,
+  Metric,
+  ProgressBar,
+  Tab,
+  TabGroup,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+  Text,
+  Title,
+} from "@tremor/react";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
-const currency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "TND", maximumFractionDigits: 2 }).format(value);
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "TND",
+  maximumFractionDigits: 2,
+});
 
-const monthLabel = (key: string) => {
-  const [year, month] = key.split("-").map(Number);
-  const date = new Date(year, (month || 1) - 1, 1);
-  return date.toLocaleString("en-US", { month: "short", year: "2-digit" });
+const compactNumberFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+const numberFormatter = (value: number) => compactNumberFormatter.format(value);
+const money = (value: number) => currencyFormatter.format(value);
+
+const statusMeta = {
+  PENDING: { label: "Pending", color: "amber", dot: "#f59e0b" },
+  PROCESSING: { label: "Processing", color: "orange", dot: "#f97316" },
+  SHIPPED: { label: "Shipped", color: "sky", dot: "#0ea5e9" },
+  DELIVERED: { label: "Delivered", color: "emerald", dot: "#10b981" },
+  CANCELLED: { label: "Cancelled", color: "rose", dot: "#f43f5e" },
+} as const;
+
+const defaultStatusMeta = { label: "Unknown", color: "zinc", dot: "#71717a" } as const;
+
+const surfaceStyle = {
+  background: "linear-gradient(180deg, var(--background) 0%, var(--surface) 100%)",
 };
 
-export default function AnalyticsPage() {
-  const { analytics, loading, error, refetch } = useAnalytics();
-  const [performanceMetric, setPerformanceMetric] = useState<"revenue" | "orders">("revenue");
-  const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
+const elevatedSurfaceStyle = {
+  background: "linear-gradient(180deg, rgba(255,40,0,0.05) 0%, var(--surface) 24%, var(--background) 100%)",
+};
 
-  const maxRevenue = Math.max(...(analytics?.monthly.map((m) => m.revenue) ?? [1]), 1);
+const formatMonth = (key: string) => {
+  const [year, month] = key.split("-").map(Number);
+  const date = new Date(year, (month || 1) - 1, 1);
+  return date.toLocaleString("en-US", { month: "short" });
+};
+
+const formatDateTime = (value: string) =>
+  new Date(value).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+function changeFromPrevious(current: number, previous: number) {
+  if (previous <= 0) {
+    if (current <= 0) {
+      return { label: "Stable baseline", color: "zinc" as const };
+    }
+
+    return { label: "Fresh momentum", color: "emerald" as const };
+  }
+
+  const delta = ((current - previous) / previous) * 100;
+  const label = `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}% vs last month`;
+
+  if (delta > 3) {
+    return { label, color: "emerald" as const };
+  }
+
+  if (delta < -3) {
+    return { label, color: "rose" as const };
+  }
+
+  return { label, color: "zinc" as const };
+}
+
+function AnalyticsPage() {
+  const { analytics, loading, error, refetch } = useAnalytics();
+
+  const monthly = analytics?.monthly ?? [];
+  const latestMonth = monthly.at(-1);
+  const previousMonth = monthly.at(-2);
+  const latestRevenue = latestMonth?.revenue ?? 0;
+  const previousRevenue = previousMonth?.revenue ?? 0;
+  const latestOrders = latestMonth?.orders ?? 0;
+  const previousOrders = previousMonth?.orders ?? 0;
+  const currentAov = latestOrders > 0 ? latestRevenue / latestOrders : analytics?.revenue.averageOrderValue ?? 0;
+  const previousAov = previousOrders > 0 ? previousRevenue / previousOrders : 0;
+  const revenueInMotion = analytics ? Math.max(analytics.revenue.potential - analytics.revenue.realized, 0) : 0;
+
+  const revenueDelta = changeFromPrevious(latestRevenue, previousRevenue);
+  const ordersDelta = changeFromPrevious(latestOrders, previousOrders);
+  const aovDelta = changeFromPrevious(currentAov, previousAov);
+
+  const revenueTrend = monthly.map((month) => ({
+    month: formatMonth(month.month),
+    Revenue: month.revenue,
+    Orders: month.orders,
+    "New users": month.newUsers,
+  }));
+
+  const peakMonth = monthly.reduce(
+    (best, month) => (month.revenue > best.revenue ? month : best),
+    monthly[0] ?? { month: "", revenue: 0, orders: 0, newUsers: 0 }
+  );
+
+  const statusRows = (analytics?.statusDistribution ?? []).map((item) => {
+    const meta = statusMeta[item.status as keyof typeof statusMeta] ?? defaultStatusMeta;
+    return {
+      ...item,
+      label: meta.label,
+      color: meta.color,
+      dot: meta.dot,
+      share: analytics?.totals.orders ? (item.count / analytics.totals.orders) * 100 : 0,
+    };
+  });
+
+  const deliveredCount =
+    analytics?.statusDistribution.find((item) => item.status === "DELIVERED")?.count ?? 0;
+  const fulfillmentRate = analytics?.totals.orders
+    ? Math.round((deliveredCount / analytics.totals.orders) * 100)
+    : 0;
+
+  const categoryRevenueBars = (analytics?.categorySales ?? []).map((category) => ({
+    name: category.name,
+    value: category.revenue,
+  }));
+
+  const categoryUnitsBars = (analytics?.categorySales ?? []).map((category) => ({
+    name: category.name,
+    value: category.orders,
+  }));
+
+  const productBars = (analytics?.topProducts ?? []).map((product) => ({
+    name: product.name,
+    value: product.revenue,
+  }));
+
+  const leadingProduct = analytics?.topProducts[0];
 
   return (
-    <div style={{ padding: 28, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ padding: 28, minHeight: "100%", background: "var(--background)" }}>
       <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.5; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.5; } }
-        @keyframes slideRight { from { width: 0; } }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .fade-in { animation: fadeIn 0.5s ease-out both; }
-        .stat-card:hover { 
-          transform: translateY(-2px) !important; 
-          border-color: var(--border-strong) !important; 
-          box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important; 
+        @keyframes commandShimmer {
+          0% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
-        .chart-bar:hover { opacity: 1 !important; filter: brightness(1.1); }
-        .live-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
-        
-        .btn-premium {
-          background: var(--brand-red);
-          color: #fff;
-          border: none;
-          box-shadow: 0 4px 14px rgba(255,40,0,0.25);
-          transition: all 0.2s;
+
+        .command-shell {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
         }
-        .btn-premium:hover {
-          background: var(--brand-red-hover);
-          transform: translateY(-1px);
-          box-shadow: 0 6px 18px rgba(255,40,0,0.32);
-        }
-        
-        .panel {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: 20px;
-          padding: 20px;
+
+        .command-hero {
           position: relative;
           overflow: hidden;
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          padding: 32px;
+          border-radius: 32px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background:
+            radial-gradient(circle at top right, rgba(255,40,0,0.28) 0%, transparent 28%),
+            radial-gradient(circle at bottom left, rgba(255,120,0,0.12) 0%, transparent 26%),
+            linear-gradient(135deg, #1a1a1a 0%, #090909 72%);
+          box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+          color: #ffffff;
         }
-        .panel:hover {
-          border-color: var(--border-strong);
-          box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+
+        .command-hero::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(rgba(255,255,255,0.16) 1px, transparent 1px);
+          background-size: 18px 18px;
+          opacity: 0.08;
+          mask-image: linear-gradient(180deg, rgba(0,0,0,0.85), transparent);
+          pointer-events: none;
+        }
+
+        .command-hero-grid {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: minmax(0, 1.45fr) minmax(280px, 1fr);
+          gap: 24px;
+          align-items: end;
+        }
+
+        .command-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 16px;
+          padding: 8px 14px;
+          border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.05);
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .command-kicker-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: #22c55e;
+          box-shadow: 0 0 0 8px rgba(34,197,94,0.14);
+        }
+
+        .command-title {
+          margin: 0;
+          font-size: clamp(32px, 4vw, 48px);
+          font-weight: 900;
+          line-height: 1.02;
+          letter-spacing: -0.05em;
+        }
+
+        .command-copy {
+          margin: 14px 0 0;
+          max-width: 700px;
+          color: rgba(255,255,255,0.72);
+          font-size: 15px;
+          line-height: 1.75;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 500;
+        }
+
+        .command-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-top: 24px;
+        }
+
+        .command-note {
+          padding: 11px 14px;
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.05);
+          color: rgba(255,255,255,0.74);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+        }
+
+        .hero-signal-panel {
+          border-radius: 24px;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.05);
+          backdrop-filter: blur(16px);
+          padding: 20px;
+        }
+
+        .hero-signal-title {
+          margin: 0;
+          color: #ffffff;
+          font-size: 18px;
+          font-weight: 800;
+          letter-spacing: -0.03em;
+        }
+
+        .hero-signal-copy {
+          margin: 6px 0 0;
+          color: rgba(255,255,255,0.62);
+          font-size: 12px;
+          font-weight: 600;
+          line-height: 1.6;
+        }
+
+        .hero-signal-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+          margin-top: 18px;
+        }
+
+        .hero-signal-card {
+          padding: 14px 14px 16px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .hero-signal-label {
+          display: block;
+          color: rgba(255,255,255,0.58);
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+
+        .hero-signal-value {
+          display: block;
+          margin-top: 10px;
+          color: #ffffff;
+          font-size: 22px;
+          font-weight: 900;
+          letter-spacing: -0.04em;
+        }
+
+        .hero-signal-sub {
+          display: block;
+          margin-top: 4px;
+          color: rgba(255,255,255,0.62);
+          font-size: 12px;
+          font-weight: 600;
+          line-height: 1.5;
+        }
+
+        .brand-panel {
+          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        }
+
+        .brand-panel:hover {
+          transform: translateY(-2px);
+        }
+
+        .command-mini-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+          margin-top: 18px;
+        }
+
+        .command-mini-card {
+          border-radius: 18px;
+          padding: 14px 16px;
+          border: 1px solid var(--border);
+          background: var(--surface);
+        }
+
+        .command-mini-value {
+          margin-top: 6px;
+          font-size: 18px;
+          font-weight: 900;
+          letter-spacing: -0.03em;
+          color: var(--foreground);
+        }
+
+        .status-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 18px;
+        }
+
+        .status-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .status-row-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
+
+        .status-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          flex-shrink: 0;
+        }
+
+        .status-label {
+          color: var(--foreground);
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .status-sub {
+          margin-top: 2px;
+          color: var(--text-muted);
+          font-size: 11px;
+          font-weight: 600;
+        }
+
+        .inventory-list {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          margin-top: 18px;
+        }
+
+        .inventory-item {
+          padding: 14px 16px;
+          border-radius: 18px;
+          border: 1px solid var(--border);
+          background: linear-gradient(180deg, var(--surface) 0%, var(--background) 100%);
+        }
+
+        .empty-block {
+          border-radius: 18px;
+          border: 1px dashed var(--border-strong);
+          background: linear-gradient(180deg, var(--surface) 0%, var(--background) 100%);
+          padding: 24px;
+          text-align: center;
+          color: var(--text-muted);
+          font-weight: 700;
+        }
+
+        .command-table-wrap {
+          overflow-x: auto;
+        }
+
+        .command-table tbody td {
+          transition: background 0.2s ease;
+        }
+
+        .command-table tbody tr:hover td {
+          background: var(--surface-hover);
+        }
+
+        .command-skeleton {
+          background: linear-gradient(90deg, rgba(255,40,0,0.06) 0%, rgba(255,255,255,0.45) 50%, rgba(255,40,0,0.06) 100%);
+          background-size: 200% 100%;
+          animation: commandShimmer 1.5s linear infinite;
+          border-radius: 999px;
+        }
+
+        .command-loading-orb {
+          width: 54px;
+          height: 54px;
+          border-radius: 18px;
+          background: linear-gradient(135deg, var(--brand-red) 0%, #ff7b00 100%);
+          box-shadow: 0 18px 30px rgba(255,40,0,0.22);
+        }
+
+        @media (max-width: 1120px) {
+          .command-hero-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 760px) {
+          .command-hero {
+            padding: 24px;
+            border-radius: 24px;
+          }
+
+          .hero-signal-grid,
+          .command-mini-grid {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em" }}>Analytics Command Center</h1>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <span className="live-dot" />
-            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 13, fontWeight: 600 }}>Live Store Insights</p>
-          </div>
-        </div>
-        <button
-          onClick={refetch}
-          className="btn-premium"
-          style={{
-            padding: "10px 20px",
-            borderRadius: 12,
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: "pointer",
-          }}
-        >
-          Refresh Data
-        </button>
-      </div>
-
-      {loading && (
-        <div style={{ marginTop: 40, textAlign: "center" }}>
-          <div style={{ border: "3px solid var(--border)", borderTopColor: "var(--brand-red)", width: 40, height: 40, borderRadius: "50%", margin: "0 auto", animation: "spin 1s linear infinite" }} />
-          <p style={{ marginTop: 16, fontWeight: 700, color: "var(--text-muted)" }}>Synchronizing metrics...</p>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      )}
-
-      {error && (
-        <div className="fade-in" style={{ marginTop: 16, background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: 12, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 20 }}>⚠️</span>
-          <span style={{ color: "#dc2626", fontWeight: 700 }}>{error}</span>
-        </div>
-      )}
-
-      {analytics && (
-        <div className="fade-in">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            <StatCard label="Realized Profit" value={currency(analytics.revenue.realized)} sub="Net revenue from delivered orders" delay="0s" />
-            <StatCard label="Potential Revenue" value={currency(analytics.revenue.potential)} sub="All pending and shipped orders" delay="0.1s" />
-            <StatCard label="AOV" value={currency(analytics.revenue.averageOrderValue)} sub="Average value per transaction" delay="0.2s" />
-            <StatCard label="Total Orders" value={String(analytics.totals.orders)} sub={`${analytics.totals.pendingOrders} awaiting processing`} delay="0.3s" />
-            <StatCard label="Active Customers" value={String(analytics.totals.customers)} sub={`From ${analytics.totals.users} total registered`} delay="0.4s" />
-            <StatCard label="Cart Value" value={currency(analytics.carts.estimatedOpenCartValue)} sub={`${analytics.totals.cartsWithItems} carts currently active`} delay="0.5s" />
-          </div>
-
-          <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 12 }}>
-            <section className="panel fade-in">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h2 style={panelTitleStyle}>Revenue vs Customer Growth</h2>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Monthly Performance</div>
+      <div className="command-shell">
+        <section className="command-hero">
+          <div className="command-hero-grid">
+            <div>
+              <div className="command-kicker">
+                <span className="command-kicker-dot" />
+                Analytics Command Center
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 12, alignItems: "end", minHeight: 240, marginTop: 10, position: "relative" }}>
-                {analytics.monthly.map((month) => {
-                  const barHeight = Math.max(8, (month.revenue / maxRevenue) * 160);
-                  const isHovered = hoveredMonth === month.month;
-                  return (
-                    <div
-                      key={month.month}
-                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer" }}
-                      onMouseEnter={() => setHoveredMonth(month.month)}
-                      onMouseLeave={() => setHoveredMonth(null)}
-                    >
-                      <div style={{
-                        position: "relative",
-                        width: "100%",
-                        height: barHeight,
-                        background: isHovered ? "var(--foreground)" : "var(--brand-red)",
-                        borderRadius: "8px 8px 0 0",
-                        opacity: isHovered ? 1 : 0.85,
-                        transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
-                      }}>
-                        {isHovered && (
-                          <div style={{
-                            position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)",
-                            background: "var(--foreground)", color: "var(--background)", padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 900, whiteSpace: "nowrap", zIndex: 10,
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-                          }}>
-                            {currency(month.revenue)}
-                          </div>
-                        )}
-                        {month.newUsers > 0 && (
-                          <div style={{ position: "absolute", top: -20, left: "50%", transform: "translateX(-50%)", fontSize: 10, fontWeight: 800, color: "var(--text-dim)" }}>
-                            +{month.newUsers}
-                          </div>
-                        )}
-                      </div>
-                      <span style={{ fontSize: 11, color: isHovered ? "var(--foreground)" : "var(--text-dim)", fontWeight: 800, transition: "color 0.2s" }}>{monthLabel(month.month)}</span>
-                    </div>
-                  );
-                })}
+              <h1 className="command-title">Tremor-powered store intelligence with your site’s visual DNA.</h1>
+              <p className="command-copy">
+                Revenue, orders, customer growth, and inventory health now live in a single command center that mirrors
+                the storefront’s red-black premium aesthetic instead of a generic admin dashboard.
+              </p>
+              <div className="command-actions">
+                <Button onClick={refetch} loading={loading} icon={ArrowPathIcon}>
+                  Refresh Metrics
+                </Button>
+                <div className="command-note">Live window: latest 6 months of store performance</div>
               </div>
-            </section>
+            </div>
 
-            <section className="panel fade-in">
-              <h2 style={panelTitleStyle}>Order Distribution</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {analytics.statusDistribution.map((item, idx) => (
-                  <div key={item.status} style={{ animation: `fadeUp 0.3s ease-out ${idx * 0.05}s both` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13, fontWeight: 800 }}>
-                      <span style={{ color: "var(--text-dim)" }}>{item.status}</span>
-                      <span style={{ background: "var(--surface-hover)", padding: "2px 8px", borderRadius: 6 }}>{item.count}</span>
-                    </div>
-                    <div style={{ height: 10, background: "var(--surface-hover)", borderRadius: 10, overflow: "hidden" }}>
-                      <div
-                        style={{
-                          height: "100%",
-                          width: `${(item.count / analytics.totals.orders) * 100}%`,
-                          background: item.status === 'DELIVERED' ? '#22c55e' : item.status === 'CANCELLED' ? '#ef4444' : 'linear-gradient(90deg, var(--brand-red), #ff7a00)',
-                          borderRadius: 10,
-                          animation: "slideRight 1s cubic-bezier(0.16, 1, 0.3, 1) both"
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-
-          <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <section className="panel fade-in">
-              <h2 style={panelTitleStyle}>Recent Activity</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {analytics.recentOrders.map((order, idx) => (
-                  <div key={order.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, borderBottom: "1px solid var(--border)", paddingBottom: 10, animation: `fadeUp 0.3s ease-out ${idx * 0.05}s both` }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{order.customerName || "Anonymous Guest"}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 2 }}>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {order.deliveryMode}</div>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontWeight: 900, color: "var(--foreground)" }}>{currency(order.total)}</div>
-                      <div style={{ fontSize: 10, color: order.status === 'DELIVERED' ? '#22c55e' : "var(--brand-red)", fontWeight: 800, textTransform: "uppercase" }}>{order.status}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="panel fade-in">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <h2 style={{ ...panelTitleStyle, margin: 0 }}>Performance Toggles</h2>
-                <div style={{ display: "flex", background: "var(--background)", padding: 4, borderRadius: 10, border: "1px solid var(--border)" }}>
-                  <button onClick={() => setPerformanceMetric("revenue")} style={{ border: "none", background: performanceMetric === "revenue" ? "var(--foreground)" : "transparent", color: performanceMetric === "revenue" ? "var(--background)" : "var(--text-muted)", padding: "4px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800, cursor: "pointer", transition: "all 0.2s" }}>Revenue</button>
-                  <button onClick={() => setPerformanceMetric("orders")} style={{ border: "none", background: performanceMetric === "orders" ? "var(--foreground)" : "transparent", color: performanceMetric === "orders" ? "var(--background)" : "var(--text-muted)", padding: "4px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800, cursor: "pointer", transition: "all 0.2s" }}>Orders</button>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {analytics.categorySales.map((cat, idx) => (
-                  <div key={cat.categoryId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, animation: `fadeUp 0.3s ease-out ${idx * 0.05}s both` }}>
-                    <div style={{ fontWeight: 700 }}>{cat.name}</div>
-                    <div style={{ textAlign: "right", fontWeight: 900, color: "var(--brand-red)" }}>
-                      {performanceMetric === "revenue" ? currency(cat.revenue) : `${cat.count} Sales`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="panel fade-in" style={{ borderColor: analytics.lowStockProducts.length > 0 ? "rgba(255,40,0,0.4)" : "var(--border)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h2 style={{ ...panelTitleStyle, margin: 0 }}>Stock Vulnerabilities</h2>
-                {analytics.lowStockProducts.length > 0 && (
-                  <span style={{ fontSize: 10, padding: "4px 10px", background: "#ef4444", color: "#fff", borderRadius: 20, fontWeight: 900, boxShadow: "0 4px 12px rgba(239,68,68,0.2)" }}>
-                    {analytics.lowStockProducts.length} CRITICAL
+            <div className="hero-signal-panel">
+              <h2 className="hero-signal-title">Store pulse</h2>
+              <p className="hero-signal-copy">Immediate signals your team can act on without leaving the dashboard.</p>
+              <div className="hero-signal-grid">
+                <div className="hero-signal-card">
+                  <span className="hero-signal-label">Customers</span>
+                  <span className="hero-signal-value">{numberFormatter(analytics?.totals.customers ?? 0)}</span>
+                  <span className="hero-signal-sub">
+                    {numberFormatter(analytics?.totals.users ?? 0)} total accounts in the platform
                   </span>
-                )}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {analytics.lowStockProducts.length === 0 && (
-                  <div style={{ textAlign: "center", padding: "20px 0" }}>
-                    <span style={{ fontSize: 24 }}>🛡️</span>
-                    <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "8px 0 0", fontWeight: 700 }}>Inventory Secured.</p>
-                  </div>
-                )}
-                {analytics.lowStockProducts.map((p) => (
-                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, alignItems: "center", padding: "8px 0", borderBottom: "1px dashed var(--border)" }}>
-                    <div style={{ fontWeight: 700, maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
-                    <div style={{ color: p.stock <= 2 ? "#ef4444" : "#f97316", fontWeight: 900, fontSize: 12, padding: "2px 8px", background: "var(--surface-hover)", borderRadius: 6 }}>{p.stock} Unit{p.stock !== 1 ? 's' : ''}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-
-          <section className="panel fade-in" style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={panelTitleStyle}>Top Performing Assets</h2>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-dim)", textTransform: "uppercase" }}>Best Sellers</div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-              {analytics.topProducts.map((product, idx) => (
-                <div key={product.productId} className="panel" style={{ padding: 16, background: "var(--background)", animation: `fadeUp 0.4s ease-out ${idx * 0.1}s both`, cursor: "pointer" }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--brand-red)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}>
-                  <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 4, letterSpacing: "-0.01em" }}>{product.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--text-dim)", marginBottom: 12, fontWeight: 600 }}>SKU: {product.sku}</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderTop: "1px solid var(--border)", paddingTop: 12 }}>
-                    <div>
-                      <span style={{ fontSize: 10, color: "var(--text-dim)", textTransform: "uppercase", fontWeight: 800 }}>Sold</span>
-                      <div style={{ fontSize: 16, fontWeight: 900 }}>{product.unitsSold}</div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <span style={{ fontSize: 10, color: "var(--text-dim)", textTransform: "uppercase", fontWeight: 800 }}>Revenue</span>
-                      <div style={{ fontSize: 16, fontWeight: 900, color: "var(--brand-red)" }}>{currency(product.revenue)}</div>
-                    </div>
-                  </div>
                 </div>
-              ))}
+
+                <div className="hero-signal-card">
+                  <span className="hero-signal-label">Open Carts</span>
+                  <span className="hero-signal-value">{money(analytics?.carts.estimatedOpenCartValue ?? 0)}</span>
+                  <span className="hero-signal-sub">
+                    {numberFormatter(analytics?.carts.itemsInOpenCarts ?? 0)} items waiting in carts
+                  </span>
+                </div>
+
+                <div className="hero-signal-card">
+                  <span className="hero-signal-label">Stock Alerts</span>
+                  <span className="hero-signal-value">{numberFormatter(analytics?.lowStockProducts.length ?? 0)}</span>
+                  <span className="hero-signal-sub">
+                    {numberFormatter(analytics?.totals.pendingOrders ?? 0)} pending orders to protect
+                  </span>
+                </div>
+              </div>
             </div>
-          </section>
-        </div>
-      )}
+          </div>
+        </section>
+
+        {error ? (
+          <Card className="brand-panel" style={{ ...surfaceStyle, borderColor: "rgba(244,63,94,0.26)" }}>
+            <Title>Analytics feed needs attention</Title>
+            <Text style={{ marginTop: 8 }}>{error}</Text>
+          </Card>
+        ) : null}
+
+        {!analytics ? (
+          loading ? (
+            <LoadingState />
+          ) : (
+            <EmptyState onRefresh={refetch} />
+          )
+        ) : (
+          <>
+            <Grid numItems={1} numItemsMd={2} numItemsLg={4} className="gap-4">
+              <InsightCard
+                title="Realized revenue"
+                value={money(analytics.revenue.realized)}
+                note={`Peak delivery month: ${formatMonth(peakMonth.month)} at ${money(peakMonth.revenue)}`}
+                badgeLabel={revenueDelta.label}
+                badgeColor={revenueDelta.color}
+                accent="linear-gradient(90deg, var(--brand-red), #ff7a00)"
+              />
+
+              <InsightCard
+                title="Revenue in motion"
+                value={money(revenueInMotion)}
+                note={`${numberFormatter(analytics.totals.pendingOrders)} pending orders still moving through the pipeline`}
+                badgeLabel="Open pipeline"
+                badgeColor="amber"
+                accent="linear-gradient(90deg, #ff7a00, #f59e0b)"
+              />
+
+              <InsightCard
+                title="This month orders"
+                value={numberFormatter(latestOrders)}
+                note={`${numberFormatter(analytics.totals.orders)} lifetime orders captured so far`}
+                badgeLabel={ordersDelta.label}
+                badgeColor={ordersDelta.color}
+                accent="linear-gradient(90deg, #111111, #3f3f46)"
+              />
+
+              <InsightCard
+                title="Average order value"
+                value={money(currentAov)}
+                note={`${fulfillmentRate}% fulfillment rate based on delivered orders`}
+                badgeLabel={aovDelta.label}
+                badgeColor={aovDelta.color}
+                accent="linear-gradient(90deg, #10b981, #22c55e)"
+              />
+            </Grid>
+
+            <Grid numItems={1} numItemsLg={3} className="gap-4">
+              <Col numColSpan={1} numColSpanLg={2}>
+                <Card className="brand-panel" style={elevatedSurfaceStyle}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+                    <div>
+                      <Title>Performance timeline</Title>
+                      <Text style={{ marginTop: 6 }}>
+                        Switch between revenue, order velocity, and audience growth without leaving the main chart.
+                      </Text>
+                    </div>
+                    <Badge color="red">Tremor AreaChart</Badge>
+                  </div>
+
+                  <TabGroup style={{ marginTop: 18 }}>
+                    <TabList variant="solid" color="red">
+                      <Tab>Revenue pulse</Tab>
+                      <Tab>Order flow</Tab>
+                      <Tab>Audience growth</Tab>
+                    </TabList>
+
+                    <TabPanels style={{ marginTop: 18 }}>
+                      <TabPanel>
+                        <AreaChart
+                          className="mt-2 h-80"
+                          data={revenueTrend}
+                          index="month"
+                          categories={["Revenue"]}
+                          colors={["red"]}
+                          valueFormatter={money}
+                          showLegend={false}
+                          showAnimation
+                          showGradient
+                          curveType="natural"
+                          yAxisWidth={92}
+                        />
+                      </TabPanel>
+
+                      <TabPanel>
+                        <AreaChart
+                          className="mt-2 h-80"
+                          data={revenueTrend}
+                          index="month"
+                          categories={["Orders"]}
+                          colors={["zinc"]}
+                          valueFormatter={numberFormatter}
+                          showLegend={false}
+                          showAnimation
+                          showGradient
+                          curveType="natural"
+                          yAxisWidth={70}
+                        />
+                      </TabPanel>
+
+                      <TabPanel>
+                        <AreaChart
+                          className="mt-2 h-80"
+                          data={revenueTrend}
+                          index="month"
+                          categories={["New users"]}
+                          colors={["orange"]}
+                          valueFormatter={numberFormatter}
+                          showLegend={false}
+                          showAnimation
+                          showGradient
+                          curveType="natural"
+                          yAxisWidth={70}
+                        />
+                      </TabPanel>
+                    </TabPanels>
+                  </TabGroup>
+
+                  <div className="command-mini-grid">
+                    <div className="command-mini-card">
+                      <Text>Peak month</Text>
+                      <div className="command-mini-value">{formatMonth(peakMonth.month)}</div>
+                      <Text>{money(peakMonth.revenue)} delivered</Text>
+                    </div>
+
+                    <div className="command-mini-card">
+                      <Text>Current new users</Text>
+                      <div className="command-mini-value">{numberFormatter(latestMonth?.newUsers ?? 0)}</div>
+                      <Text>New customer accounts created this month</Text>
+                    </div>
+
+                    <div className="command-mini-card">
+                      <Text>Catalog breadth</Text>
+                      <div className="command-mini-value">{numberFormatter(analytics.totals.products)}</div>
+                      <Text>{numberFormatter(analytics.totals.categories)} product categories on the shelf</Text>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              <Col numColSpan={1}>
+                <Card className="brand-panel" style={surfaceStyle}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+                    <div>
+                      <Title>Order status mix</Title>
+                      <Text style={{ marginTop: 6 }}>
+                        A quick read on fulfillment pressure and order quality.
+                      </Text>
+                    </div>
+                    <Badge color="zinc">{fulfillmentRate}% fulfilled</Badge>
+                  </div>
+
+                  <DonutChart
+                    className="mt-6 h-72"
+                    data={statusRows}
+                    category="count"
+                    index="label"
+                    colors={statusRows.map((row) => row.color)}
+                    valueFormatter={numberFormatter}
+                    showLabel={false}
+                    showAnimation
+                  />
+
+                  <div className="status-stack">
+                    {statusRows.map((row) => (
+                      <div key={row.status} className="status-row">
+                        <div className="status-row-left">
+                          <span className="status-dot" style={{ background: row.dot }} />
+                          <div>
+                            <div className="status-label">{row.label}</div>
+                            <div className="status-sub">{row.share.toFixed(0)}% of total orders</div>
+                          </div>
+                        </div>
+                        <Badge color={row.color}>{numberFormatter(row.count)}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </Col>
+            </Grid>
+
+            <Grid numItems={1} numItemsLg={3} className="gap-4">
+              <Col numColSpan={1}>
+                <Card className="brand-panel" style={surfaceStyle}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+                    <div>
+                      <Title>Category command board</Title>
+                      <Text style={{ marginTop: 6 }}>
+                        Compare category revenue against unit demand using Tremor tabs and bar lists.
+                      </Text>
+                    </div>
+                    <Badge color="red">Top 5</Badge>
+                  </div>
+
+                  <TabGroup style={{ marginTop: 18 }}>
+                    <TabList variant="solid" color="red">
+                      <Tab>Revenue</Tab>
+                      <Tab>Units</Tab>
+                    </TabList>
+
+                    <TabPanels style={{ marginTop: 18 }}>
+                      <TabPanel>
+                        {categoryRevenueBars.length > 0 ? (
+                          <BarList data={categoryRevenueBars} valueFormatter={money} color="red" showAnimation />
+                        ) : (
+                          <div className="empty-block">No category revenue yet.</div>
+                        )}
+                      </TabPanel>
+
+                      <TabPanel>
+                        {categoryUnitsBars.length > 0 ? (
+                          <BarList data={categoryUnitsBars} valueFormatter={numberFormatter} color="orange" showAnimation />
+                        ) : (
+                          <div className="empty-block">No category volume yet.</div>
+                        )}
+                      </TabPanel>
+                    </TabPanels>
+                  </TabGroup>
+                </Card>
+              </Col>
+
+              <Col numColSpan={1}>
+                <Card className="brand-panel" style={surfaceStyle}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+                    <div>
+                      <Title>Top performing products</Title>
+                      <Text style={{ marginTop: 6 }}>
+                        Best sellers by realized revenue with a layout that matches the storefront’s premium cards.
+                      </Text>
+                    </div>
+                    <Badge color="emerald">{leadingProduct ? `${leadingProduct.unitsSold} units lead` : "Waiting"}</Badge>
+                  </div>
+
+                  <div style={{ marginTop: 18 }}>
+                    {productBars.length > 0 ? (
+                      <BarList data={productBars} valueFormatter={money} color="red" showAnimation />
+                    ) : (
+                      <div className="empty-block">No product performance data yet.</div>
+                    )}
+                  </div>
+
+                  {leadingProduct ? (
+                    <div
+                      style={{
+                        marginTop: 18,
+                        padding: "14px 16px",
+                        borderRadius: 18,
+                        border: "1px solid var(--border)",
+                        background: "linear-gradient(180deg, rgba(255,40,0,0.05), rgba(255,255,255,0))",
+                      }}
+                    >
+                      <Text>Lead mover</Text>
+                      <div style={{ marginTop: 8, fontSize: 18, fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)" }}>
+                        {leadingProduct.name}
+                      </div>
+                      <Text style={{ marginTop: 6 }}>
+                        {leadingProduct.sku} • {numberFormatter(leadingProduct.unitsSold)} units sold
+                      </Text>
+                    </div>
+                  ) : null}
+                </Card>
+              </Col>
+
+              <Col numColSpan={1}>
+                <Card className="brand-panel" style={surfaceStyle}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+                    <div>
+                      <Title>Inventory watch</Title>
+                      <Text style={{ marginTop: 6 }}>
+                        Surface low-stock risk before high-demand products go dark.
+                      </Text>
+                    </div>
+                    <Badge color={analytics.lowStockProducts.length > 0 ? "rose" : "emerald"}>
+                      {analytics.lowStockProducts.length > 0 ? `${analytics.lowStockProducts.length} alerts` : "Stable"}
+                    </Badge>
+                  </div>
+
+                  <div className="inventory-list">
+                    {analytics.lowStockProducts.length === 0 ? (
+                      <div className="empty-block">Inventory looks healthy right now.</div>
+                    ) : (
+                      analytics.lowStockProducts.map((product) => (
+                        <div key={product.id} className="inventory-item">
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: 14, fontWeight: 800, color: "var(--foreground)", letterSpacing: "-0.02em" }}>
+                                {product.name}
+                              </div>
+                              <div style={{ marginTop: 3, fontSize: 11, color: "var(--text-dim)", fontWeight: 700 }}>
+                                {product.sku}
+                              </div>
+                            </div>
+                            <Badge color={product.stock <= 2 ? "rose" : "orange"}>{product.stock} left</Badge>
+                          </div>
+
+                          <div style={{ marginTop: 12 }}>
+                            <ProgressBar
+                              value={Math.max(4, Math.min((product.stock / 10) * 100, 100))}
+                              color={product.stock <= 2 ? "rose" : "orange"}
+                              showAnimation
+                            />
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            </Grid>
+
+            <Card className="brand-panel" style={surfaceStyle}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+                <div>
+                  <Title>Recent order stream</Title>
+                  <Text style={{ marginTop: 6 }}>
+                    The latest transactions, redesigned with Tremor tables and the same clean spacing language as the site.
+                  </Text>
+                </div>
+                <Badge color="red">{numberFormatter(analytics.recentOrders.length)} latest orders</Badge>
+              </div>
+
+              <div className="command-table-wrap" style={{ marginTop: 20 }}>
+                {analytics.recentOrders.length > 0 ? (
+                  <Table className="command-table">
+                    <TableHead>
+                      <TableRow>
+                        <TableHeaderCell>Order</TableHeaderCell>
+                        <TableHeaderCell>Customer</TableHeaderCell>
+                        <TableHeaderCell>Created</TableHeaderCell>
+                        <TableHeaderCell>Total</TableHeaderCell>
+                        <TableHeaderCell>Status</TableHeaderCell>
+                      </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                      {analytics.recentOrders.map((order) => {
+                        const meta = statusMeta[order.status as keyof typeof statusMeta] ?? defaultStatusMeta;
+
+                        return (
+                          <TableRow key={order.id}>
+                            <TableCell>
+                              <div style={{ fontWeight: 800, color: "var(--foreground)" }}>#{order.id.slice(0, 8).toUpperCase()}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div style={{ fontWeight: 700, color: "var(--foreground)" }}>
+                                {order.customerName || "Guest checkout"}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div style={{ color: "var(--text-muted)", fontWeight: 600 }}>{formatDateTime(order.createdAt)}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div style={{ fontWeight: 800, color: "var(--foreground)" }}>{money(order.total)}</div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge color={meta.color}>{meta.label}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="empty-block">No recent orders to display yet.</div>
+                )}
+              </div>
+            </Card>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-function StatCard({ label, value, sub, delay }: { label: string; value: string; sub: string; delay: string }) {
+function InsightCard({
+  title,
+  value,
+  note,
+  badgeLabel,
+  badgeColor,
+  accent,
+}: {
+  title: string;
+  value: string;
+  note: string;
+  badgeLabel: string;
+  badgeColor: string;
+  accent: string;
+}) {
   return (
-    <div className="panel stat-card" style={{ minHeight: 115, animation: `fadeIn 0.6s ease-out ${delay} both`, cursor: "default" }}>
-      <p style={{ margin: 0, fontSize: 11, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 800 }}>{label}</p>
-      <p style={{ margin: "12px 0 6px", fontSize: 26, fontWeight: 900, letterSpacing: "-0.05em", color: "var(--foreground)" }}>{value}</p>
-      <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>{sub}</p>
+    <Card className="brand-panel" style={surfaceStyle}>
+      <div
+        style={{
+          width: 62,
+          height: 4,
+          borderRadius: 999,
+          background: accent,
+        }}
+      />
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginTop: 16 }}>
+        <div style={{ minWidth: 0 }}>
+          <Text>{title}</Text>
+          <Metric style={{ marginTop: 12 }}>{value}</Metric>
+          <Text style={{ marginTop: 10, lineHeight: 1.7 }}>{note}</Text>
+        </div>
+        <Badge color={badgeColor}>{badgeLabel}</Badge>
+      </div>
+    </Card>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="command-shell">
+      <Grid numItems={1} numItemsMd={2} numItemsLg={4} className="gap-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Card key={index} className="brand-panel" style={surfaceStyle}>
+            <div className="command-skeleton" style={{ width: 72, height: 4 }} />
+            <div className="command-skeleton" style={{ width: "50%", height: 18, marginTop: 18 }} />
+            <div className="command-skeleton" style={{ width: "74%", height: 34, marginTop: 14 }} />
+            <div className="command-skeleton" style={{ width: "66%", height: 14, marginTop: 16 }} />
+          </Card>
+        ))}
+      </Grid>
+
+      <Card className="brand-panel" style={elevatedSurfaceStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <div className="command-loading-orb" />
+          <div>
+            <Title>Synchronizing analytics streams</Title>
+            <Text style={{ marginTop: 8 }}>
+              Pulling the latest orders, carts, customer growth, and inventory signals into the new command center.
+            </Text>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
 
-const panelTitleStyle: CSSProperties = {
-  margin: "0 0 16px",
-  fontSize: 16,
-  fontWeight: 900,
-  letterSpacing: "-0.02em",
-  color: "var(--foreground)",
-};
+function EmptyState({ onRefresh }: { onRefresh: () => void }) {
+  return (
+    <Card className="brand-panel" style={surfaceStyle}>
+      <Title>Analytics data is not ready yet</Title>
+      <Text style={{ marginTop: 8 }}>
+        The dashboard layout is in place, but the overview feed did not return any metrics for this session.
+      </Text>
+      <div style={{ marginTop: 18 }}>
+        <Button onClick={onRefresh} icon={ArrowPathIcon}>
+          Retry Analytics Sync
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+export default AnalyticsPage;

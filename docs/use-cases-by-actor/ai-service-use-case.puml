@@ -1,0 +1,21 @@
+@startuml
+title AI Service Use Case Diagram
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "AI Service" as AI
+
+rectangle "Smart E-Commerce Platform" {
+  usecase "Chat with AI Assistant" as UC_ChatAI
+  usecase "Generate Product Content" as UC_GenerateProductContent
+  usecase "Call AI Service" as UC_CallAI
+}
+
+AI --> UC_CallAI
+
+UC_ChatAI ..> UC_CallAI : <<include>>
+UC_GenerateProductContent ..> UC_CallAI : <<include>>
+
+@enduml

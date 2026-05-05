@@ -105,3 +105,40 @@ export interface ProductFilters {
   search?: string
   sortBy?: 'featured' | 'price_asc' | 'price_desc' | 'newest'
 }
+
+export interface Review {
+  id: string
+  rating: number
+  comment: string
+  userId: string
+  productId: string
+  user: { id: string; name: string }
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RatingStats {
+  averageRating: number
+  totalReviews: number
+  distribution: Record<number, number>
+}
+
+export interface ProductReviewsResponse {
+  success: boolean
+  message: string
+  data: {
+    reviews: Review[]
+    stats: RatingStats
+  }
+}
+
+export interface TopRatedProduct extends Product {
+  averageRating: number
+  totalReviews: number
+}
+
+export interface TopRatedProductsResponse {
+  success: boolean
+  message: string
+  data: TopRatedProduct[]
+}

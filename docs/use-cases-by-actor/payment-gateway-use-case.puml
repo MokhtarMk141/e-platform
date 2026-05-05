@@ -1,0 +1,23 @@
+@startuml
+title Payment Gateway Use Case Diagram
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "Payment Gateway" as Payment
+
+rectangle "Smart E-Commerce Platform" {
+  usecase "Checkout" as UC_Checkout
+  usecase "Pay with Stripe" as UC_StripeCheckout
+  usecase "Process Stripe Payment" as UC_ProcessStripe
+  usecase "Send Order Confirmation Email" as UC_SendOrderEmail
+}
+
+Payment --> UC_ProcessStripe
+
+UC_Checkout ..> UC_StripeCheckout : <<include>>
+UC_StripeCheckout ..> UC_ProcessStripe : <<include>>
+UC_ProcessStripe ..> UC_SendOrderEmail : <<include>>
+
+@enduml

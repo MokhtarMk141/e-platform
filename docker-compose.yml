@@ -111,7 +111,7 @@ services:
       - backend
     networks:
       - ecommerce-network
-    command: npm run dev
+    command: sh -c "npm ci --legacy-peer-deps && npm run dev"
 
 networks:
   ecommerce-network:

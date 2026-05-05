@@ -34,15 +34,6 @@ export const DEFAULT_HERO_SLIDES: HomepageHeroSlide[] = [
     imageUrl:
       "https://www.amd.com/content/dam/amd/en/images/products/processors/ryzen/2505603-ryzen-9-702702-702703.jpg",
   },
-  {
-    title: "Build Your\nDream PC",
-    subtitle:
-      "Let our AI assistant help you discover parts that fit your setup and budget.",
-    buttonText: "Build with AI",
-    buttonLink: "/build-with-ai",
-    imageUrl:
-      "https://cdn.deepcool.com/public/Global-images/products/Cases/2025/05/CH690_DIGITAL_1.jpg?fm=webp&q=60",
-  },
 ];
 
 function cloneDefaultHeroSlides(): HomepageHeroSlide[] {
@@ -51,6 +42,23 @@ function cloneDefaultHeroSlides(): HomepageHeroSlide[] {
 
 function toTrimmedString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function isBuilderRelatedSlide(slide: HomepageHeroSlideDto): boolean {
+  const title = toTrimmedString(slide.title).toLowerCase();
+  const subtitle = toTrimmedString(slide.subtitle).toLowerCase();
+  const buttonText = toTrimmedString(slide.buttonText).toLowerCase();
+  const buttonLink = toTrimmedString(slide.buttonLink).toLowerCase();
+  const combinedText = `${title} ${subtitle} ${buttonText}`;
+
+  return (
+    buttonLink.includes("/build-with-ai") ||
+    combinedText.includes("build with ai") ||
+    combinedText.includes("build it yourself") ||
+    combinedText.includes("build it youself") ||
+    combinedText.includes("create your own pc") ||
+    combinedText.includes("dream pc")
+  );
 }
 
 function isHomepageHeroSlide(value: unknown): value is HomepageHeroSlideDto {
@@ -80,6 +88,10 @@ function normalizeHeroSlides(
 
   for (const candidate of value as unknown[]) {
     if (!isHomepageHeroSlide(candidate)) {
+      continue;
+    }
+
+    if (isBuilderRelatedSlide(candidate)) {
       continue;
     }
 

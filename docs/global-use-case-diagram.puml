@@ -1,0 +1,98 @@
+@startuml
+title Smart E-Commerce Platform - Global Use Case Diagram
+left to right direction
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+skinparam ArrowColor #5F6B7A
+skinparam actor {
+  BorderColor #2F4858
+  BackgroundColor #F8FAFC
+}
+skinparam usecase {
+  BorderColor #2F4858
+  BackgroundColor #FFFFFF
+}
+skinparam package {
+  BorderColor #B8C4CE
+  BackgroundColor #F8FAFC
+}
+
+actor Visitor as visitor
+actor Customer as customer
+actor Administrator as admin
+actor "Stripe Gateway" as stripe
+actor "AI Service" as ai
+actor "Email Service" as email
+
+customer --|> visitor
+
+rectangle "Smart E-Commerce Platform" {
+
+  package "Storefront" {
+    usecase "Browse Catalog" as UC_BrowseCatalog
+    usecase "View Product Details" as UC_ViewProductDetails
+    usecase "Manage Cart" as UC_ManageCart
+    usecase "Use AI Assistant" as UC_UseAIAssistant
+  }
+
+  package "Account & Checkout" {
+    usecase "Register" as UC_Register
+    usecase "Authenticate" as UC_Authenticate
+    usecase "Checkout" as UC_Checkout
+    usecase "Manage Account" as UC_ManageAccount
+  }
+
+  package "Order Management" {
+    usecase "Manage Orders" as UC_ManageOrders
+  }
+
+  package "Administration" {
+    usecase "Manage Catalog" as UC_ManageCatalog
+    usecase "Manage Promotions" as UC_ManagePromotions
+    usecase "Manage Customers" as UC_ManageCustomers
+  }
+
+  package "Integrations" {
+    usecase "Process Payment" as UC_ProcessPayment
+    usecase "Generate Recommendations" as UC_GenerateRecommendations
+    usecase "Send Email Notifications" as UC_SendEmailNotifications
+  }
+}
+
+visitor --> UC_BrowseCatalog
+visitor --> UC_ViewProductDetails
+visitor --> UC_ManageCart
+visitor --> UC_Register
+visitor --> UC_Authenticate
+visitor --> UC_UseAIAssistant
+
+customer --> UC_Checkout
+customer --> UC_ManageAccount
+customer --> UC_ManageOrders
+
+admin --> UC_ManageCatalog
+admin --> UC_ManagePromotions
+admin --> UC_ManageCustomers
+admin --> UC_ManageOrders
+
+stripe --> UC_ProcessPayment
+ai --> UC_GenerateRecommendations
+email --> UC_SendEmailNotifications
+
+UC_ViewProductDetails ..> UC_BrowseCatalog : <<extend>>
+UC_UseAIAssistant ..> UC_GenerateRecommendations : <<include>>
+UC_Checkout ..> UC_Authenticate : <<include>>
+UC_Checkout ..> UC_ProcessPayment : <<include>>
+UC_Checkout ..> UC_SendEmailNotifications : <<include>>
+UC_ManageAccount ..> UC_Authenticate : <<include>>
+UC_ManageOrders ..> UC_Authenticate : <<include>>
+UC_ManageOrders ..> UC_SendEmailNotifications : <<extend>>
+UC_ManageCatalog ..> UC_Authenticate : <<include>>
+UC_ManagePromotions ..> UC_Authenticate : <<include>>
+UC_ManageCustomers ..> UC_Authenticate : <<include>>
+
+@enduml

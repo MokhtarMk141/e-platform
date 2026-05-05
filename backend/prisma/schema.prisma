@@ -21,6 +21,7 @@ model User {
   orders              Order[]
   passwordResetTokens PasswordResetToken[]
   refreshTokens       RefreshToken[]
+  reviews             Review[]
 }
 
 model RefreshToken {
@@ -89,6 +90,7 @@ model Product {
   brand                 Brand?                 @relation(fields: [brandId], references: [id])
   category              Category?              @relation(fields: [categoryId], references: [id])
   recommendations       Recommendation[]
+  reviews               Review[]
 }
 
 model Cart {
@@ -260,4 +262,18 @@ enum OrderStatus {
 enum PromotionDiscountType {
   PERCENTAGE
   FIXED
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
 }

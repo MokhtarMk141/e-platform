@@ -1,0 +1,75 @@
+@startuml
+title Admin Use Case Diagram
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor Admin
+
+rectangle "Smart E-Commerce Platform" {
+  usecase "Authenticate" as UC_Auth
+  usecase "Access Admin Dashboard" as UC_AdminDash
+  usecase "View Analytics Overview" as UC_Analytics
+  usecase "Manage Products" as UC_ManageProducts
+  usecase "Upload Product Image" as UC_UploadProductImage
+  usecase "Generate Product Content" as UC_GenerateProductContent
+  usecase "Manage Categories" as UC_ManageCategories
+  usecase "Manage Brands" as UC_ManageBrands
+  usecase "Upload Brand Logo" as UC_UploadBrandLogo
+  usecase "Manage Promotions" as UC_ManagePromotions
+  usecase "Manage Product Discounts" as UC_ProductDiscounts
+  usecase "Manage Category Discounts" as UC_CategoryDiscounts
+  usecase "Manage Flash Sales" as UC_FlashSales
+  usecase "Manage Coupons" as UC_ManageCoupons
+  usecase "Manage Orders" as UC_ManageOrders
+  usecase "View All Orders" as UC_ViewAllOrders
+  usecase "View Customer Orders" as UC_ViewCustomerOrders
+  usecase "Update Order Status" as UC_UpdateOrderStatus
+  usecase "View Customers" as UC_ViewCustomers
+  usecase "Manage Homepage Hero" as UC_HomepageHero
+  usecase "Upload Homepage Hero Image" as UC_UploadHeroImage
+  usecase "Call AI Service" as UC_CallAI
+  usecase "Send Order Status Update Email" as UC_SendStatusEmail
+  usecase "Logout" as UC_Logout
+}
+
+Admin --> UC_AdminDash
+Admin --> UC_ManageProducts
+Admin --> UC_ManageCategories
+Admin --> UC_ManageBrands
+Admin --> UC_ManagePromotions
+Admin --> UC_ManageOrders
+Admin --> UC_ViewCustomers
+Admin --> UC_HomepageHero
+Admin --> UC_Logout
+
+UC_AdminDash ..> UC_Auth : <<include>>
+UC_AdminDash ..> UC_Analytics : <<include>>
+UC_ManageProducts ..> UC_Auth : <<include>>
+UC_UploadProductImage ..> UC_ManageProducts : <<extend>>
+UC_GenerateProductContent ..> UC_ManageProducts : <<extend>>
+UC_GenerateProductContent ..> UC_CallAI : <<include>>
+
+UC_ManageCategories ..> UC_Auth : <<include>>
+UC_ManageBrands ..> UC_Auth : <<include>>
+UC_UploadBrandLogo ..> UC_ManageBrands : <<extend>>
+
+UC_ManagePromotions ..> UC_Auth : <<include>>
+UC_ProductDiscounts ..> UC_ManagePromotions : <<extend>>
+UC_CategoryDiscounts ..> UC_ManagePromotions : <<extend>>
+UC_FlashSales ..> UC_ManagePromotions : <<extend>>
+UC_ManageCoupons ..> UC_ManagePromotions : <<extend>>
+
+UC_ManageOrders ..> UC_Auth : <<include>>
+UC_ViewAllOrders ..> UC_ManageOrders : <<extend>>
+UC_ViewCustomerOrders ..> UC_ManageOrders : <<extend>>
+UC_UpdateOrderStatus ..> UC_ManageOrders : <<extend>>
+UC_UpdateOrderStatus ..> UC_SendStatusEmail : <<include>>
+
+UC_ViewCustomers ..> UC_Auth : <<include>>
+UC_HomepageHero ..> UC_Auth : <<include>>
+UC_UploadHeroImage ..> UC_HomepageHero : <<extend>>
+UC_Logout ..> UC_Auth : <<include>>
+
+@enduml

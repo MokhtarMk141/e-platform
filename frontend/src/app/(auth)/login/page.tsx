@@ -1,15 +1,73 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { LoginCredentials } from '@/types/auth.types'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ThemeToggle from '@/components/ThemeToggle'
+import { AuthService } from '@/services/auth.service'
 
-export default function Login() {
+function LoginContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const resetToken = searchParams.get('reset_token')
   const { login } = useAuth()
 
   const [showPassword, setShowPassword] = useState(false)
+  const [showForgotModal, setShowForgotModal] = useState(false)
+  const [showResetModal, setShowResetModal] = useState(false)
+  
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotError, setForgotError] = useState<string | null>(null)
+  const [forgotSuccess, setForgotSuccess] = useState(false)
+
+  const [resetPass, setResetPass] = useState('')
+  const [resetConfirm, setResetConfirm] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetError, setResetError] = useState<string | null>(null)
+  const [resetSuccess, setResetSuccess] = useState(false)
+  const [showResetPass, setShowResetPass] = useState(false)
+
+  useEffect(() => {
+    if (resetToken) setShowResetModal(true)
+  }, [resetToken])
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!forgotEmail) return setForgotError('Please enter your email')
+    setForgotLoading(true)
+    setForgotError(null)
+    try {
+      await AuthService.forgotPassword({ email: forgotEmail })
+      setForgotSuccess(true)
+    } catch (err: any) {
+      setForgotError(err.message || 'Something went wrong.')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetPass || resetPass !== resetConfirm) return setResetError('Passwords do not match')
+    if (resetPass.length < 8) return setResetError('Password must be at least 8 characters')
+    if (!resetToken) return
+    setResetLoading(true)
+    setResetError(null)
+    try {
+      await AuthService.resetPassword({ token: resetToken, password: resetPass })
+      setResetSuccess(true)
+      setTimeout(() => {
+        setShowResetModal(false)
+        router.replace('/login')
+      }, 3000)
+    } catch (err: any) {
+      setResetError(err.message || 'Reset failed. Please try again.')
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -345,6 +403,50 @@ export default function Login() {
         .space-y-4 > * + * { margin-top: 16px; }
         .mb-8 { margin-bottom: 32px; }
         .mb-2 { margin-bottom: 8px; }
+        
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.6);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          opacity: 0;
+          animation: fadeIn 0.3s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .modal-content {
+          background: var(--panel-bg);
+          border: 1px solid var(--panel-border);
+          border-radius: 16px;
+          padding: 32px;
+          width: 100%;
+          max-width: 400px;
+          position: relative;
+          box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+          transform: scale(0.95) translateY(10px);
+          opacity: 0;
+          animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes modalPop { to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-close {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          background: none;
+          border: none;
+          color: var(--label-color);
+          cursor: pointer;
+          padding: 4px;
+          display: flex;
+        }
+        .modal-close:hover {
+          color: var(--brand-red);
+        }
       `}</style>
 
       <div className="auth-root">
@@ -430,9 +532,9 @@ export default function Login() {
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <a href="/forgot-password" className="signin-link" style={{ fontSize: '0.8125rem' }}>
+                <button type="button" onClick={() => setShowForgotModal(true)} className="signin-link" style={{ fontSize: '0.8125rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
                   Forgot password?
-                </a>
+                </button>
               </div>
 
               <button type="submit" disabled={!isFormValid || isLoading} className="submit-btn" style={{ marginTop: 24 }}>
@@ -465,6 +567,80 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {showForgotModal && (
+        <div className="modal-overlay" onClick={() => setShowForgotModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowForgotModal(false)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+            <div className="mb-8 text-center">
+              <h2 className="form-heading" style={{ fontSize: '1.5rem' }}>Reset Password</h2>
+              <p className="form-subtext">Enter your email to receive a reset link</p>
+            </div>
+            {forgotSuccess ? (
+              <div className="error-box" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
+                If an account exists with that email, a password reset link has been sent.
+              </div>
+            ) : (
+              <form onSubmit={handleForgotSubmit} className="space-y-4">
+                {forgotError && <div className="error-box">{forgotError}</div>}
+                <div>
+                  <label className="field-label">Email Address</label>
+                  <input type="email" required className="field-input" placeholder="name@company.com" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} disabled={forgotLoading} />
+                </div>
+                <button type="submit" disabled={!forgotEmail || forgotLoading} className="submit-btn" style={{ marginTop: 24 }}>
+                  {forgotLoading ? 'Processing...' : 'Send Reset Link'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showResetModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="mb-8 text-center">
+              <h2 className="form-heading" style={{ fontSize: '1.5rem' }}>Set New Password</h2>
+              <p className="form-subtext">Please enter your new password below</p>
+            </div>
+            {resetSuccess ? (
+              <div className="error-box" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
+                Password has been reset successfully! Redirecting...
+              </div>
+            ) : (
+              <form onSubmit={handleResetSubmit} className="space-y-4">
+                {resetError && <div className="error-box">{resetError}</div>}
+                <div>
+                  <label className="field-label">New Password</label>
+                  <div className="pw-wrap">
+                    <input type={showResetPass ? 'text' : 'password'} required className="field-input" placeholder="........" value={resetPass} onChange={e => setResetPass(e.target.value)} disabled={resetLoading} />
+                    <button type="button" onClick={() => setShowResetPass(!showResetPass)} className="pw-toggle"><EyeIcon open={showResetPass} /></button>
+                  </div>
+                </div>
+                <div>
+                  <label className="field-label">Confirm Password</label>
+                  <div className="pw-wrap">
+                    <input type={showResetPass ? 'text' : 'password'} required className="field-input" placeholder="........" value={resetConfirm} onChange={e => setResetConfirm(e.target.value)} disabled={resetLoading} />
+                  </div>
+                </div>
+                <button type="submit" disabled={!resetPass || resetPass !== resetConfirm || resetLoading} className="submit-btn" style={{ marginTop: 24 }}>
+                  {resetLoading ? 'Resetting...' : 'Update Password'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </>
+  )
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <LoginContent />
+    </Suspense>
   )
 }

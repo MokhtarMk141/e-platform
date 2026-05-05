@@ -180,6 +180,10 @@ export class ProductRepository {
         },
       });
 
+      await tx.review.deleteMany({
+        where: { productId: id },
+      });
+
       return tx.product.delete({ where: { id } });
     });
   }

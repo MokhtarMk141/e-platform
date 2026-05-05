@@ -10,6 +10,11 @@ import {
 type ApiResponse<T> = { data: T };
 
 export class PromotionService {
+  static async getActivePromotions() {
+    const response = await ApiClient.get<ApiResponse<any>>("/promotions/active");
+    return response.data;
+  }
+
   static async getProductDiscounts() {
     const response = await ApiClient.get<ApiResponse<ProductDiscountRecord[]>>("/promotions/product-discounts");
     return response.data;

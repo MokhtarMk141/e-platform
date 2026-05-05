@@ -1,0 +1,59 @@
+@startuml
+title Visitor Use Case Diagram
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor Visitor
+
+rectangle "Smart E-Commerce Platform" {
+  usecase "View Homepage" as UC_Home
+  usecase "Browse Products" as UC_BrowseProducts
+  usecase "Browse Categories" as UC_BrowseCategories
+  usecase "Browse Brands" as UC_BrowseBrands
+  usecase "Search Products" as UC_SearchProducts
+  usecase "Filter Products" as UC_FilterProducts
+  usecase "Sort Products" as UC_SortProducts
+  usecase "View Product Details" as UC_ProductDetails
+  usecase "Chat with AI Assistant" as UC_ChatAI
+  usecase "Manage Shopping Bag" as UC_Bag
+  usecase "Add Item to Bag" as UC_AddToBag
+  usecase "Update Item Quantity" as UC_UpdateBag
+  usecase "Remove Item from Bag" as UC_RemoveFromBag
+  usecase "Clear Shopping Bag" as UC_ClearBag
+  usecase "Register Account" as UC_Register
+  usecase "Authenticate" as UC_Auth
+  usecase "Request Password Reset" as UC_Forgot
+  usecase "Reset Password" as UC_ResetPassword
+  usecase "Call AI Service" as UC_CallAI
+  usecase "Send Password Reset Email" as UC_SendResetEmail
+}
+
+Visitor --> UC_Home
+Visitor --> UC_BrowseProducts
+Visitor --> UC_ProductDetails
+Visitor --> UC_ChatAI
+Visitor --> UC_Bag
+Visitor --> UC_Register
+Visitor --> UC_Auth
+Visitor --> UC_Forgot
+Visitor --> UC_ResetPassword
+
+UC_BrowseCategories ..> UC_BrowseProducts : <<extend>>
+UC_BrowseBrands ..> UC_BrowseProducts : <<extend>>
+UC_SearchProducts ..> UC_BrowseProducts : <<extend>>
+UC_FilterProducts ..> UC_BrowseProducts : <<extend>>
+UC_SortProducts ..> UC_BrowseProducts : <<extend>>
+UC_ProductDetails ..> UC_BrowseProducts : <<extend>>
+
+UC_AddToBag ..> UC_Bag : <<extend>>
+UC_UpdateBag ..> UC_Bag : <<extend>>
+UC_RemoveFromBag ..> UC_Bag : <<extend>>
+UC_ClearBag ..> UC_Bag : <<extend>>
+
+UC_ChatAI ..> UC_CallAI : <<include>>
+UC_Forgot ..> UC_SendResetEmail : <<include>>
+UC_ResetPassword ..> UC_Forgot : <<extend>>
+
+@enduml

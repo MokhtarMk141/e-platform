@@ -278,15 +278,7 @@ module.exports = {
       {
         "id": "cmo02a7t00002ll3fl6rgrht7",
         "slug": "main",
-        "heroSlides": [
-          {
-            "title": "Build Your \nDream PC",
-            "imageUrl": "http://localhost:5000/uploads/homepage/fitgirl_repack-f00bcda06f40.webp",
-            "subtitle": "Let our AI assistant help you discover parts that fit your setup and budget.",
-            "buttonLink": "/build-with-ai",
-            "buttonText": "Build with AI"
-          }
-        ],
+        "heroSlides": [],
         "createdAt": new Date("2026-04-15T13:03:42.085Z"),
         "updatedAt": new Date("2026-04-16T08:27:47.375Z")
       }

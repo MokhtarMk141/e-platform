@@ -1,0 +1,27 @@
+@startuml
+title Email Service Use Case Diagram
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "Email Service" as Email
+
+rectangle "Smart E-Commerce Platform" {
+  usecase "Request Password Reset" as UC_Forgot
+  usecase "Process Stripe Payment" as UC_ProcessStripe
+  usecase "Update Order Status" as UC_UpdateOrderStatus
+  usecase "Send Password Reset Email" as UC_SendResetEmail
+  usecase "Send Order Confirmation Email" as UC_SendOrderEmail
+  usecase "Send Order Status Update Email" as UC_SendStatusEmail
+}
+
+Email --> UC_SendResetEmail
+Email --> UC_SendOrderEmail
+Email --> UC_SendStatusEmail
+
+UC_Forgot ..> UC_SendResetEmail : <<include>>
+UC_ProcessStripe ..> UC_SendOrderEmail : <<include>>
+UC_UpdateOrderStatus ..> UC_SendStatusEmail : <<include>>
+
+@enduml

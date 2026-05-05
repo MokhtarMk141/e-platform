@@ -123,28 +123,11 @@ const menus = {
     },
   },
 
-  "Build Guide": {
-    sections: [
-      {
-        title: "Build Types",
-        items: [
-          { icon: "build", label: "Budget Build $400–$600", desc: "Best performance per dollar" },
-        ],
-      },
-    ],
-    featured: {
-      badge: "Popular",
-      title: "PC Builder Tool",
-      desc: "Answer a few questions and get a full parts list tailored to your budget and goals.",
-      cta: "Start Building",
-      href: "/build-with-ai",
-    },
-  },
 };
 
-const navLinks = ["PC", "ACCESSORIES", "COMPONENTS", "Build Guide"];
+const navLinks = ["HOME", "PC", "ACCESSORIES", "COMPONENTS"];
 
-type MenuKey = "PC" | "ACCESSORIES" | "COMPONENTS" | "Build Guide";
+type MenuKey = "PC" | "ACCESSORIES" | "COMPONENTS";
 
 const toCategorySlug = (label: string) =>
   label
@@ -202,19 +185,19 @@ export default function MegaMenu() {
 
         .nav-btn {
           color: var(--text-muted);
-          font-size: 13.5px;
+          font-size: 13px;
           font-weight: 600;
-          padding: 6px 14px;
+          padding: 6px 12px;
           background: none;
           border: none;
           border-bottom: 2px solid transparent;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 4px;
           font-family: 'Plus Jakarta Sans', sans-serif;
           transition: all 0.2s;
-          height: 56px;
+          height: 48px;
           letter-spacing: -0.01em;
         }
         .nav-btn:hover { color: var(--foreground); }
@@ -376,59 +359,48 @@ export default function MegaMenu() {
         }
 
         .action-btn {
+          height: 38px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 14px;
+          border-radius: 10px;
           border: 1px solid var(--border);
           background: var(--surface-hover);
           color: var(--foreground);
-          font-size: 13px;
+          font-size: 12.5px;
           font-weight: 700;
-          padding: 10px 16px;
-          border-radius: 999px;
           cursor: pointer;
           font-family: 'Plus Jakarta Sans', sans-serif;
-          transition: all 0.2s;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           letter-spacing: -0.01em;
-          line-height: 1;
+          gap: 6px;
+          position: relative;
           white-space: nowrap;
+          line-height: 1;
         }
         .action-btn:hover {
+          transform: translateY(-1.5px);
           border-color: var(--brand-red);
           color: var(--brand-red);
           background: var(--background);
-          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(255,40,0,0.1);
         }
-
+        .action-btn.icon-only {
+          width: 38px;
+          padding: 0;
+        }
         .action-btn.primary {
           background: var(--foreground);
           color: var(--background);
           border-color: var(--foreground);
-          box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         .action-btn.primary:hover {
           background: var(--brand-red);
           border-color: var(--brand-red);
           color: #fff;
-        }
-
-        .bag-btn {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 48px;
-          height: 48px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 40, 0, 0.18);
-          background: linear-gradient(135deg, var(--surface-hover) 0%, var(--surface) 100%);
-          color: var(--foreground);
-          cursor: pointer;
-          transition: all 0.22s ease;
-          box-shadow: 0 10px 24px rgba(0,0,0,0.08);
-        }
-        .bag-btn:hover {
-          transform: translateY(-1px);
-          border-color: rgba(255, 40, 0, 0.4);
-          color: var(--brand-red);
-          box-shadow: 0 14px 28px rgba(255,40,0,0.14);
+          box-shadow: 0 8px 20px rgba(255,40,0,0.2);
         }
 
         .bag-count {
@@ -506,24 +478,37 @@ export default function MegaMenu() {
           padding: "0 32px",
           display: "flex",
           alignItems: "center",
-          height: 64,
+          height: 56,
           gap: 0,
         }}>
       
-          <a href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0, marginRight: 32 }}>
+          <a href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0, marginRight: 24 }}>
             <img
               src={logoimg.src}
               alt="Website logo"
-              style={{ maxHeight: 38, maxWidth: 200, objectFit: "contain", filter: "var(--foreground) === '#ffffff' ? 'invert(1)' : 'none'" }}
+              style={{ maxHeight: 32, maxWidth: 180, objectFit: "contain", filter: "var(--foreground) === '#ffffff' ? 'invert(1)' : 'none'" }}
             />
           </a>
 
           {/* Slim divider */}
-          <div style={{ width: 1, height: 24, background: "var(--border)", marginRight: 20 }} />
+          <div style={{ width: 1, height: 20, background: "var(--border)", marginRight: 16 }} />
 
           {/* Nav links */}
           <div style={{ display: "flex", alignItems: "stretch", height: "100%" }}>
             {navLinks.map((link) => {
+              if (link === "HOME") {
+                return (
+                  <Link 
+                    key={link} 
+                    href="/" 
+                    className="nav-btn" 
+                    style={{ textDecoration: 'none' }}
+                    onMouseEnter={() => setActive(null)}
+                  >
+                    HOME
+                  </Link>
+                );
+              }
               const isOpen = active === link;
               return (
                 <button
@@ -555,17 +540,17 @@ export default function MegaMenu() {
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
               </svg>
               <input className="search-input" type="text" placeholder="Search setups..." />
-              <span className="kbd">⌘K</span>
+              <span className="kbd">Ã¢Å’ËœK</span>
             </div>
 
-            <ThemeToggle />
+            <ThemeToggle className="action-btn icon-only" />
 
             <button
-              className="bag-btn"
+              className="action-btn icon-only"
               onClick={toggleCart}
               aria-label="Open bag"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M8 7V6a4 4 0 018 0v1" />
                 <path d="M6 7h12l-1 12a2 2 0 01-2 2H9a2 2 0 01-2-2L6 7Z" />
                 <path d="M10 11a2 2 0 004 0" />
@@ -603,7 +588,7 @@ export default function MegaMenu() {
             )}
 
           </div>
-        </div>        {/* ── Dropdown ── */}
+        </div>        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Dropdown Ã¢â€â‚¬Ã¢â€â‚¬ */}
         {active && menus[active as MenuKey] && (
           <div
             className="dropdown"

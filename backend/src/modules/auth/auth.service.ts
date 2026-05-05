@@ -184,7 +184,7 @@ export class AuthService {
     });
 
     // Build reset URL (frontend will handle this route)
-    const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+    const resetUrl = `${env.FRONTEND_URL}/login?reset_token=${rawToken}`;
 
     await AuthEmailService.sendPasswordReset(user, resetUrl);
   }

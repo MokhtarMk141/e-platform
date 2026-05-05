@@ -25,7 +25,7 @@ type ProductPricingInput = Pick<Product, "id" | "name" | "price" | "categoryId">
 type PromotionClient = Prisma.TransactionClient | typeof prisma;
 
 type ProductDiscountWithProduct = Prisma.ProductDiscountGetPayload<{
-  include: { product: { select: { id: true; name: true; sku: true } } };
+  include: { product: { include: { category: true } } };
 }>;
 
 type CategoryDiscountWithCategory = Prisma.CategoryDiscountGetPayload<{
@@ -33,7 +33,7 @@ type CategoryDiscountWithCategory = Prisma.CategoryDiscountGetPayload<{
 }>;
 
 type FlashSaleWithProducts = Prisma.FlashSaleGetPayload<{
-  include: { products: { include: { product: { select: { id: true; name: true; sku: true } } } } };
+  include: { products: { include: { product: { include: { category: true } } } } };
 }>;
 
 const activeWindowWhere = (now: Date) => ({
@@ -130,7 +130,7 @@ export class PromotionService {
   static async listProductDiscounts() {
     const records = await prisma.productDiscount.findMany({
       include: {
-        product: { select: { id: true, name: true, sku: true } },
+        product: { include: { category: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -142,7 +142,7 @@ export class PromotionService {
     const record = await prisma.productDiscount.findUnique({
       where: { id },
       include: {
-        product: { select: { id: true, name: true, sku: true } },
+        product: { include: { category: true } },
       },
     });
 
@@ -179,7 +179,7 @@ export class PromotionService {
         isActive: data.isActive ?? true,
       },
       include: {
-        product: { select: { id: true, name: true, sku: true } },
+        product: { include: { category: true } },
       },
     });
 
@@ -221,7 +221,7 @@ export class PromotionService {
       where: { id },
       data,
       include: {
-        product: { select: { id: true, name: true, sku: true } },
+        product: { include: { category: true } },
       },
     });
 
@@ -344,7 +344,7 @@ export class PromotionService {
       include: {
         products: {
           include: {
-            product: { select: { id: true, name: true, sku: true } },
+            product: { include: { category: true } },
           },
         },
       },
@@ -360,7 +360,7 @@ export class PromotionService {
       include: {
         products: {
           include: {
-            product: { select: { id: true, name: true, sku: true } },
+            product: { include: { category: true } },
           },
         },
       },
@@ -417,7 +417,7 @@ export class PromotionService {
       include: {
         products: {
           include: {
-            product: { select: { id: true, name: true, sku: true } },
+            product: { include: { category: true } },
           },
         },
       },
@@ -491,7 +491,7 @@ export class PromotionService {
       include: {
         products: {
           include: {
-            product: { select: { id: true, name: true, sku: true } },
+            product: { include: { category: true } },
           },
         },
       },
@@ -502,6 +502,7 @@ export class PromotionService {
 
   static async deleteFlashSale(id: string) {
     await this.getFlashSaleById(id);
+    await prisma.flashSaleProduct.deleteMany({ where: { flashSaleId: id } });
     await prisma.flashSale.delete({ where: { id } });
   }
 
@@ -624,7 +625,7 @@ export class PromotionService {
     const [productDiscounts, categoryDiscounts, flashSales, coupons] = await Promise.all([
       prisma.productDiscount.findMany({
         where: activeWindowWhere(now),
-        include: { product: { select: { id: true, name: true, sku: true } } },
+        include: { product: { include: { category: true } } },
         orderBy: { createdAt: "desc" },
       }),
       prisma.categoryDiscount.findMany({
@@ -636,7 +637,7 @@ export class PromotionService {
         where: activeWindowWhere(now),
         include: {
           products: {
-            include: { product: { select: { id: true, name: true, sku: true } } },
+            include: { product: { include: { category: true } } },
           },
         },
         orderBy: { createdAt: "desc" },

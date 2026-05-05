@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ProductService } from '@/services/product.service'
-import { Product } from '@/types/product.types'
+import { ReviewService } from '@/services/review.service'
+import { Product, Review, RatingStats } from '@/types/product.types'
 import { useCart } from '@/hooks/useCart'
+import { useAuth } from '@/hooks/useAuth'
 import { getProductDiscountLabel, getProductFinalPrice, productHasDiscount } from '@/lib/product-pricing'
 import MegaMenu from '../../mega-menu/megaMenu'
 //hello worlddddd
@@ -16,6 +18,7 @@ const FONTS = `
 export default function ProductDetailPage() {
     const params = useParams()
     const id = params.id as string
+    const { user, isAuthenticated } = useAuth()
 
     const [product, setProduct] = useState<Product | null>(null)
     const [loading, setLoading] = useState(true)
@@ -24,6 +27,16 @@ export default function ProductDetailPage() {
     const [selectedImageZoom, setSelectedImageZoom] = useState(false)
     const [quantity, setQuantity] = useState(1)
     const { addItem } = useCart()
+
+    // Review state
+    const [reviews, setReviews] = useState<Review[]>([])
+    const [ratingStats, setRatingStats] = useState<RatingStats | null>(null)
+    const [reviewRating, setReviewRating] = useState(5)
+    const [reviewComment, setReviewComment] = useState('')
+    const [hoverRating, setHoverRating] = useState(0)
+    const [reviewLoading, setReviewLoading] = useState(false)
+    const [reviewError, setReviewError] = useState<string | null>(null)
+    const [editingReview, setEditingReview] = useState<Review | null>(null)
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -43,6 +56,73 @@ export default function ProductDetailPage() {
         }
         if (id) fetchProduct()
     }, [id])
+
+    // Fetch reviews
+    const fetchReviews = async () => {
+        try {
+            const res = await ReviewService.getProductReviews(id)
+            setReviews(res.data.reviews)
+            setRatingStats(res.data.stats)
+        } catch {
+            // silently fail - reviews are supplementary
+        }
+    }
+
+    useEffect(() => {
+        if (id) fetchReviews()
+    }, [id])
+
+    const handleSubmitReview = async () => {
+        if (!reviewComment.trim()) return
+        setReviewLoading(true)
+        setReviewError(null)
+        try {
+            if (editingReview) {
+                await ReviewService.updateReview(editingReview.id, {
+                    rating: reviewRating,
+                    comment: reviewComment,
+                })
+                setEditingReview(null)
+            } else {
+                await ReviewService.createReview(id, {
+                    rating: reviewRating,
+                    comment: reviewComment,
+                })
+            }
+            setReviewComment('')
+            setReviewRating(5)
+            fetchReviews()
+        } catch (err: any) {
+            setReviewError(err?.message || err?.error || 'Failed to submit review')
+        } finally {
+            setReviewLoading(false)
+        }
+    }
+
+    const handleDeleteReview = async (reviewId: string) => {
+        try {
+            await ReviewService.deleteReview(reviewId)
+            fetchReviews()
+        } catch {
+            // silently fail
+        }
+    }
+
+    const startEditReview = (review: Review) => {
+        setEditingReview(review)
+        setReviewRating(review.rating)
+        setReviewComment(review.comment)
+    }
+
+    const cancelEdit = () => {
+        setEditingReview(null)
+        setReviewRating(5)
+        setReviewComment('')
+        setReviewError(null)
+    }
+
+    // Check if current user already has a review
+    const userReview = reviews.find(r => r.userId === user?.id)
 
     if (loading) {
         return (
@@ -161,6 +241,41 @@ export default function ProductDetailPage() {
         .back-link:hover {
           color: var(--brand-red) !important;
           gap: 12px !important;
+        }
+
+        .review-star {
+          cursor: pointer;
+          transition: transform 0.15s ease, color 0.15s ease;
+        }
+        .review-star:hover {
+          transform: scale(1.2);
+        }
+
+        .rating-bar-fill {
+          transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .review-card {
+          transition: all 0.2s ease;
+        }
+        .review-card:hover {
+          border-color: var(--border-strong) !important;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+
+        .review-submit-btn {
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .review-submit-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(255,40,0,0.3) !important;
+        }
+
+        .review-action-btn {
+          transition: all 0.15s;
+        }
+        .review-action-btn:hover {
+          background: var(--surface-hover) !important;
         }
       `}</style>
 
@@ -377,80 +492,83 @@ export default function ProductDetailPage() {
                     {/* Divider */}
                     <div style={{ height: 1, background: 'var(--border)', marginBottom: 28 }} />
 
-                    {/* Description */}
-                    {product.description && (
-                        <div style={{ marginBottom: 32 }}>
+                    {/* About Product Card */}
+                    <div style={{
+                        background: 'var(--surface)',
+                        borderRadius: 16,
+                        padding: '28px',
+                        marginBottom: 32,
+                        border: '1px solid var(--border)',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                            <div style={{ width: 4, height: 16, background: 'var(--brand-red)', borderRadius: 4 }} />
                             <h3 style={{
-                                margin: '0 0 12px', fontSize: 13, fontWeight: 800,
-                                letterSpacing: '0.08em', textTransform: 'uppercase',
-                                color: 'var(--text-dim)',
+                                margin: 0, fontSize: 15, fontWeight: 800,
+                                letterSpacing: '0.02em', textTransform: 'uppercase',
+                                color: 'var(--foreground)',
                                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                             }}>
-                                Description
+                                About this Product
                             </h3>
+                        </div>
+                        
+                        {product.description ? (
                             <p style={{
-                                margin: 0, fontSize: 15, color: 'var(--text-muted)',
-                                lineHeight: 1.75, fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
+                                margin: '0 0 24px', fontSize: 15, color: 'var(--text-muted)',
+                                lineHeight: 1.8, fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
                             }}>
                                 {product.description}
                             </p>
-                        </div>
-                    )}
+                        ) : (
+                            <p style={{
+                                margin: '0 0 24px', fontSize: 15, color: 'var(--text-dim)', 
+                                fontStyle: 'italic', fontFamily: "'DM Sans', sans-serif",
+                            }}>
+                                No description provided.
+                            </p>
+                        )}
 
-                    {/* Product Details Table */}
-                    <div style={{ marginBottom: 32 }}>
-                        <h3 style={{
-                            margin: '0 0 16px', fontSize: 13, fontWeight: 800,
-                            letterSpacing: '0.08em', textTransform: 'uppercase',
-                            color: 'var(--text-dim)',
-                            fontFamily: "'Plus Jakarta Sans', sans-serif",
-                        }}>
-                            Product Details
-                        </h3>
-                        <div style={{
-                            border: '1px solid var(--border)',
-                            borderRadius: 16, overflow: 'hidden',
-                        }}>
-                            {[
-                                { label: 'Product Name', value: product.name },
-                                { label: 'SKU', value: product.sku },
-                                { label: 'Category', value: product.category?.name ?? '—' },
-                                ...(hasDiscount
-                                    ? [
-                                        { label: 'Original Price', value: `$${product.price?.toFixed(2) ?? '0.00'}` },
-                                        { label: 'Promotion', value: product.discountLabel ?? 'Active promotion' },
-                                      ]
-                                    : []),
-                                { label: hasDiscount ? 'New Price' : 'Price', value: `$${finalPrice.toFixed(2)}` },
-                                { label: 'Stock', value: inStock ? `${product.stock} units` : 'Out of Stock' },
-                                { label: 'Added', value: new Date(product.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
-                                { label: 'Last Updated', value: new Date(product.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
-                            ].map((row, i) => (
-                                <div
-                                    key={row.label}
-                                    className="spec-row"
-                                    style={{
-                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                        padding: '14px 20px',
-                                        background: i % 2 === 0 ? 'var(--surface)' : 'var(--background)',
-                                        borderBottom: i < 6 ? '1px solid var(--border)' : 'none',
-                                    }}
-                                >
-                                    <span style={{
-                                        fontSize: 13, fontWeight: 700, color: 'var(--text-muted)',
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                            {product.category && (
+                                <div style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                                    padding: '8px 16px', background: 'var(--background)',
+                                    borderRadius: 12, border: '1px solid var(--border)',
+                                }}>
+                                    <span style={{ 
+                                        fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', 
+                                        textTransform: 'uppercase', letterSpacing: '0.05em',
                                         fontFamily: "'Plus Jakarta Sans', sans-serif",
                                     }}>
-                                        {row.label}
+                                        Category
                                     </span>
-                                    <span style={{
-                                        fontSize: 13, fontWeight: 600, color: 'var(--foreground)',
+                                    <span style={{ 
+                                        fontSize: 13, fontWeight: 700, color: 'var(--foreground)',
                                         fontFamily: "'DM Sans', sans-serif",
-                                        textAlign: 'right',
                                     }}>
-                                        {row.value}
+                                        {product.category.name}
                                     </span>
                                 </div>
-                            ))}
+                            )}
+                            <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 8,
+                                padding: '8px 16px', background: 'var(--background)',
+                                borderRadius: 12, border: '1px solid var(--border)',
+                            }}>
+                                <span style={{ 
+                                    fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', 
+                                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                }}>
+                                    Condition
+                                </span>
+                                <span style={{ 
+                                    fontSize: 13, fontWeight: 700, color: 'var(--foreground)',
+                                    fontFamily: "'DM Sans', sans-serif",
+                                }}>
+                                    Brand New
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -587,6 +705,397 @@ export default function ProductDetailPage() {
                                 </span>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Reviews & Ratings Section ── */}
+            <div style={{
+                maxWidth: 1400, margin: '0 auto', padding: '0 40px 60px',
+                animation: 'fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both',
+            }}>
+                <div style={{ height: 1, background: 'var(--border)', marginBottom: 48 }} />
+
+                <h2 style={{
+                    margin: '0 0 36px', fontSize: 28, fontWeight: 900,
+                    letterSpacing: '-0.03em',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    color: 'var(--foreground)',
+                }}>
+                    Customer Reviews
+                </h2>
+
+                <div style={{ display: 'flex', gap: 48, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+
+                    {/* ── Left: Rating Summary (Google Maps style) ── */}
+                    <div style={{ flex: '0 0 300px', minWidth: 260 }}>
+                        <div style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            borderRadius: 20,
+                            padding: '32px',
+                        }}>
+                            {/* Big average rating */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                                <span style={{
+                                    fontSize: 52, fontWeight: 900, color: 'var(--foreground)',
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    letterSpacing: '-0.04em', lineHeight: 1,
+                                }}>
+                                    {ratingStats ? ratingStats.averageRating.toFixed(1) : '0.0'}
+                                </span>
+                                <div>
+                                    <div style={{ display: 'flex', gap: 3, marginBottom: 4 }}>
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <svg key={star} width="18" height="18" viewBox="0 0 24 24"
+                                                fill={(ratingStats?.averageRating ?? 0) >= star ? 'var(--brand-red)' : (ratingStats?.averageRating ?? 0) >= star - 0.5 ? 'var(--brand-red)' : 'none'}
+                                                stroke="var(--brand-red)" strokeWidth="2">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                            </svg>
+                                        ))}
+                                    </div>
+                                    <span style={{
+                                        fontSize: 13, color: 'var(--text-muted)',
+                                        fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                                    }}>
+                                        {ratingStats?.totalReviews ?? 0} review{(ratingStats?.totalReviews ?? 0) !== 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Rating distribution bars */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                {[5, 4, 3, 2, 1].map(star => {
+                                    const count = ratingStats?.distribution[star] ?? 0
+                                    const total = ratingStats?.totalReviews ?? 0
+                                    const pct = total > 0 ? (count / total) * 100 : 0
+                                    return (
+                                        <div key={star} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <span style={{
+                                                fontSize: 13, fontWeight: 700, color: 'var(--text-muted)',
+                                                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                                width: 28, textAlign: 'right', flexShrink: 0,
+                                            }}>
+                                                {star}★
+                                            </span>
+                                            <div style={{
+                                                flex: 1, height: 10, borderRadius: 6,
+                                                background: 'var(--border)',
+                                                overflow: 'hidden',
+                                            }}>
+                                                <div className="rating-bar-fill" style={{
+                                                    width: `${pct}%`, height: '100%',
+                                                    borderRadius: 6,
+                                                    background: star >= 4 ? 'var(--brand-red)' : star === 3 ? '#f59e0b' : '#ef4444',
+                                                }} />
+                                            </div>
+                                            <span style={{
+                                                fontSize: 12, fontWeight: 600, color: 'var(--text-dim)',
+                                                fontFamily: "'DM Sans', sans-serif",
+                                                width: 28, flexShrink: 0,
+                                            }}>
+                                                {count}
+                                            </span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Right: Review Form + List ── */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+
+                        {/* Review Form */}
+                        {isAuthenticated && !userReview && !editingReview && (
+                            <div style={{
+                                background: 'var(--surface)',
+                                border: '1px solid var(--border)',
+                                borderRadius: 20,
+                                padding: '28px',
+                                marginBottom: 32,
+                            }}>
+                                <h3 style={{
+                                    margin: '0 0 16px', fontSize: 15, fontWeight: 800,
+                                    letterSpacing: '-0.01em',
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    color: 'var(--foreground)',
+                                }}>
+                                    Write a Review
+                                </h3>
+
+                                {/* Interactive Stars */}
+                                <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <svg key={star} className="review-star" width="28" height="28" viewBox="0 0 24 24"
+                                            fill={(hoverRating || reviewRating) >= star ? '#ffb800' : 'none'}
+                                            stroke={(hoverRating || reviewRating) >= star ? '#ffb800' : 'var(--text-dim)'}
+                                            strokeWidth="2"
+                                            onMouseEnter={() => setHoverRating(star)}
+                                            onMouseLeave={() => setHoverRating(0)}
+                                            onClick={() => setReviewRating(star)}
+                                        >
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                        </svg>
+                                    ))}
+                                    <span style={{
+                                        fontSize: 13, fontWeight: 600, color: 'var(--text-muted)',
+                                        fontFamily: "'DM Sans', sans-serif",
+                                        alignSelf: 'center', marginLeft: 8,
+                                    }}>
+                                        {hoverRating || reviewRating} / 5
+                                    </span>
+                                </div>
+
+                                <textarea
+                                    value={reviewComment}
+                                    onChange={e => setReviewComment(e.target.value)}
+                                    placeholder="Share your experience with this product..."
+                                    rows={4}
+                                    style={{
+                                        width: '100%', padding: '14px 18px',
+                                        borderRadius: 14, border: '1px solid var(--border)',
+                                        background: 'var(--background)', color: 'var(--foreground)',
+                                        fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+                                        resize: 'vertical', outline: 'none',
+                                        transition: 'border-color 0.2s',
+                                        lineHeight: 1.6,
+                                    }}
+                                    onFocus={e => e.target.style.borderColor = 'var(--brand-red)'}
+                                    onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                                />
+
+                                {reviewError && (
+                                    <p style={{
+                                        margin: '10px 0 0', fontSize: 13, color: '#ef4444',
+                                        fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+                                    }}>
+                                        {reviewError}
+                                    </p>
+                                )}
+
+                                <button
+                                    className="review-submit-btn"
+                                    disabled={reviewLoading || !reviewComment.trim()}
+                                    onClick={handleSubmitReview}
+                                    style={{
+                                        marginTop: 14, padding: '12px 32px',
+                                        borderRadius: 12, border: 'none',
+                                        background: reviewComment.trim() ? 'var(--brand-red)' : 'var(--surface)',
+                                        color: reviewComment.trim() ? '#fff' : 'var(--text-dim)',
+                                        fontSize: 14, fontWeight: 800,
+                                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                        cursor: reviewComment.trim() ? 'pointer' : 'not-allowed',
+                                        boxShadow: reviewComment.trim() ? '0 4px 16px rgba(255,40,0,0.2)' : 'none',
+                                    }}
+                                >
+                                    {reviewLoading ? 'Submitting...' : 'Submit Review'}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Edit Review Form */}
+                        {editingReview && (
+                            <div style={{
+                                background: 'var(--surface)',
+                                border: '1px solid var(--brand-red)',
+                                borderRadius: 20,
+                                padding: '28px',
+                                marginBottom: 32,
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                    <h3 style={{
+                                        margin: 0, fontSize: 15, fontWeight: 800,
+                                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                        color: 'var(--foreground)',
+                                    }}>
+                                        Edit Your Review
+                                    </h3>
+                                    <button onClick={cancelEdit} style={{
+                                        background: 'none', border: 'none', color: 'var(--text-muted)',
+                                        fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    }}>
+                                        Cancel
+                                    </button>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <svg key={star} className="review-star" width="28" height="28" viewBox="0 0 24 24"
+                                            fill={(hoverRating || reviewRating) >= star ? '#ffb800' : 'none'}
+                                            stroke={(hoverRating || reviewRating) >= star ? '#ffb800' : 'var(--text-dim)'}
+                                            strokeWidth="2"
+                                            onMouseEnter={() => setHoverRating(star)}
+                                            onMouseLeave={() => setHoverRating(0)}
+                                            onClick={() => setReviewRating(star)}
+                                        >
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                        </svg>
+                                    ))}
+                                </div>
+
+                                <textarea
+                                    value={reviewComment}
+                                    onChange={e => setReviewComment(e.target.value)}
+                                    rows={4}
+                                    style={{
+                                        width: '100%', padding: '14px 18px',
+                                        borderRadius: 14, border: '1px solid var(--border)',
+                                        background: 'var(--background)', color: 'var(--foreground)',
+                                        fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+                                        resize: 'vertical', outline: 'none',
+                                        lineHeight: 1.6,
+                                    }}
+                                />
+
+                                {reviewError && (
+                                    <p style={{ margin: '10px 0 0', fontSize: 13, color: '#ef4444', fontWeight: 600 }}>
+                                        {reviewError}
+                                    </p>
+                                )}
+
+                                <button
+                                    className="review-submit-btn"
+                                    disabled={reviewLoading || !reviewComment.trim()}
+                                    onClick={handleSubmitReview}
+                                    style={{
+                                        marginTop: 14, padding: '12px 32px',
+                                        borderRadius: 12, border: 'none',
+                                        background: 'var(--brand-red)', color: '#fff',
+                                        fontSize: 14, fontWeight: 800,
+                                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                        cursor: 'pointer',
+                                        boxShadow: '0 4px 16px rgba(255,40,0,0.2)',
+                                    }}
+                                >
+                                    {reviewLoading ? 'Updating...' : 'Update Review'}
+                                </button>
+                            </div>
+                        )}
+
+                        {!isAuthenticated && (
+                            <div style={{
+                                background: 'var(--surface)',
+                                border: '1px solid var(--border)',
+                                borderRadius: 16,
+                                padding: '20px 24px',
+                                marginBottom: 32,
+                                display: 'flex', alignItems: 'center', gap: 12,
+                            }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" strokeWidth="2">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z" />
+                                </svg>
+                                <span style={{
+                                    fontSize: 13, color: 'var(--text-muted)',
+                                    fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                                }}>
+                                    <Link href="/login" style={{ color: 'var(--brand-red)', fontWeight: 700, textDecoration: 'none' }}>Sign in</Link> to leave a review
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Reviews List */}
+                        {reviews.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                {reviews.map(review => (
+                                    <div key={review.id} className="review-card" style={{
+                                        background: 'var(--background)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 16,
+                                        padding: '24px',
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                                                    {/* User avatar */}
+                                                    <div style={{
+                                                        width: 36, height: 36, borderRadius: '50%',
+                                                        background: 'linear-gradient(135deg, var(--brand-red), #ff5500)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        color: '#fff', fontSize: 14, fontWeight: 800,
+                                                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                                    }}>
+                                                        {review.user.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <span style={{
+                                                            fontSize: 14, fontWeight: 700,
+                                                            fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                                            color: 'var(--foreground)',
+                                                        }}>
+                                                            {review.user.name}
+                                                        </span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                                            <div style={{ display: 'flex', gap: 2 }}>
+                                                                {[1, 2, 3, 4, 5].map(star => (
+                                                                    <svg key={star} width="13" height="13" viewBox="0 0 24 24"
+                                                                        fill={review.rating >= star ? '#ffb800' : 'none'}
+                                                                        stroke={review.rating >= star ? '#ffb800' : 'var(--text-dim)'}
+                                                                        strokeWidth="2">
+                                                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                                    </svg>
+                                                                ))}
+                                                            </div>
+                                                            <span style={{
+                                                                fontSize: 11, color: 'var(--text-dim)',
+                                                                fontFamily: "'DM Sans', sans-serif",
+                                                            }}>
+                                                                {new Date(review.createdAt).toLocaleDateString('en-US', {
+                                                                    year: 'numeric', month: 'short', day: 'numeric'
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Edit/Delete for own reviews */}
+                                            {user?.id === review.userId && !editingReview && (
+                                                <div style={{ display: 'flex', gap: 4 }}>
+                                                    <button className="review-action-btn" onClick={() => startEditReview(review)} style={{
+                                                        background: 'var(--surface)', border: '1px solid var(--border)',
+                                                        borderRadius: 8, padding: '6px 12px',
+                                                        fontSize: 12, fontWeight: 700, color: 'var(--text-muted)',
+                                                        cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                                    }}>
+                                                        Edit
+                                                    </button>
+                                                    <button className="review-action-btn" onClick={() => handleDeleteReview(review.id)} style={{
+                                                        background: 'var(--surface)', border: '1px solid var(--border)',
+                                                        borderRadius: 8, padding: '6px 12px',
+                                                        fontSize: 12, fontWeight: 700, color: '#ef4444',
+                                                        cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                                    }}>
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <p style={{
+                                            margin: 0, fontSize: 14, color: 'var(--text-muted)',
+                                            lineHeight: 1.7, fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
+                                        }}>
+                                            {review.comment}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{
+                                textAlign: 'center', padding: '48px 20px',
+                                color: 'var(--text-dim)',
+                            }}>
+                                <div style={{ fontSize: 40, opacity: 0.15, marginBottom: 12 }}>★</div>
+                                <p style={{
+                                    margin: 0, fontSize: 14, fontWeight: 600,
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                }}>
+                                    No reviews yet. Be the first to share your experience!
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

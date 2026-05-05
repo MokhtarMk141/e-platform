@@ -1,0 +1,44 @@
+@startuml
+title Client Use Case Diagram
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor Client
+
+rectangle "Smart E-Commerce Platform" {
+  usecase "Authenticate" as UC_Auth
+  usecase "Manage Profile" as UC_Profile
+  usecase "Change Password" as UC_ChangePassword
+  usecase "Logout" as UC_Logout
+  usecase "Checkout" as UC_Checkout
+  usecase "Enter Shipping Information" as UC_Shipping
+  usecase "Choose Delivery Mode" as UC_Delivery
+  usecase "Apply Coupon" as UC_ApplyCoupon
+  usecase "Pay with Stripe" as UC_StripeCheckout
+  usecase "Process Stripe Payment" as UC_ProcessStripe
+  usecase "Send Order Confirmation Email" as UC_SendOrderEmail
+  usecase "View My Orders" as UC_MyOrders
+}
+
+Client --> UC_Checkout
+Client --> UC_MyOrders
+Client --> UC_Profile
+Client --> UC_ChangePassword
+Client --> UC_Logout
+
+UC_Profile ..> UC_Auth : <<include>>
+UC_ChangePassword ..> UC_Auth : <<include>>
+UC_Logout ..> UC_Auth : <<include>>
+UC_Checkout ..> UC_Auth : <<include>>
+UC_Checkout ..> UC_Shipping : <<include>>
+UC_Checkout ..> UC_Delivery : <<include>>
+UC_Checkout ..> UC_StripeCheckout : <<include>>
+UC_ApplyCoupon ..> UC_Checkout : <<extend>>
+UC_MyOrders ..> UC_Auth : <<include>>
+
+UC_StripeCheckout ..> UC_ProcessStripe : <<include>>
+UC_ProcessStripe ..> UC_SendOrderEmail : <<include>>
+
+@enduml

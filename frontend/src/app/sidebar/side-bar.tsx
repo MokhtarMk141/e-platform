@@ -74,6 +74,13 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const toggleExpand = (label: string) => {
+    setExpandedItems((prev) =>
+      prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]
+    );
+  };
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
@@ -377,21 +384,43 @@ export default function Sidebar() {
 
              const isSecondBlock = item.label === "Store";
 
+            const isExpanded = expandedItems.includes(item.label) || hasActiveChild;
+
             return (
               <div key={item.label}>
                 {isSecondBlock && <div style={{ height: 24 }} />}
-                <Link
-                  href={item.href!}
-                  className={`sb-item${active || hasActiveChild ? " active" : ""}`}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <div className="sb-icon">
-                    <Icon d={iconPaths[item.icon]} size={18} />
-                  </div>
-                  {!collapsed && <span className="sb-label">{item.label}</span>}
-                  {!collapsed && item.badge && <span className="sb-badge">{item.badge}</span>}
-                </Link>
-                {!collapsed && item.children && (
+                {item.children ? (
+                  <button
+                    onClick={() => toggleExpand(item.label)}
+                    className={`sb-item${active || hasActiveChild ? " active" : ""}`}
+                    title={collapsed ? item.label : undefined}
+                    style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
+                  >
+                    <div className="sb-icon">
+                      <Icon d={iconPaths[item.icon]} size={18} />
+                    </div>
+                    {!collapsed && <span className="sb-label">{item.label}</span>}
+                    {!collapsed && (
+                      <div style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>
+                        <Icon d={iconPaths.chevronDown} size={14} />
+                      </div>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href!}
+                    className={`sb-item${active ? " active" : ""}`}
+                    title={collapsed ? item.label : undefined}
+                    style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
+                  >
+                    <div className="sb-icon">
+                      <Icon d={iconPaths[item.icon]} size={18} />
+                    </div>
+                    {!collapsed && <span className="sb-label">{item.label}</span>}
+                    {!collapsed && item.badge && <span className="sb-badge">{item.badge}</span>}
+                  </Link>
+                )}
+                {!collapsed && item.children && isExpanded && (
                   <div className="sb-children">
                     {item.children.map((child) => (
                       <Link key={child.href} href={child.href} className={`sb-child${isActive(child.href) ? " active" : ""}`}>

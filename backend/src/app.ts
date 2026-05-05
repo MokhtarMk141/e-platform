@@ -19,6 +19,7 @@ import orderRoutes from "./modules/order/order.routes";
 import chatbotRoutes from "./modules/chatbot/chatbot.routes";
 import homepageConfigRoutes from "./modules/homepage-config/homepage-config.routes";
 import paymentRoutes from "./modules/payments/payments.routes";
+import reviewRoutes from "./modules/review/review.routes";
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use("/api/promotions", promotionRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/homepage-config", homepageConfigRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

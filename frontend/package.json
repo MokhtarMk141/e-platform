@@ -12,6 +12,7 @@
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@react-icons/all-files": "^4.1.0",
+    "@tremor/react": "^3.18.7",
     "axios": "^1.13.4",
     "flowbite": "^4.0.1",
     "flowbite-react": "^0.12.17",
