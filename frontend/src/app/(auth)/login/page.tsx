@@ -404,48 +404,119 @@ function LoginContent() {
         .mb-8 { margin-bottom: 32px; }
         .mb-2 { margin-bottom: 8px; }
         
+        /* ── Modal Overlay — blurs the page behind it ── */
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.6);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          background: rgba(10, 10, 15, 0.55);
+          backdrop-filter: blur(16px) saturate(1.2);
+          -webkit-backdrop-filter: blur(16px) saturate(1.2);
           z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
           opacity: 0;
-          animation: fadeIn 0.3s forwards;
+          animation: overlayFadeIn 0.25s ease forwards;
         }
-        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes overlayFadeIn { to { opacity: 1; } }
+
+        /* ── Modal Card — fully opaque, matches site design ── */
         .modal-content {
-          background: var(--panel-bg);
-          border: 1px solid var(--panel-border);
-          border-radius: 16px;
-          padding: 32px;
+          background: #ffffff;
+          border: 1px solid rgba(0,0,0,0.09);
+          border-radius: 20px;
+          padding: 0;
           width: 100%;
-          max-width: 400px;
+          max-width: 420px;
           position: relative;
-          box-shadow: 0 24px 48px rgba(0,0,0,0.4);
-          transform: scale(0.95) translateY(10px);
+          box-shadow: 0 32px 64px rgba(0,0,0,0.22), 0 8px 24px rgba(0,0,0,0.1);
+          overflow: hidden;
+          transform: scale(0.94) translateY(16px);
           opacity: 0;
-          animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+        }
+        :global(.dark) .modal-content {
+          background: #111115;
+          border-color: rgba(255,255,255,0.08);
+          box-shadow: 0 32px 64px rgba(0,0,0,0.7), 0 8px 24px rgba(0,0,0,0.5);
         }
         @keyframes modalPop { to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        /* Red accent bar at the very top of the modal */
+        .modal-accent-bar {
+          height: 4px;
+          background: linear-gradient(90deg, var(--brand-red) 0%, #ff6b35 100%);
+          width: 100%;
+        }
+
+        /* Inner padding container */
+        .modal-inner {
+          padding: 32px 32px 36px;
+        }
+
+        /* Icon badge */
+        .modal-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 14px;
+          background: rgba(229, 57, 53, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 20px;
+          color: var(--brand-red);
+        }
+        :global(.dark) .modal-icon {
+          background: rgba(229, 57, 53, 0.15);
+        }
+
         .modal-close {
           position: absolute;
-          top: 16px;
-          right: 16px;
-          background: none;
+          top: 14px;
+          right: 14px;
+          background: rgba(0,0,0,0.05);
           border: none;
+          border-radius: 8px;
           color: var(--label-color);
           cursor: pointer;
-          padding: 4px;
+          padding: 6px;
           display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s, color 0.2s;
+          z-index: 2;
+        }
+        :global(.dark) .modal-close {
+          background: rgba(255,255,255,0.07);
         }
         .modal-close:hover {
+          background: rgba(229, 57, 53, 0.1);
           color: var(--brand-red);
+        }
+
+        /* Success state */
+        .modal-success {
+          background: rgba(34, 197, 94, 0.08);
+          border: 1px solid rgba(34, 197, 94, 0.2);
+          border-radius: 12px;
+          padding: 16px;
+          text-align: center;
+        }
+        .modal-success-icon {
+          font-size: 2rem;
+          margin-bottom: 8px;
+        }
+        .modal-success-title {
+          font-weight: 700;
+          font-size: 0.9rem;
+          color: #16a34a;
+          margin-bottom: 6px;
+        }
+        .modal-success-text {
+          font-size: 0.8rem;
+          color: #22c55e;
+          line-height: 1.5;
         }
       `}</style>
 
@@ -569,67 +640,140 @@ function LoginContent() {
       </div>
 
       {showForgotModal && (
-        <div className="modal-overlay" onClick={() => setShowForgotModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowForgotModal(false)}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12"/></svg>
+        <div
+          onClick={() => setShowForgotModal(false)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(10,10,15,0.60)',
+            backdropFilter: 'blur(18px) saturate(1.2)',
+            WebkitBackdropFilter: 'blur(18px) saturate(1.2)',
+            zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+            animation: 'overlayFadeIn 0.25s ease forwards',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              border: '1px solid rgba(0,0,0,0.10)',
+              borderRadius: 20,
+              width: '100%', maxWidth: 420,
+              position: 'relative',
+              boxShadow: '0 32px 64px rgba(0,0,0,0.28), 0 8px 24px rgba(0,0,0,0.14)',
+              overflow: 'hidden',
+              animation: 'modalPop 0.4s cubic-bezier(0.16,1,0.3,1) 0.05s forwards',
+            }}
+          >
+            <button
+              onClick={() => setShowForgotModal(false)}
+              aria-label="Close"
+              style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 8, cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b6b7b', zIndex: 2 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
-            <div className="mb-8 text-center">
-              <h2 className="form-heading" style={{ fontSize: '1.5rem' }}>Reset Password</h2>
-              <p className="form-subtext">Enter your email to receive a reset link</p>
-            </div>
-            {forgotSuccess ? (
-              <div className="error-box" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
-                If an account exists with that email, a password reset link has been sent.
+            {/* Red accent bar */}
+            <div style={{ height: 4, background: 'linear-gradient(90deg, #e53935 0%, #ff6b35 100%)', width: '100%' }} />
+            <div style={{ padding: '32px 32px 36px' }}>
+              {/* Lock icon badge */}
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(229,57,53,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#e53935' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
               </div>
-            ) : (
-              <form onSubmit={handleForgotSubmit} className="space-y-4">
-                {forgotError && <div className="error-box">{forgotError}</div>}
-                <div>
-                  <label className="field-label">Email Address</label>
-                  <input type="email" required className="field-input" placeholder="name@company.com" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} disabled={forgotLoading} />
+              <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                <h2 style={{ fontSize: '1.45rem', fontWeight: 700, letterSpacing: '-0.03em', color: '#0a0a0f', marginBottom: 8, lineHeight: 1.2 }}>Forgot Password?</h2>
+                <p style={{ fontSize: '0.875rem', color: '#6b6b7b' }}>No worries — enter your email and we'll send you a reset link.</p>
+              </div>
+              {forgotSuccess ? (
+                <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#16a34a', marginBottom: 6 }}>Check your inbox!</div>
+                  <div style={{ fontSize: '0.8rem', color: '#22c55e', lineHeight: 1.5 }}>If an account exists with that email, a password reset link has been sent.</div>
                 </div>
-                <button type="submit" disabled={!forgotEmail || forgotLoading} className="submit-btn" style={{ marginTop: 24 }}>
-                  {forgotLoading ? 'Processing...' : 'Send Reset Link'}
-                </button>
-              </form>
-            )}
+              ) : (
+                <form onSubmit={handleForgotSubmit} className="space-y-4">
+                  {forgotError && <div className="error-box">{forgotError}</div>}
+                  <div>
+                    <label className="field-label">Email Address</label>
+                    <input type="email" required className="field-input" placeholder="name@company.com" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} disabled={forgotLoading} autoFocus />
+                  </div>
+                  <button type="submit" disabled={!forgotEmail || forgotLoading} style={{ marginTop: 8, width: '100%', padding: '13px 16px', borderRadius: 10, background: '#e53935', color: '#ffffff', fontSize: '0.875rem', fontWeight: 700, letterSpacing: '0.03em', border: 'none', cursor: 'pointer', opacity: (!forgotEmail || forgotLoading) ? 0.5 : 1 }}>
+                    {forgotLoading ? 'Processing...' : 'Send Reset Link'}
+                  </button>
+                  <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#6b6b7b', marginTop: 4 }}>
+                    Remember your password?{' '}
+                    <button type="button" onClick={() => setShowForgotModal(false)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 700, color: '#e53935', fontSize: '0.8rem' }}>Sign in</button>
+                  </p>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {showResetModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="mb-8 text-center">
-              <h2 className="form-heading" style={{ fontSize: '1.5rem' }}>Set New Password</h2>
-              <p className="form-subtext">Please enter your new password below</p>
-            </div>
-            {resetSuccess ? (
-              <div className="error-box" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
-                Password has been reset successfully! Redirecting...
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(10,10,15,0.60)',
+            backdropFilter: 'blur(18px) saturate(1.2)',
+            WebkitBackdropFilter: 'blur(18px) saturate(1.2)',
+            zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid rgba(0,0,0,0.10)',
+              borderRadius: 20,
+              width: '100%', maxWidth: 420,
+              position: 'relative',
+              boxShadow: '0 32px 64px rgba(0,0,0,0.28), 0 8px 24px rgba(0,0,0,0.14)',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ height: 4, background: 'linear-gradient(90deg, #e53935 0%, #ff6b35 100%)', width: '100%' }} />
+            <div style={{ padding: '32px 32px 36px' }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(229,57,53,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#e53935' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
               </div>
-            ) : (
-              <form onSubmit={handleResetSubmit} className="space-y-4">
-                {resetError && <div className="error-box">{resetError}</div>}
-                <div>
-                  <label className="field-label">New Password</label>
-                  <div className="pw-wrap">
-                    <input type={showResetPass ? 'text' : 'password'} required className="field-input" placeholder="........" value={resetPass} onChange={e => setResetPass(e.target.value)} disabled={resetLoading} />
-                    <button type="button" onClick={() => setShowResetPass(!showResetPass)} className="pw-toggle"><EyeIcon open={showResetPass} /></button>
-                  </div>
+              <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                <h2 style={{ fontSize: '1.45rem', fontWeight: 700, letterSpacing: '-0.03em', color: '#0a0a0f', marginBottom: 8, lineHeight: 1.2 }}>Set New Password</h2>
+                <p style={{ fontSize: '0.875rem', color: '#6b6b7b' }}>Please enter your new password below</p>
+              </div>
+              {resetSuccess ? (
+                <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#16a34a', marginBottom: 6 }}>Password Updated!</div>
+                  <div style={{ fontSize: '0.8rem', color: '#22c55e', lineHeight: 1.5 }}>Your password has been reset successfully. Redirecting to login...</div>
                 </div>
-                <div>
-                  <label className="field-label">Confirm Password</label>
-                  <div className="pw-wrap">
-                    <input type={showResetPass ? 'text' : 'password'} required className="field-input" placeholder="........" value={resetConfirm} onChange={e => setResetConfirm(e.target.value)} disabled={resetLoading} />
+              ) : (
+                <form onSubmit={handleResetSubmit} className="space-y-4">
+                  {resetError && <div className="error-box">{resetError}</div>}
+                  <div>
+                    <label className="field-label">New Password</label>
+                    <div className="pw-wrap">
+                      <input type={showResetPass ? 'text' : 'password'} required className="field-input" placeholder="Min. 8 characters" value={resetPass} onChange={e => setResetPass(e.target.value)} disabled={resetLoading} />
+                      <button type="button" onClick={() => setShowResetPass(!showResetPass)} className="pw-toggle"><EyeIcon open={showResetPass} /></button>
+                    </div>
                   </div>
-                </div>
-                <button type="submit" disabled={!resetPass || resetPass !== resetConfirm || resetLoading} className="submit-btn" style={{ marginTop: 24 }}>
-                  {resetLoading ? 'Resetting...' : 'Update Password'}
-                </button>
-              </form>
-            )}
+                  <div>
+                    <label className="field-label">Confirm Password</label>
+                    <div className="pw-wrap">
+                      <input type={showResetPass ? 'text' : 'password'} required className="field-input" placeholder="Re-enter password" value={resetConfirm} onChange={e => setResetConfirm(e.target.value)} disabled={resetLoading} />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={!resetPass || resetPass !== resetConfirm || resetLoading} style={{ marginTop: 8, width: '100%', padding: '13px 16px', borderRadius: 10, background: '#e53935', color: '#ffffff', fontSize: '0.875rem', fontWeight: 700, letterSpacing: '0.03em', border: 'none', cursor: 'pointer', opacity: (!resetPass || resetPass !== resetConfirm || resetLoading) ? 0.5 : 1 }}>
+                    {resetLoading ? 'Updating...' : 'Update Password'}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}
